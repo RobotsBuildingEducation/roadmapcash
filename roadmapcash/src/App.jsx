@@ -1,12 +1,25 @@
 import { Box, HStack, VStack, Text, Spinner } from "@chakra-ui/react";
 import { useDecentralizedIdentity } from "@/hooks/useDecentralizedIdentity";
+import { useFinancialParser } from "@/hooks/useFinancialParser";
 import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { AccountMenu } from "@/components/AccountMenu";
+import { FinancialInput } from "@/components/FinancialInput";
+import { FinancialChart } from "@/components/FinancialChart";
 import "./App.css";
 
 function App() {
   const { identity, userData, isLoading, error, switchAccount, logout } =
     useDecentralizedIdentity();
+  const {
+    parseFinancialInput,
+    financialData,
+    isLoading: isGenerating,
+    error: parseError,
+  } = useFinancialParser();
+
+  const handleGenerate = async (input) => {
+    await parseFinancialInput(input);
+  };
 
   return (
     <Box minH="100vh" bg="gray.950" color="white">
@@ -48,39 +61,29 @@ function App() {
             </Text>
           </VStack>
         ) : identity ? (
-          <VStack align="stretch" gap="6" maxW="600px" mx="auto">
-            <Box
-              p="6"
-              bg="gray.900"
-              borderRadius="lg"
-              borderWidth="1px"
-              borderColor="gray.800"
-            >
-              <Text fontSize="xl" fontWeight="bold" mb="4">
-                Welcome to roadmap.cash
-              </Text>
-              <Text color="gray.400" mb="4">
-                Your decentralized identity is ready. Your account is tied to
-                your unique keys - no email or password required.
-              </Text>
+          <VStack align="stretch" gap="6" maxW="900px" mx="auto">
+            <FinancialInput
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
+            />
 
+            {parseError && (
               <Box
                 p="4"
-                bg="gray.800"
+                bg="red.900"
                 borderRadius="md"
-                fontFamily="mono"
-                fontSize="sm"
+                borderWidth="1px"
+                borderColor="red.700"
               >
-                <Text color="gray.500" mb="1">
-                  Your public identity:
-                </Text>
-                <Text color="blue.300" wordBreak="break-all" fontSize="xs">
-                  {identity.npub}
+                <Text color="red.200" fontSize="sm">
+                  {parseError}
                 </Text>
               </Box>
-            </Box>
+            )}
 
-            {userData && (
+            {financialData && <FinancialChart data={financialData} />}
+
+            {financialData?.summary && (
               <Box
                 p="6"
                 bg="gray.900"
@@ -88,15 +91,11 @@ function App() {
                 borderWidth="1px"
                 borderColor="gray.800"
               >
-                <Text fontSize="lg" fontWeight="medium" mb="2">
-                  Account Created
+                <Text fontSize="lg" fontWeight="bold" mb="3">
+                  AI Analysis
                 </Text>
-                <Text color="gray.400" fontSize="sm">
-                  {new Date(userData.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                <Text color="gray.300" lineHeight="tall">
+                  {financialData.summary}
                 </Text>
               </Box>
             )}

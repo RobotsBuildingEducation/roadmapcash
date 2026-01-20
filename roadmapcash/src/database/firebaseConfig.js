@@ -3,7 +3,7 @@ import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { getGenerativeModel, getVertexAI, Schema } from "@firebase/vertexai";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  apiKey: import.meta.env.VITE_FIREBASE_PUBLIC_API_KEY,
   authDomain: "roadmapcash.firebaseapp.com",
   projectId: "roadmapcash",
   storageBucket: "roadmapcash.firebasestorage.app",
