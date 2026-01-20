@@ -9,7 +9,7 @@ import {
   GridItem,
   Button,
   Input,
-  Select,
+  NativeSelect,
   Textarea,
 } from "@chakra-ui/react";
 
@@ -1457,19 +1457,21 @@ export function FinancialChart({ data, onUpdate }) {
                     borderColor="gray.700"
                     fontSize="sm"
                   />
-                  <Select
-                    value={expense.priority}
-                    onChange={(e) =>
-                      updateExpenseField(index, "priority", e.target.value)
-                    }
-                    bg="gray.800"
-                    borderColor="gray.700"
-                    fontSize="sm"
-                  >
-                    <option value="essential">Essential</option>
-                    <option value="important">Important</option>
-                    <option value="discretionary">Discretionary</option>
-                  </Select>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field
+                      value={expense.priority}
+                      onChange={(e) =>
+                        updateExpenseField(index, "priority", e.target.value)
+                      }
+                      bg="gray.800"
+                      borderColor="gray.700"
+                      fontSize="sm"
+                    >
+                      <option value="essential">Essential</option>
+                      <option value="important">Important</option>
+                      <option value="discretionary">Discretionary</option>
+                    </NativeSelect.Field>
+                  </NativeSelect.Root>
                   <Button
                     size="xs"
                     variant="ghost"
