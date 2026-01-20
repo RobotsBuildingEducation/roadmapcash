@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { getGenerativeModel, getVertexAI, Schema } from "@firebase/vertexai";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,4 +15,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getFirestore(app);
 
-export { database, doc, getDoc, setDoc };
+const vertexAI = getVertexAI(app, { location: "global" });
+export const ai = vertexAI;
+
+const simplemodel = getGenerativeModel(vertexAI, {
+  model: "gemini-3-flash-preview",
+});
+
+export { database, doc, getDoc, setDoc, simplemodel };
