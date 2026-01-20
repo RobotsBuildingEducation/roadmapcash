@@ -2,12 +2,12 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { Box, VStack, Text, HStack, Badge, ProgressRoot, ProgressTrack, ProgressRange } from "@chakra-ui/react";
 
-// Create a cute fat dog with military uniform
-function createMilitaryDog(color, teamColor, x, z) {
+// Create a cute fat dog with military uniform, sword and shield
+function createMilitaryDog(color, teamColor, x, z, facingLeft = false) {
   const dogGroup = new THREE.Group();
 
   // Fat body (big ellipsoid)
-  const bodyGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+  const bodyGeometry = new THREE.SphereGeometry(0.35, 16, 16);
   bodyGeometry.scale(1.2, 0.85, 0.9);
   const bodyMaterial = new THREE.MeshStandardMaterial({
     color: color,
@@ -15,65 +15,53 @@ function createMilitaryDog(color, teamColor, x, z) {
     roughness: 0.8,
   });
   const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-  body.position.y = 0.4;
+  body.position.y = 0.3;
   dogGroup.add(body);
 
-  // Military vest
-  const vestGeometry = new THREE.SphereGeometry(0.52, 16, 16);
+  // Military vest/armor
+  const vestGeometry = new THREE.SphereGeometry(0.37, 16, 16);
   vestGeometry.scale(1.1, 0.6, 0.85);
   const vestMaterial = new THREE.MeshStandardMaterial({
     color: teamColor,
-    metalness: 0.3,
-    roughness: 0.6,
+    metalness: 0.4,
+    roughness: 0.5,
   });
   const vest = new THREE.Mesh(vestGeometry, vestMaterial);
-  vest.position.y = 0.42;
+  vest.position.y = 0.32;
   dogGroup.add(vest);
 
-  // Vest straps
-  const strapGeometry = new THREE.BoxGeometry(0.08, 0.5, 0.08);
-  const strapMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
-  const leftStrap = new THREE.Mesh(strapGeometry, strapMaterial);
-  leftStrap.position.set(0.15, 0.45, 0.35);
-  leftStrap.rotation.x = 0.3;
-  dogGroup.add(leftStrap);
-  const rightStrap = new THREE.Mesh(strapGeometry, strapMaterial);
-  rightStrap.position.set(0.15, 0.45, -0.35);
-  rightStrap.rotation.x = -0.3;
-  dogGroup.add(rightStrap);
-
   // Round head
-  const headGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+  const headGeometry = new THREE.SphereGeometry(0.22, 16, 16);
   const headMaterial = new THREE.MeshStandardMaterial({
     color: color,
     metalness: 0.1,
     roughness: 0.8,
   });
   const head = new THREE.Mesh(headGeometry, headMaterial);
-  head.position.set(0.55, 0.55, 0);
+  head.position.set(0.4, 0.42, 0);
   dogGroup.add(head);
 
   // Military helmet
-  const helmetGeometry = new THREE.SphereGeometry(0.32, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+  const helmetGeometry = new THREE.SphereGeometry(0.24, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
   const helmetMaterial = new THREE.MeshStandardMaterial({
     color: teamColor,
-    metalness: 0.4,
-    roughness: 0.5,
+    metalness: 0.5,
+    roughness: 0.4,
   });
   const helmet = new THREE.Mesh(helmetGeometry, helmetMaterial);
-  helmet.position.set(0.55, 0.6, 0);
+  helmet.position.set(0.4, 0.47, 0);
   helmet.rotation.x = -0.2;
   dogGroup.add(helmet);
 
   // Helmet rim
-  const rimGeometry = new THREE.TorusGeometry(0.32, 0.03, 8, 16);
+  const rimGeometry = new THREE.TorusGeometry(0.24, 0.02, 8, 16);
   const rim = new THREE.Mesh(rimGeometry, helmetMaterial);
-  rim.position.set(0.55, 0.58, 0);
+  rim.position.set(0.4, 0.45, 0);
   rim.rotation.x = Math.PI / 2;
   dogGroup.add(rim);
 
   // Snout
-  const snoutGeometry = new THREE.SphereGeometry(0.12, 12, 12);
+  const snoutGeometry = new THREE.SphereGeometry(0.09, 12, 12);
   snoutGeometry.scale(1.2, 0.7, 0.9);
   const snoutMaterial = new THREE.MeshStandardMaterial({
     color: 0xd4a574,
@@ -81,93 +69,174 @@ function createMilitaryDog(color, teamColor, x, z) {
     roughness: 0.9,
   });
   const snout = new THREE.Mesh(snoutGeometry, snoutMaterial);
-  snout.position.set(0.8, 0.48, 0);
+  snout.position.set(0.58, 0.36, 0);
   dogGroup.add(snout);
 
   // Nose
-  const noseGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+  const noseGeometry = new THREE.SphereGeometry(0.035, 8, 8);
   const noseMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
   const nose = new THREE.Mesh(noseGeometry, noseMaterial);
-  nose.position.set(0.9, 0.5, 0);
+  nose.position.set(0.65, 0.38, 0);
   dogGroup.add(nose);
 
-  // Eyes (determined look)
-  const eyeGeometry = new THREE.SphereGeometry(0.06, 8, 8);
+  // Eyes
+  const eyeGeometry = new THREE.SphereGeometry(0.04, 8, 8);
   const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
   const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-  leftEye.position.set(0.72, 0.62, 0.15);
+  leftEye.position.set(0.52, 0.48, 0.1);
   dogGroup.add(leftEye);
   const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-  rightEye.position.set(0.72, 0.62, -0.15);
+  rightEye.position.set(0.52, 0.48, -0.1);
   dogGroup.add(rightEye);
 
   // Angry eyebrows
-  const browGeometry = new THREE.BoxGeometry(0.12, 0.02, 0.03);
+  const browGeometry = new THREE.BoxGeometry(0.08, 0.015, 0.02);
   const browMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
   const leftBrow = new THREE.Mesh(browGeometry, browMaterial);
-  leftBrow.position.set(0.7, 0.7, 0.15);
-  leftBrow.rotation.z = -0.4;
+  leftBrow.position.set(0.5, 0.53, 0.1);
+  leftBrow.rotation.z = -0.5;
   dogGroup.add(leftBrow);
   const rightBrow = new THREE.Mesh(browGeometry, browMaterial);
-  rightBrow.position.set(0.7, 0.7, -0.15);
-  rightBrow.rotation.z = 0.4;
+  rightBrow.position.set(0.5, 0.53, -0.1);
+  rightBrow.rotation.z = 0.5;
   dogGroup.add(rightBrow);
 
-  // Floppy ears (under helmet)
-  const earGeometry = new THREE.SphereGeometry(0.12, 10, 10);
+  // Ears
+  const earGeometry = new THREE.SphereGeometry(0.08, 10, 10);
   earGeometry.scale(0.5, 1, 0.7);
   const earMaterial = new THREE.MeshStandardMaterial({
     color: new THREE.Color(color).multiplyScalar(0.7),
   });
   const leftEar = new THREE.Mesh(earGeometry, earMaterial);
-  leftEar.position.set(0.4, 0.5, 0.28);
+  leftEar.position.set(0.28, 0.4, 0.18);
   dogGroup.add(leftEar);
   const rightEar = new THREE.Mesh(earGeometry, earMaterial);
-  rightEar.position.set(0.4, 0.5, -0.28);
+  rightEar.position.set(0.28, 0.4, -0.18);
   dogGroup.add(rightEar);
 
   // Stubby legs
-  const legGeometry = new THREE.CylinderGeometry(0.08, 0.1, 0.25, 8);
+  const legGeometry = new THREE.CylinderGeometry(0.055, 0.07, 0.18, 8);
   const legMaterial = new THREE.MeshStandardMaterial({ color: color });
-  const positions = [
-    [0.3, 0.12, 0.25],
-    [0.3, 0.12, -0.25],
-    [-0.3, 0.12, 0.25],
-    [-0.3, 0.12, -0.25],
+  const legPositions = [
+    [0.2, 0.09, 0.18],
+    [0.2, 0.09, -0.18],
+    [-0.2, 0.09, 0.18],
+    [-0.2, 0.09, -0.18],
   ];
-  positions.forEach((pos) => {
+  legPositions.forEach((pos) => {
     const leg = new THREE.Mesh(legGeometry, legMaterial);
     leg.position.set(...pos);
     dogGroup.add(leg);
   });
 
-  // Medal on vest
-  const medalGeometry = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 12);
-  const medalMaterial = new THREE.MeshStandardMaterial({
+  // Tail
+  const tailGeometry = new THREE.SphereGeometry(0.07, 8, 8);
+  const tail = new THREE.Mesh(tailGeometry, new THREE.MeshStandardMaterial({ color }));
+  tail.position.set(-0.45, 0.38, 0);
+  dogGroup.add(tail);
+
+  // === SWORD ===
+  const swordGroup = new THREE.Group();
+
+  // Blade
+  const bladeGeometry = new THREE.BoxGeometry(0.04, 0.5, 0.015);
+  const bladeMaterial = new THREE.MeshStandardMaterial({
+    color: 0xc0c0c0,
+    metalness: 0.9,
+    roughness: 0.2,
+  });
+  const blade = new THREE.Mesh(bladeGeometry, bladeMaterial);
+  blade.position.y = 0.25;
+  swordGroup.add(blade);
+
+  // Blade tip (pointed)
+  const tipGeometry = new THREE.ConeGeometry(0.025, 0.1, 4);
+  const tip = new THREE.Mesh(tipGeometry, bladeMaterial);
+  tip.position.y = 0.55;
+  swordGroup.add(tip);
+
+  // Handle
+  const handleGeometry = new THREE.CylinderGeometry(0.025, 0.025, 0.12, 8);
+  const handleMaterial = new THREE.MeshStandardMaterial({ color: 0x4a3728 });
+  const handle = new THREE.Mesh(handleGeometry, handleMaterial);
+  handle.position.y = -0.06;
+  swordGroup.add(handle);
+
+  // Crossguard
+  const guardGeometry = new THREE.BoxGeometry(0.15, 0.025, 0.025);
+  const guardMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffd700,
+    metalness: 0.7,
+    roughness: 0.3,
+  });
+  const guard = new THREE.Mesh(guardGeometry, guardMaterial);
+  guard.position.y = 0;
+  swordGroup.add(guard);
+
+  // Position sword in right paw
+  swordGroup.position.set(0.35, 0.35, -0.3);
+  swordGroup.rotation.z = -0.3;
+  swordGroup.rotation.x = 0.2;
+  dogGroup.add(swordGroup);
+
+  // === SHIELD ===
+  const shieldGroup = new THREE.Group();
+
+  // Shield body (round)
+  const shieldGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.04, 16);
+  const shieldMaterial = new THREE.MeshStandardMaterial({
+    color: teamColor,
+    metalness: 0.4,
+    roughness: 0.5,
+  });
+  const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
+  shield.rotation.x = Math.PI / 2;
+  shieldGroup.add(shield);
+
+  // Shield rim
+  const shieldRimGeometry = new THREE.TorusGeometry(0.2, 0.015, 8, 16);
+  const shieldRimMaterial = new THREE.MeshStandardMaterial({
+    color: 0xc0c0c0,
+    metalness: 0.8,
+    roughness: 0.2,
+  });
+  const shieldRim = new THREE.Mesh(shieldRimGeometry, shieldRimMaterial);
+  shieldRim.rotation.x = Math.PI / 2;
+  shieldRim.position.z = 0.02;
+  shieldGroup.add(shieldRim);
+
+  // Shield boss (center bump)
+  const bossGeometry = new THREE.SphereGeometry(0.06, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+  const bossMaterial = new THREE.MeshStandardMaterial({
     color: 0xffd700,
     metalness: 0.8,
     roughness: 0.2,
   });
-  const medal = new THREE.Mesh(medalGeometry, medalMaterial);
-  medal.position.set(0.3, 0.5, 0.4);
-  medal.rotation.x = Math.PI / 2;
-  dogGroup.add(medal);
+  const boss = new THREE.Mesh(bossGeometry, bossMaterial);
+  boss.rotation.x = -Math.PI / 2;
+  boss.position.z = 0.02;
+  shieldGroup.add(boss);
 
-  // Tail
-  const tailGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-  const tail = new THREE.Mesh(tailGeometry, new THREE.MeshStandardMaterial({ color }));
-  tail.position.set(-0.65, 0.5, 0);
-  dogGroup.add(tail);
+  // Position shield in left paw
+  shieldGroup.position.set(0.15, 0.3, 0.35);
+  shieldGroup.rotation.y = -0.5;
+  dogGroup.add(shieldGroup);
 
   dogGroup.position.set(x, 0, z);
+
+  // Face the right direction
+  if (facingLeft) {
+    dogGroup.rotation.y = Math.PI;
+  }
+
   return dogGroup;
 }
 
 // Create 3D bar for chart
-function createBar(height, color, x, label) {
+function createBar(height, color, x) {
   const barGroup = new THREE.Group();
 
-  const geometry = new THREE.BoxGeometry(0.6, height, 0.6);
+  const geometry = new THREE.BoxGeometry(0.5, height, 0.5);
   const material = new THREE.MeshStandardMaterial({
     color: color,
     metalness: 0.3,
@@ -178,7 +247,7 @@ function createBar(height, color, x, label) {
   barGroup.add(bar);
 
   // Glow effect
-  const glowGeometry = new THREE.BoxGeometry(0.65, height + 0.05, 0.65);
+  const glowGeometry = new THREE.BoxGeometry(0.55, height + 0.05, 0.55);
   const glowMaterial = new THREE.MeshBasicMaterial({
     color: color,
     transparent: true,
@@ -192,55 +261,55 @@ function createBar(height, color, x, label) {
   return barGroup;
 }
 
-// Create projection line chart
+// Create projection chart
 function createProjectionChart(currentSavings, monthlySavings, savingsGoal, months) {
   const chartGroup = new THREE.Group();
 
   // Base platform
-  const platformGeometry = new THREE.BoxGeometry(8, 0.1, 3);
+  const platformGeometry = new THREE.BoxGeometry(7, 0.08, 2.5);
   const platformMaterial = new THREE.MeshStandardMaterial({
     color: 0x2a2a40,
     metalness: 0.2,
     roughness: 0.8,
   });
   const platform = new THREE.Mesh(platformGeometry, platformMaterial);
-  platform.position.y = 0.05;
+  platform.position.y = 0.04;
   chartGroup.add(platform);
 
   // Grid lines
   const gridMaterial = new THREE.LineBasicMaterial({ color: 0x3b3b5c, transparent: true, opacity: 0.5 });
   for (let i = 0; i <= 4; i++) {
     const points = [
-      new THREE.Vector3(-3.5, 0.11, -1.2 + i * 0.6),
-      new THREE.Vector3(3.5, 0.11, -1.2 + i * 0.6),
+      new THREE.Vector3(-3, 0.09, -1 + i * 0.5),
+      new THREE.Vector3(3, 0.09, -1 + i * 0.5),
     ];
     const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
     const line = new THREE.Line(lineGeometry, gridMaterial);
     chartGroup.add(line);
   }
 
-  // Create projection bars (month over month)
+  // Create projection bars
   const maxMonths = Math.min(months, 12);
-  const barWidth = 6 / (maxMonths + 1);
+  const barWidth = 5.5 / (maxMonths + 1);
 
   for (let i = 0; i <= maxMonths; i++) {
     const projectedSavings = currentSavings + (monthlySavings * i);
     const progress = savingsGoal > 0 ? Math.min(projectedSavings / savingsGoal, 1) : 0;
-    const barHeight = progress * 2.5 + 0.1;
+    const barHeight = progress * 2 + 0.1;
 
     const isCurrentMonth = i === 0;
     const isGoalReached = projectedSavings >= savingsGoal;
 
     let barColor;
     if (isCurrentMonth) {
-      barColor = 0x6366f1; // Current - indigo
+      barColor = 0x6366f1;
     } else if (isGoalReached) {
-      barColor = 0x10b981; // Goal reached - green
+      barColor = 0x10b981;
     } else {
-      barColor = 0x3b82f6; // Projected - blue
+      barColor = 0x3b82f6;
     }
 
-    const barGeometry = new THREE.BoxGeometry(barWidth * 0.7, barHeight, 0.4);
+    const barGeometry = new THREE.BoxGeometry(barWidth * 0.7, barHeight, 0.35);
     const barMaterial = new THREE.MeshStandardMaterial({
       color: barColor,
       metalness: 0.4,
@@ -249,36 +318,36 @@ function createProjectionChart(currentSavings, monthlySavings, savingsGoal, mont
       emissiveIntensity: isGoalReached ? 0.3 : 0.1,
     });
     const bar = new THREE.Mesh(barGeometry, barMaterial);
-    bar.position.set(-3 + i * (6 / maxMonths), barHeight / 2 + 0.1, 0);
+    bar.position.set(-2.5 + i * (5.5 / maxMonths), barHeight / 2 + 0.08, 0);
     chartGroup.add(bar);
   }
 
   // Goal line
-  const goalLineGeometry = new THREE.BoxGeometry(7, 0.03, 0.03);
+  const goalLineGeometry = new THREE.BoxGeometry(6, 0.02, 0.02);
   const goalLineMaterial = new THREE.MeshStandardMaterial({
     color: 0xffd700,
     emissive: 0xffd700,
     emissiveIntensity: 0.5,
   });
   const goalLine = new THREE.Mesh(goalLineGeometry, goalLineMaterial);
-  goalLine.position.set(0, 2.6, 0);
+  goalLine.position.set(0, 2.1, 0);
   chartGroup.add(goalLine);
 
   // Goal flag
-  const flagPoleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.8, 8);
+  const flagPoleGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.6, 8);
   const flagPoleMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700 });
   const flagPole = new THREE.Mesh(flagPoleGeometry, flagPoleMaterial);
-  flagPole.position.set(3.5, 3, 0);
+  flagPole.position.set(3, 2.4, 0);
   chartGroup.add(flagPole);
 
-  const flagGeometry = new THREE.BoxGeometry(0.4, 0.25, 0.02);
+  const flagGeometry = new THREE.BoxGeometry(0.35, 0.2, 0.015);
   const flagMaterial = new THREE.MeshStandardMaterial({
     color: 0xffd700,
     emissive: 0xffd700,
     emissiveIntensity: 0.3,
   });
   const flag = new THREE.Mesh(flagGeometry, flagMaterial);
-  flag.position.set(3.7, 3.25, 0);
+  flag.position.set(3.18, 2.6, 0);
   chartGroup.add(flag);
 
   return chartGroup;
@@ -293,16 +362,16 @@ export function FinancialChart({ data }) {
 
     const container = containerRef.current;
     const width = container.clientWidth;
-    const height = 450;
+    const height = 500;
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x12121a);
+    scene.background = new THREE.Color(0x0f0f18);
 
-    // Camera - focused on charts
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 8, 16);
-    camera.lookAt(0, 2, 0);
+    // Camera
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    camera.position.set(0, 10, 18);
+    camera.lookAt(0, 1, 0);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -312,24 +381,24 @@ export function FinancialChart({ data }) {
     container.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 12, 8);
+    directionalLight.position.set(5, 15, 10);
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    const blueLight = new THREE.PointLight(0x6366f1, 0.6, 25);
-    blueLight.position.set(-6, 5, 5);
+    const redLight = new THREE.PointLight(0xff4444, 0.5, 30);
+    redLight.position.set(-10, 5, 5);
+    scene.add(redLight);
+
+    const blueLight = new THREE.PointLight(0x4444ff, 0.5, 30);
+    blueLight.position.set(10, 5, 5);
     scene.add(blueLight);
 
-    const greenLight = new THREE.PointLight(0x10b981, 0.4, 20);
-    greenLight.position.set(6, 5, -5);
-    scene.add(greenLight);
-
-    // Ground
-    const groundGeometry = new THREE.PlaneGeometry(30, 30);
+    // Ground (battlefield)
+    const groundGeometry = new THREE.PlaneGeometry(40, 40);
     const groundMaterial = new THREE.MeshStandardMaterial({
       color: 0x1a1a2e,
       roughness: 0.9,
@@ -348,101 +417,90 @@ export function FinancialChart({ data }) {
     const remainingToGoal = Math.max(0, savingsGoal - currentSavings);
     const monthsToGoal = monthlySavings > 0 ? Math.ceil(remainingToGoal / monthlySavings) : 12;
 
-    // === MAIN CHART: Expense bars ===
-    const expenseColors = [
-      0xef4444, // red
-      0xf59e0b, // amber
-      0x8b5cf6, // purple
-      0x06b6d4, // cyan
-      0xec4899, // pink
-      0x3b82f6, // blue
-    ];
-
+    // === EXPENSE BARS ===
+    const expenseColors = [0xef4444, 0xf59e0b, 0x8b5cf6, 0x06b6d4, 0xec4899, 0x3b82f6];
     const maxExpense = Math.max(...expenses.map(e => e.amount), 1);
-    const barSpacing = 1.2;
+    const barSpacing = 1;
     const startX = -((expenses.length - 1) * barSpacing) / 2;
 
     const expenseBars = [];
     expenses.slice(0, 6).forEach((expense, index) => {
-      const normalizedHeight = (expense.amount / maxExpense) * 3 + 0.2;
+      const normalizedHeight = (expense.amount / maxExpense) * 2.5 + 0.15;
       const bar = createBar(normalizedHeight, expenseColors[index % expenseColors.length], startX + index * barSpacing);
-      bar.position.z = 4;
+      bar.position.z = 6;
       scene.add(bar);
       expenseBars.push(bar);
     });
 
-    // Income bar (green, taller)
+    // Income bar
     if (data.income) {
-      const incomeHeight = (data.income / maxExpense) * 3 + 0.2;
-      const incomeBar = createBar(Math.min(incomeHeight, 4), 0x10b981, startX - barSpacing * 1.5);
-      incomeBar.position.z = 4;
+      const incomeHeight = (data.income / maxExpense) * 2.5 + 0.15;
+      const incomeBar = createBar(Math.min(incomeHeight, 3.5), 0x10b981, startX - barSpacing * 1.5);
+      incomeBar.position.z = 6;
       scene.add(incomeBar);
       expenseBars.push(incomeBar);
     }
 
     // === PROJECTION CHART ===
-    const projectionChart = createProjectionChart(
-      currentSavings,
-      monthlySavings,
-      savingsGoal,
-      monthsToGoal
-    );
-    projectionChart.position.set(0, 0, -3);
+    const projectionChart = createProjectionChart(currentSavings, monthlySavings, savingsGoal, monthsToGoal);
+    projectionChart.position.set(0, 0, -5);
     scene.add(projectionChart);
 
-    // === BATTLING DOGS ===
-    const dogColors = [0xc4a574, 0x8b6914, 0xf5f5dc, 0x4a4a4a];
-    const teamRed = 0x8b0000; // Dark red team
-    const teamBlue = 0x00008b; // Dark blue team
+    // === 20 BATTLING DOGS - TWO ARMIES ===
+    const dogColors = [0xc4a574, 0x8b6914, 0xf5f5dc, 0x4a4a4a, 0xd4956a, 0xa0522d, 0xdeb887, 0x8b4513, 0xf4a460, 0xcd853f];
+    const teamRed = 0x8b0000;
+    const teamBlue = 0x00008b;
 
     const dogs = [];
+    const numDogsPerSide = 10;
 
-    // Team Red (left side) - fighting for expenses
-    for (let i = 0; i < 2; i++) {
-      const dog = createMilitaryDog(dogColors[i], teamRed, -7 + i * 1.5, 2 + i * 2);
-      dog.rotation.y = Math.PI / 4;
+    // Red Army (left side) - 10 dogs in formation
+    for (let i = 0; i < numDogsPerSide; i++) {
+      const row = Math.floor(i / 5);
+      const col = i % 5;
+      const x = -8 - row * 1.2;
+      const z = -2 + col * 1.5;
+
+      const dog = createMilitaryDog(dogColors[i % dogColors.length], teamRed, x, z, false);
       dog.userData = {
         team: 'red',
-        baseX: -7 + i * 1.5,
-        baseZ: 2 + i * 2,
-        state: 'idle',
-        chargeTime: Math.random() * 3,
+        baseX: x,
+        baseZ: z,
         targetX: 0,
-        speed: 0.03 + Math.random() * 0.02,
+        targetZ: z,
+        state: 'idle',
+        stateTimer: 1 + Math.random() * 2,
+        speed: 0.04 + Math.random() * 0.02,
+        swingOffset: Math.random() * Math.PI * 2,
+        row: row,
       };
       scene.add(dog);
       dogs.push(dog);
     }
 
-    // Team Blue (right side) - fighting for savings
-    for (let i = 0; i < 2; i++) {
-      const dog = createMilitaryDog(dogColors[i + 2], teamBlue, 7 - i * 1.5, 2 + i * 2);
-      dog.rotation.y = -Math.PI / 4;
+    // Blue Army (right side) - 10 dogs in formation
+    for (let i = 0; i < numDogsPerSide; i++) {
+      const row = Math.floor(i / 5);
+      const col = i % 5;
+      const x = 8 + row * 1.2;
+      const z = -2 + col * 1.5;
+
+      const dog = createMilitaryDog(dogColors[(i + 5) % dogColors.length], teamBlue, x, z, true);
       dog.userData = {
         team: 'blue',
-        baseX: 7 - i * 1.5,
-        baseZ: 2 + i * 2,
-        state: 'idle',
-        chargeTime: Math.random() * 3 + 1,
+        baseX: x,
+        baseZ: z,
         targetX: 0,
-        speed: 0.03 + Math.random() * 0.02,
+        targetZ: z,
+        state: 'idle',
+        stateTimer: 1.5 + Math.random() * 2,
+        speed: 0.04 + Math.random() * 0.02,
+        swingOffset: Math.random() * Math.PI * 2,
+        row: row,
       };
       scene.add(dog);
       dogs.push(dog);
     }
-
-    // Battle zone indicator
-    const battleZoneGeometry = new THREE.RingGeometry(1.5, 1.8, 32);
-    const battleZoneMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff6600,
-      transparent: true,
-      opacity: 0.3,
-      side: THREE.DoubleSide,
-    });
-    const battleZone = new THREE.Mesh(battleZoneGeometry, battleZoneMaterial);
-    battleZone.rotation.x = -Math.PI / 2;
-    battleZone.position.set(0, 0.02, 3);
-    scene.add(battleZone);
 
     // Animation
     let animationId;
@@ -452,94 +510,103 @@ export function FinancialChart({ data }) {
       animationId = requestAnimationFrame(animate);
       time += 0.016;
 
-      // Animate expense bars (subtle pulse)
+      // Animate expense bars
       expenseBars.forEach((bar, index) => {
         const pulse = 1 + Math.sin(time * 2 + index) * 0.02;
         bar.scale.y = pulse;
       });
 
-      // Battle zone pulse
-      battleZone.material.opacity = 0.2 + Math.sin(time * 3) * 0.1;
-      battleZone.scale.setScalar(1 + Math.sin(time * 2) * 0.05);
-
       // Dog battle animations
       dogs.forEach((dog, index) => {
         const ud = dog.userData;
+        ud.stateTimer -= 0.016;
 
-        // Wobble/bounce
-        dog.position.y = Math.sin(time * 4 + index) * 0.03;
+        // Basic bounce
+        const bounce = Math.sin(time * 6 + index * 0.5) * 0.02;
 
-        // State machine for battle
-        ud.chargeTime -= 0.016;
+        // State machine
+        if (ud.state === 'idle') {
+          dog.position.y = bounce;
+          // Slight sway
+          dog.rotation.z = Math.sin(time * 2 + index) * 0.05;
 
-        if (ud.state === 'idle' && ud.chargeTime <= 0) {
-          ud.state = 'charging';
-          ud.chargeTime = 2 + Math.random() * 2;
+          if (ud.stateTimer <= 0) {
+            ud.state = 'charging';
+            ud.stateTimer = 3 + Math.random() * 2;
+          }
         }
 
         if (ud.state === 'charging') {
-          // Charge toward battle zone
-          const targetX = ud.team === 'red' ? 0 : 0;
-          const targetZ = 3;
+          // Charge toward enemy
+          const targetX = ud.team === 'red' ? 1.5 + ud.row * 0.5 : -1.5 - ud.row * 0.5;
           const dx = targetX - dog.position.x;
-          const dz = targetZ - dog.position.z;
-          const dist = Math.sqrt(dx * dx + dz * dz);
+          const dist = Math.abs(dx);
 
-          if (dist > 1.5) {
-            dog.position.x += (dx / dist) * ud.speed;
-            dog.position.z += (dz / dist) * ud.speed;
-            // Face direction of movement
-            dog.rotation.y = Math.atan2(dx, dz);
-            // Running animation - bob up and down faster
-            dog.position.y = Math.abs(Math.sin(time * 12 + index)) * 0.1;
-            dog.rotation.z = Math.sin(time * 10 + index) * 0.1;
+          if (dist > 0.5) {
+            dog.position.x += Math.sign(dx) * ud.speed;
+            // Running animation
+            dog.position.y = Math.abs(Math.sin(time * 15 + index)) * 0.08;
+            dog.rotation.z = Math.sin(time * 12 + index) * 0.1;
+
+            // Sword raised while charging
+            const sword = dog.children.find(c => c.children && c.children.length === 4);
+            if (sword) {
+              sword.rotation.z = -0.8 + Math.sin(time * 10) * 0.2;
+            }
           } else {
             ud.state = 'fighting';
-            ud.chargeTime = 1.5 + Math.random();
+            ud.stateTimer = 2 + Math.random() * 1.5;
           }
         }
 
         if (ud.state === 'fighting') {
-          // Fighting animation - shake and lunge
-          dog.position.x += Math.sin(time * 15 + index * 2) * 0.02;
-          dog.position.z += Math.cos(time * 12 + index * 3) * 0.02;
-          dog.rotation.z = Math.sin(time * 20 + index) * 0.15;
-          dog.rotation.x = Math.sin(time * 18 + index) * 0.1;
+          // Intense fighting animation
+          dog.position.y = Math.abs(Math.sin(time * 10 + index)) * 0.05;
+          dog.position.x += Math.sin(time * 8 + index * 2) * 0.015;
+          dog.rotation.z = Math.sin(time * 15 + index) * 0.12;
 
-          if (ud.chargeTime <= 0) {
+          // Sword swinging
+          const sword = dog.children.find(c => c.children && c.children.length === 4);
+          if (sword) {
+            sword.rotation.z = -0.5 + Math.sin(time * 12 + ud.swingOffset) * 0.6;
+            sword.rotation.x = 0.2 + Math.sin(time * 10 + ud.swingOffset) * 0.3;
+          }
+
+          // Shield blocking
+          const shield = dog.children.find(c => c.children && c.children.length === 3);
+          if (shield) {
+            shield.rotation.y = -0.5 + Math.sin(time * 8 + ud.swingOffset + 1) * 0.3;
+          }
+
+          if (ud.stateTimer <= 0) {
             ud.state = 'retreating';
-            ud.chargeTime = 2 + Math.random() * 2;
+            ud.stateTimer = 2 + Math.random() * 2;
           }
         }
 
         if (ud.state === 'retreating') {
-          // Retreat to base
           const dx = ud.baseX - dog.position.x;
-          const dz = ud.baseZ - dog.position.z;
-          const dist = Math.sqrt(dx * dx + dz * dz);
+          const dist = Math.abs(dx);
 
           if (dist > 0.3) {
-            dog.position.x += (dx / dist) * ud.speed * 0.7;
-            dog.position.z += (dz / dist) * ud.speed * 0.7;
-            dog.rotation.y = Math.atan2(dx, dz);
+            dog.position.x += Math.sign(dx) * ud.speed * 0.6;
+            dog.position.y = Math.abs(Math.sin(time * 12 + index)) * 0.06;
           } else {
             ud.state = 'idle';
-            ud.chargeTime = 1 + Math.random() * 2;
-            // Face the battle
-            dog.rotation.y = ud.team === 'red' ? Math.PI / 4 : -Math.PI / 4;
+            ud.stateTimer = 1 + Math.random() * 2;
           }
         }
 
-        // Tail wag (faster when fighting)
-        const tail = dog.children.find(c => c.position.x < -0.6 && c.position.y > 0.4);
+        // Tail wag - faster when fighting
+        const tail = dog.children.find(c => c.geometry?.type === 'SphereGeometry' && c.position.x < -0.4);
         if (tail) {
-          const wagSpeed = ud.state === 'fighting' ? 15 : 6;
-          tail.position.z = Math.sin(time * wagSpeed + index) * 0.08;
+          const wagSpeed = ud.state === 'fighting' ? 18 : 8;
+          tail.position.z = Math.sin(time * wagSpeed + index) * 0.06;
         }
       });
 
-      // Animate projection chart flag
-      const flag = projectionChart.children.find(c => c.geometry?.type === 'BoxGeometry' && c.position.y > 3);
+      // Animate flag
+      const flag = projectionChart.children.find(c => c.geometry?.type === 'BoxGeometry' && c.position.y > 2.5);
       if (flag) {
         flag.rotation.z = Math.sin(time * 4) * 0.1;
       }
@@ -596,7 +663,7 @@ export function FinancialChart({ data }) {
         <HStack justify="space-between" align="center" flexWrap="wrap" gap="2">
           <VStack align="start" gap="0">
             <Text fontSize="xl" fontWeight="bold">Financial Battle Plan</Text>
-            <Text fontSize="sm" color="gray.500">Expenses vs Savings - Month over Month</Text>
+            <Text fontSize="sm" color="gray.500">20 Warriors: Expenses vs Savings</Text>
           </VStack>
           {monthsToGoal !== null && monthsToGoal !== Infinity && (
             <Badge
@@ -626,7 +693,7 @@ export function FinancialChart({ data }) {
           </Box>
         )}
 
-        <Box ref={containerRef} borderRadius="md" overflow="hidden" minH="450px" />
+        <Box ref={containerRef} borderRadius="md" overflow="hidden" minH="500px" />
 
         <HStack justify="space-between" flexWrap="wrap" gap="4" pt="2">
           <VStack align="start" gap="1">
