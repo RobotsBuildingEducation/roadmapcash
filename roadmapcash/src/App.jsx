@@ -35,8 +35,6 @@ function App() {
   // Initialize input state - use saved input if available
   const [userInput, setUserInput] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
-  const [updateDraft, setUpdateDraft] = useState("");
-
   // Initialize from saved data (called once by callback ref)
   const initializeFromSaved = useCallback(
     (node) => {
@@ -46,9 +44,6 @@ function App() {
         }
         if (savedRoadmap.financialData && !financialData) {
           setFinancialData(savedRoadmap.financialData);
-        }
-        if (savedRoadmap.lastUpdatePrompt) {
-          setUpdateDraft(savedRoadmap.lastUpdatePrompt);
         }
         setIsInitialized(true);
       }
@@ -72,7 +67,6 @@ function App() {
     const result = await updateFinancialData(financialData, updateInput);
     if (result) {
       await saveRoadmap(userInput, result, updateInput);
-      setUpdateDraft(updateInput);
     }
   };
 
@@ -125,14 +119,10 @@ function App() {
           >
             <FinancialInput
               onGenerate={handleGenerate}
-              onUpdate={handleUpdate}
               isGenerating={isGenerating}
-              isUpdating={isUpdating}
               input={userInput}
               onInputChange={setUserInput}
               hasSavedData={hasSavedData}
-              updateDraft={updateDraft}
-              onUpdateDraftChange={setUpdateDraft}
             />
 
             {(parseError || updateError) && (
@@ -150,7 +140,11 @@ function App() {
             )}
 
             {financialData && (
-              <FinancialChart data={financialData} onUpdate={handleUpdate} />
+              <FinancialChart
+                data={financialData}
+                onUpdate={handleUpdate}
+                isUpdating={isUpdating}
+              />
             )}
           </VStack>
         ) : null}

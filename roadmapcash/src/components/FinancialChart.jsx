@@ -11,6 +11,7 @@ import {
   Input,
   NativeSelect,
   Textarea,
+  Spinner,
 } from "@chakra-ui/react";
 
 // Color palette for consistent theming
@@ -1226,7 +1227,7 @@ function MetricsSummary({
 }
 
 // Main FinancialChart component
-export function FinancialChart({ data, onUpdate }) {
+export function FinancialChart({ data, onUpdate, isUpdating }) {
   const [activeTab, setActiveTab] = useState(0);
   const [draftIncome, setDraftIncome] = useState(0);
   const [draftSavingsGoal, setDraftSavingsGoal] = useState("");
@@ -1273,7 +1274,7 @@ export function FinancialChart({ data, onUpdate }) {
     setDraftExpenses((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const buildUpdatePrompt = () => {
+  const updateSummary = useMemo(() => {
     const lines = [];
     const incomeValue = Number(draftIncome);
     const goalValue =
@@ -1322,15 +1323,28 @@ export function FinancialChart({ data, onUpdate }) {
       lines.push(`Notes: ${updateNotes.trim()}`);
     }
 
-    if (lines.length === 0) {
+    return lines;
+  }, [
+    draftIncome,
+    draftSavingsGoal,
+    draftCurrentSavings,
+    draftExpenses,
+    updateNotes,
+    data.income,
+    data.savingsGoal,
+    data.currentSavings,
+    expenses.length,
+  ]);
+
+  const buildUpdatePrompt = () => {
+    if (updateSummary.length === 0) {
       return "";
     }
 
-    lines.push(
+    return [
+      ...updateSummary,
       "Recalculate recommendations, monthly budget, potential savings, and update the plan accordingly.",
-    );
-
-    return lines.join("\n");
+    ].join("\n");
   };
 
   const handleApplyUpdates = () => {
@@ -1367,11 +1381,51 @@ export function FinancialChart({ data, onUpdate }) {
                 size={{ base: "xs", md: "sm" }}
                 colorScheme="blue"
                 onClick={handleApplyUpdates}
-                isDisabled={!onUpdate}
+                isDisabled={!onUpdate || updateSummary.length === 0}
+                isLoading={isUpdating}
+                loadingText="Updating"
               >
                 Apply updates
               </Button>
             </HStack>
+
+            <Box
+              p="3"
+              bg="gray.850"
+              borderRadius="lg"
+              borderWidth="1px"
+              borderColor="gray.700"
+            >
+              <HStack justify="space-between" mb="2" flexWrap="wrap" gap="2">
+                <Text fontSize="xs" color="gray.400" fontWeight="semibold">
+                  Pending updates
+                </Text>
+                {isUpdating && (
+                  <HStack spacing="2">
+                    <Spinner size="xs" color="blue.300" />
+                    <Text fontSize="xs" color="blue.300">
+                      Applying changes...
+                    </Text>
+                  </HStack>
+                )}
+              </HStack>
+              {updateSummary.length === 0 ? (
+                <Text fontSize="xs" color="gray.500">
+                  No changes yet. Adjust any fields to update your plan.
+                </Text>
+              ) : (
+                <VStack align="start" spacing="1">
+                  {updateSummary.map((line, index) => (
+                    <HStack key={`${line}-${index}`} spacing="2" align="start">
+                      <Box w="1.5" h="1.5" bg="blue.400" borderRadius="full" mt="1" />
+                      <Text fontSize="xs" color="gray.300">
+                        {line}
+                      </Text>
+                    </HStack>
+                  ))}
+                </VStack>
+              )}
+            </Box>
 
             <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap="3">
               <Box>
