@@ -89,7 +89,7 @@ function PlanHeader({ plan, potentialSavings }) {
     <Box
       bg="linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%)"
       borderRadius="xl"
-      p="6"
+      p={{ base: "4", md: "6" }}
       borderWidth="1px"
       borderColor="blue.800"
       position="relative"
@@ -109,55 +109,62 @@ function PlanHeader({ plan, potentialSavings }) {
       />
 
       <VStack align="start" spacing="3">
-        <HStack justify="space-between" w="100%">
-          <Text fontSize="2xl" fontWeight="bold" color="white">
-            {plan.title || "Your Financial Plan"}
-          </Text>
-          {potentialSavings > 0 && (
-            <Badge
-              colorScheme="green"
-              fontSize="sm"
-              px="3"
-              py="1"
-              borderRadius="full"
-            >
-              +{formatCurrency(potentialSavings)}/mo potential
-            </Badge>
-          )}
-        </HStack>
+        <VStack align="start" w="100%" gap={{ base: "2", md: "0" }}>
+          <HStack justify="space-between" w="100%" flexWrap="wrap" gap="2">
+            <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="white">
+              {plan.title || "Your Financial Plan"}
+            </Text>
+            {potentialSavings > 0 && (
+              <Badge
+                colorScheme="green"
+                fontSize={{ base: "xs", md: "sm" }}
+                px="3"
+                py="1"
+                borderRadius="full"
+              >
+                +{formatCurrency(potentialSavings)}/mo potential
+              </Badge>
+            )}
+          </HStack>
+        </VStack>
 
-        <Text fontSize="md" color="gray.300" lineHeight="tall">
+        <Text fontSize={{ base: "sm", md: "md" }} color="gray.300" lineHeight="tall">
           {plan.overview}
         </Text>
 
         {/* 50/30/20 Budget Breakdown */}
         {plan.monthlyBudget && (
-          <HStack spacing="4" pt="2" flexWrap="wrap">
-            <Box bg="blue.800" px="4" py="2" borderRadius="lg">
-              <Text fontSize="xs" color="blue.300" fontWeight="medium">
+          <Grid
+            templateColumns={{ base: "repeat(3, 1fr)", md: "auto auto auto" }}
+            gap={{ base: "2", md: "4" }}
+            pt="2"
+            w={{ base: "100%", md: "auto" }}
+          >
+            <Box bg="blue.800" px={{ base: "2", md: "4" }} py="2" borderRadius="lg" textAlign={{ base: "center", md: "left" }}>
+              <Text fontSize={{ base: "2xs", md: "xs" }} color="blue.300" fontWeight="medium">
                 NEEDS (50%)
               </Text>
-              <Text fontSize="lg" fontWeight="bold" color="white">
+              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="white">
                 {formatCurrency(plan.monthlyBudget.needs)}
               </Text>
             </Box>
-            <Box bg="purple.800" px="4" py="2" borderRadius="lg">
-              <Text fontSize="xs" color="purple.300" fontWeight="medium">
+            <Box bg="purple.800" px={{ base: "2", md: "4" }} py="2" borderRadius="lg" textAlign={{ base: "center", md: "left" }}>
+              <Text fontSize={{ base: "2xs", md: "xs" }} color="purple.300" fontWeight="medium">
                 WANTS (30%)
               </Text>
-              <Text fontSize="lg" fontWeight="bold" color="white">
+              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="white">
                 {formatCurrency(plan.monthlyBudget.wants)}
               </Text>
             </Box>
-            <Box bg="green.800" px="4" py="2" borderRadius="lg">
-              <Text fontSize="xs" color="green.300" fontWeight="medium">
+            <Box bg="green.800" px={{ base: "2", md: "4" }} py="2" borderRadius="lg" textAlign={{ base: "center", md: "left" }}>
+              <Text fontSize={{ base: "2xs", md: "xs" }} color="green.300" fontWeight="medium">
                 SAVINGS (20%)
               </Text>
-              <Text fontSize="lg" fontWeight="bold" color="white">
+              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="white">
                 {formatCurrency(plan.monthlyBudget.savings)}
               </Text>
             </Box>
-          </HStack>
+          </Grid>
         )}
       </VStack>
     </Box>
@@ -178,22 +185,22 @@ function ExpenseAnalysis({ expenses }) {
     <Box
       bg="gray.800"
       borderRadius="xl"
-      p="5"
+      p={{ base: "4", md: "5" }}
       borderWidth="1px"
       borderColor="gray.700"
     >
       <Text
-        fontSize="sm"
+        fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
         color="gray.400"
-        mb="4"
+        mb={{ base: "3", md: "4" }}
         textTransform="uppercase"
         letterSpacing="wide"
       >
         Expense Analysis & Recommendations
       </Text>
 
-      <VStack align="stretch" spacing="4">
+      <VStack align="stretch" spacing={{ base: "3", md: "4" }}>
         {Object.entries(groupedByPriority).map(([priority, items]) => {
           if (items.length === 0) return null;
           const config = PRIORITY_COLORS[priority];
@@ -201,15 +208,15 @@ function ExpenseAnalysis({ expenses }) {
 
           return (
             <Box key={priority}>
-              <HStack mb="2">
+              <HStack mb="2" flexWrap="wrap" gap="1">
                 <Badge
                   colorScheme={config.badge}
-                  fontSize="xs"
+                  fontSize={{ base: "2xs", md: "xs" }}
                   textTransform="capitalize"
                 >
                   {priority}
                 </Badge>
-                <Text fontSize="xs" color="gray.500">
+                <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
                   {items.length} items - {formatCurrency(total)}/mo
                 </Text>
               </HStack>
@@ -218,26 +225,26 @@ function ExpenseAnalysis({ expenses }) {
                 {items.map((expense, index) => (
                   <Box
                     key={index}
-                    p="3"
+                    p={{ base: "2", md: "3" }}
                     bg={config.bg}
                     borderRadius="lg"
                     borderWidth="1px"
                     borderColor={config.border}
                     borderLeftWidth="3px"
                   >
-                    <HStack justify="space-between" mb="1">
+                    <HStack justify="space-between" mb="1" flexWrap="wrap" gap="1">
                       <Text
-                        fontSize="sm"
+                        fontSize={{ base: "xs", md: "sm" }}
                         fontWeight="semibold"
                         color={config.text}
                       >
                         {expense.name}
                       </Text>
-                      <Text fontSize="sm" fontWeight="bold" color="white">
+                      <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold" color="white">
                         {formatCurrency(expense.amount)}
                       </Text>
                     </HStack>
-                    <Text fontSize="xs" color="gray.400" lineHeight="tall">
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.400" lineHeight="tall">
                       {expense.recommendation}
                     </Text>
                   </Box>
@@ -259,22 +266,22 @@ function SavingsStrategies({ strategies }) {
     <Box
       bg="gray.800"
       borderRadius="xl"
-      p="5"
+      p={{ base: "4", md: "5" }}
       borderWidth="1px"
       borderColor="gray.700"
     >
       <Text
-        fontSize="sm"
+        fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
         color="gray.400"
-        mb="4"
+        mb={{ base: "3", md: "4" }}
         textTransform="uppercase"
         letterSpacing="wide"
       >
         Your Savings Strategies
       </Text>
 
-      <VStack align="stretch" spacing="3">
+      <VStack align="stretch" spacing={{ base: "2", md: "3" }}>
         {strategies.map((strategy, index) => {
           const difficultyConfig =
             DIFFICULTY_CONFIG[strategy.difficulty] || DIFFICULTY_CONFIG.medium;
@@ -282,7 +289,7 @@ function SavingsStrategies({ strategies }) {
           return (
             <Box
               key={index}
-              p="4"
+              p={{ base: "3", md: "4" }}
               bg="gray.750"
               borderRadius="lg"
               borderWidth="1px"
@@ -293,17 +300,18 @@ function SavingsStrategies({ strategies }) {
               }}
               transition="all 0.2s"
             >
-              <HStack justify="space-between" mb="2">
-                <HStack>
+              <HStack justify="space-between" mb="2" flexWrap="wrap" gap="2">
+                <HStack minW="0" flex="1">
                   <Box
-                    w="8"
-                    h="8"
+                    w={{ base: "6", md: "8" }}
+                    h={{ base: "6", md: "8" }}
                     borderRadius="lg"
                     bg="cyan.900"
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
-                    fontSize="lg"
+                    fontSize={{ base: "sm", md: "lg" }}
+                    flexShrink="0"
                   >
                     {index === 0
                       ? "🎯"
@@ -313,21 +321,21 @@ function SavingsStrategies({ strategies }) {
                           ? "🚀"
                           : "✨"}
                   </Box>
-                  <Text fontSize="sm" fontWeight="semibold" color="white">
+                  <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="semibold" color="white" isTruncated>
                     {strategy.title}
                   </Text>
                 </HStack>
-                <Badge colorScheme={difficultyConfig.color} fontSize="xs">
+                <Badge colorScheme={difficultyConfig.color} fontSize={{ base: "2xs", md: "xs" }} flexShrink="0">
                   {difficultyConfig.label}
                 </Badge>
               </HStack>
 
-              <Text fontSize="sm" color="gray.400" mb="2" pl="10">
+              <Text fontSize={{ base: "xs", md: "sm" }} color="gray.400" mb="2" pl={{ base: "8", md: "10" }}>
                 {strategy.description}
               </Text>
 
-              <HStack pl="10">
-                <Badge colorScheme="green" variant="subtle" fontSize="xs">
+              <HStack pl={{ base: "8", md: "10" }}>
+                <Badge colorScheme="green" variant="subtle" fontSize={{ base: "2xs", md: "xs" }}>
                   Impact: {strategy.impact}
                 </Badge>
               </HStack>
@@ -347,15 +355,15 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
     <Box
       bg="gray.800"
       borderRadius="xl"
-      p="5"
+      p={{ base: "4", md: "5" }}
       borderWidth="1px"
       borderColor="gray.700"
     >
       <Text
-        fontSize="sm"
+        fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
         color="gray.400"
-        mb="4"
+        mb={{ base: "3", md: "4" }}
         textTransform="uppercase"
         letterSpacing="wide"
       >
@@ -370,38 +378,38 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
           return (
             <HStack
               key={index}
-              p="3"
+              p={{ base: "2", md: "3" }}
               bg="gray.750"
               borderRadius="lg"
-              spacing="3"
+              spacing={{ base: "2", md: "3" }}
               borderWidth="1px"
               borderColor="gray.700"
             >
               <Box
-                w="8"
-                h="8"
+                w={{ base: "6", md: "8" }}
+                h={{ base: "6", md: "8" }}
                 borderRadius="lg"
                 bg="gray.700"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                fontSize="md"
+                fontSize={{ base: "sm", md: "md" }}
                 flexShrink="0"
               >
                 {categoryConfig.icon}
               </Box>
-              <VStack align="start" spacing="0" flex="1">
-                <Text fontSize="sm" color="gray.200">
+              <VStack align="start" spacing="0" flex="1" minW="0">
+                <Text fontSize={{ base: "xs", md: "sm" }} color="gray.200">
                   {item.action}
                 </Text>
-                <HStack spacing="2">
-                  <Text fontSize="xs" color={categoryConfig.color}>
+                <HStack spacing="2" flexWrap="wrap">
+                  <Text fontSize={{ base: "2xs", md: "xs" }} color={categoryConfig.color}>
                     {categoryConfig.label}
                   </Text>
-                  <Text fontSize="xs" color="gray.500">
+                  <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
                     •
                   </Text>
-                  <Text fontSize="xs" color="gray.500">
+                  <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
                     {item.timeframe}
                   </Text>
                 </HStack>
@@ -413,20 +421,20 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
 
       {weeklyCheckIn && (
         <Box
-          mt="4"
-          p="3"
+          mt={{ base: "3", md: "4" }}
+          p={{ base: "2", md: "3" }}
           bg="purple.900"
           borderRadius="lg"
           borderWidth="1px"
           borderColor="purple.700"
         >
-          <HStack spacing="2">
-            <Text fontSize="lg">📅</Text>
-            <VStack align="start" spacing="0">
-              <Text fontSize="xs" color="purple.300" fontWeight="medium">
+          <HStack spacing="2" align="start">
+            <Text fontSize={{ base: "md", md: "lg" }}>📅</Text>
+            <VStack align="start" spacing="0" minW="0">
+              <Text fontSize={{ base: "2xs", md: "xs" }} color="purple.300" fontWeight="medium">
                 WEEKLY CHECK-IN
               </Text>
-              <Text fontSize="sm" color="gray.300">
+              <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300">
                 {weeklyCheckIn}
               </Text>
             </VStack>
@@ -445,17 +453,17 @@ function MotivationalNote({ note }) {
     <Box
       bg="linear-gradient(135deg, #065f46 0%, #064e3b 100%)"
       borderRadius="xl"
-      p="5"
+      p={{ base: "4", md: "5" }}
       borderWidth="1px"
       borderColor="green.700"
     >
-      <HStack spacing="3" align="start">
-        <Text fontSize="2xl">💪</Text>
-        <VStack align="start" spacing="1">
-          <Text fontSize="sm" fontWeight="semibold" color="green.300">
+      <HStack spacing={{ base: "2", md: "3" }} align="start">
+        <Text fontSize={{ base: "xl", md: "2xl" }}>💪</Text>
+        <VStack align="start" spacing="1" minW="0">
+          <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="semibold" color="green.300">
             Your Coach Says...
           </Text>
-          <Text fontSize="md" color="white" lineHeight="tall">
+          <Text fontSize={{ base: "sm", md: "md" }} color="white" lineHeight="tall">
             {note}
           </Text>
         </VStack>
@@ -539,94 +547,97 @@ function OverviewChart({ income, expenses }) {
     <Box
       bg="gray.800"
       borderRadius="xl"
-      p="5"
+      p={{ base: "4", md: "5" }}
       borderWidth="1px"
       borderColor="gray.700"
     >
       <Text
-        fontSize="sm"
+        fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
         color="gray.400"
-        mb="4"
+        mb={{ base: "3", md: "4" }}
         textTransform="uppercase"
         letterSpacing="wide"
       >
         Income Allocation
       </Text>
 
-      <HStack spacing="6" align="center">
-        <Box position="relative">
-          <svg width="160" height="160" viewBox="0 0 160 160">
-            {segments.map((segment, index) => (
-              <path
-                key={index}
-                d={describeArc(
-                  80,
-                  80,
-                  60,
-                  segment.startAngle,
-                  segment.endAngle - 0.5,
-                )}
-                fill="none"
-                stroke={segment.color}
-                strokeWidth="20"
-                strokeLinecap="round"
-                style={{
-                  filter: segment.isSavings
-                    ? "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))"
-                    : "none",
-                  transition: "all 0.3s ease",
-                }}
-              />
-            ))}
-            <circle cx="80" cy="80" r="45" fill="#1f2937" />
-            <text
-              x="80"
-              y="72"
-              textAnchor="middle"
-              fill="#10b981"
-              fontSize="24"
-              fontWeight="bold"
-            >
-              {savingsPercentage}%
-            </text>
-            <text
-              x="80"
-              y="92"
-              textAnchor="middle"
-              fill="#9ca3af"
-              fontSize="11"
-            >
-              saved
-            </text>
-          </svg>
-        </Box>
+      <VStack spacing={{ base: "4", md: "6" }} align="stretch">
+        <HStack spacing={{ base: "4", md: "6" }} align="center" justify="center" flexWrap={{ base: "wrap", md: "nowrap" }}>
+          <Box position="relative" flexShrink="0">
+            <svg width="140" height="140" viewBox="0 0 160 160">
+              {segments.map((segment, index) => (
+                <path
+                  key={index}
+                  d={describeArc(
+                    80,
+                    80,
+                    60,
+                    segment.startAngle,
+                    segment.endAngle - 0.5,
+                  )}
+                  fill="none"
+                  stroke={segment.color}
+                  strokeWidth="20"
+                  strokeLinecap="round"
+                  style={{
+                    filter: segment.isSavings
+                      ? "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))"
+                      : "none",
+                    transition: "all 0.3s ease",
+                  }}
+                />
+              ))}
+              <circle cx="80" cy="80" r="45" fill="#1f2937" />
+              <text
+                x="80"
+                y="72"
+                textAnchor="middle"
+                fill="#10b981"
+                fontSize="24"
+                fontWeight="bold"
+              >
+                {savingsPercentage}%
+              </text>
+              <text
+                x="80"
+                y="92"
+                textAnchor="middle"
+                fill="#9ca3af"
+                fontSize="11"
+              >
+                saved
+              </text>
+            </svg>
+          </Box>
 
-        <VStack align="start" spacing="2" flex="1">
-          {segments.slice(0, 5).map((segment, index) => (
-            <HStack key={index} justify="space-between" w="100%">
-              <HStack spacing="2">
-                <Box w="3" h="3" borderRadius="full" bg={segment.color} />
-                <Text fontSize="sm" color="gray.300" isTruncated maxW="100px">
-                  {segment.name}
+          <VStack align="start" spacing="2" flex="1" minW="0">
+            {segments.slice(0, 5).map((segment, index) => (
+              <HStack key={index} justify="space-between" w="100%">
+                <HStack spacing="2" minW="0" flex="1">
+                  <Box w="3" h="3" borderRadius="full" bg={segment.color} flexShrink="0" />
+                  <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300" isTruncated>
+                    {segment.name}
+                  </Text>
+                </HStack>
+                <Text
+                  fontSize={{ base: "xs", md: "sm" }}
+                  color={segment.isSavings ? "green.400" : "gray.400"}
+                  fontWeight="medium"
+                  flexShrink="0"
+                >
+                  {formatCurrency(segment.amount)}
                 </Text>
               </HStack>
-              <Text
-                fontSize="sm"
-                color={segment.isSavings ? "green.400" : "gray.400"}
-                fontWeight="medium"
-              >
-                {formatCurrency(segment.amount)}
+            ))}
+            {segments.length > 5 && (
+              <Text fontSize="xs" color="gray.500">
+                +{segments.length - 5} more
               </Text>
-            </HStack>
-          ))}
-          {segments.length > 5 && (
-            <Text fontSize="xs" color="gray.500">
-              +{segments.length - 5} more
-            </Text>
-          )}
-        </VStack>
-      </HStack>
+            )}
+          </VStack>
+        </HStack>
+      </VStack>
     </Box>
   );
 }
@@ -711,13 +722,13 @@ function MonthlyChart({
     <Box
       bg="gray.800"
       borderRadius="xl"
-      p="5"
+      p={{ base: "4", md: "5" }}
       borderWidth="1px"
       borderColor="gray.700"
     >
-      <HStack justify="space-between" mb="3">
+      <HStack justify="space-between" mb={{ base: "2", md: "3" }} flexWrap="wrap" gap="2">
         <Text
-          fontSize="sm"
+          fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
           color="gray.400"
           textTransform="uppercase"
@@ -839,21 +850,21 @@ function MonthlyChart({
           ))}
       </svg>
 
-      <HStack justify="space-between" mt="2">
+      <HStack justify="space-between" mt="2" flexWrap="wrap" gap="2">
         <VStack align="start" spacing="0">
-          <Text fontSize="xs" color="gray.500">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
             Current path
           </Text>
-          <Text fontSize="sm" fontWeight="bold" color="cyan.400">
+          <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold" color="cyan.400">
             {formatCurrency(endBalance)} in 2Y
           </Text>
         </VStack>
         {potentialSavings > 0 && (
           <VStack align="end" spacing="0">
-            <Text fontSize="xs" color="gray.500">
+            <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
               With plan
             </Text>
-            <Text fontSize="sm" fontWeight="bold" color="green.400">
+            <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold" color="green.400">
               {formatCurrency(optimizedEndBalance)} in 2Y
             </Text>
           </VStack>
@@ -944,13 +955,13 @@ function BirdsEyeView({
     <Box
       bg="gray.800"
       borderRadius="xl"
-      p="5"
+      p={{ base: "4", md: "5" }}
       borderWidth="1px"
       borderColor="gray.700"
     >
-      <HStack justify="space-between" mb="4">
+      <HStack justify="space-between" mb={{ base: "3", md: "4" }} flexWrap="wrap" gap="2">
         <Text
-          fontSize="sm"
+          fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
           color="gray.400"
           textTransform="uppercase"
@@ -1013,13 +1024,13 @@ function BirdsEyeView({
       </Box>
 
       {milestones.length > 0 && (
-        <VStack align="stretch" spacing="3">
+        <VStack align="stretch" spacing={{ base: "2", md: "3" }}>
           {milestones.map((milestone, index) => {
             const isReached = (currentSavings || 0) >= milestone.amount;
             return (
               <HStack
                 key={index}
-                p="3"
+                p={{ base: "2", md: "3" }}
                 bg={isReached ? "green.900" : "gray.750"}
                 borderRadius="lg"
                 borderWidth="1px"
@@ -1033,8 +1044,8 @@ function BirdsEyeView({
                 opacity={isReached ? 0.7 : 1}
               >
                 <Box
-                  w="10"
-                  h="10"
+                  w={{ base: "8", md: "10" }}
+                  h={{ base: "8", md: "10" }}
                   borderRadius="lg"
                   bg={
                     isReached
@@ -1048,28 +1059,29 @@ function BirdsEyeView({
                   justifyContent="center"
                   flexShrink="0"
                 >
-                  <Text fontSize="lg">
+                  <Text fontSize={{ base: "md", md: "lg" }}>
                     {milestone.icon === "shield" && "🛡️"}
                     {milestone.icon === "flag" && "🚩"}
                     {milestone.icon === "star" && "⭐"}
                     {milestone.icon === "trophy" && "🏆"}
                   </Text>
                 </Box>
-                <VStack align="start" spacing="0" flex="1">
+                <VStack align="start" spacing="0" flex="1" minW="0">
                   <Text
-                    fontSize="sm"
+                    fontSize={{ base: "xs", md: "sm" }}
                     fontWeight="semibold"
                     color={isReached ? "green.300" : "gray.200"}
+                    isTruncated
                   >
                     {milestone.label}
                   </Text>
-                  <Text fontSize="xs" color="gray.500">
+                  <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" isTruncated>
                     {milestone.sublabel || formatCurrency(milestone.amount)}
                   </Text>
                 </VStack>
-                <VStack align="end" spacing="0">
+                <VStack align="end" spacing="0" flexShrink="0">
                   <Text
-                    fontSize="sm"
+                    fontSize={{ base: "xs", md: "sm" }}
                     fontWeight="bold"
                     color={
                       isReached
@@ -1082,7 +1094,7 @@ function BirdsEyeView({
                     {isReached ? "Done" : `${milestone.months} mo`}
                   </Text>
                   {!isReached && (
-                    <Text fontSize="xs" color="gray.500">
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
                       {formatCurrency(milestone.amount)}
                     </Text>
                   )}
@@ -1121,21 +1133,21 @@ function MetricsSummary({
   return (
     <Grid
       templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }}
-      gap="3"
+      gap={{ base: "2", md: "3" }}
     >
       <GridItem>
         <Box
           bg="gray.800"
           borderRadius="xl"
-          p="4"
+          p={{ base: "3", md: "4" }}
           borderWidth="1px"
           borderColor="gray.700"
           textAlign="center"
         >
-          <Text fontSize="xs" color="gray.500" mb="1">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
             Monthly Income
           </Text>
-          <Text fontSize="xl" fontWeight="bold" color="green.400">
+          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color="green.400">
             {formatCurrency(income)}
           </Text>
         </Box>
@@ -1144,15 +1156,15 @@ function MetricsSummary({
         <Box
           bg="gray.800"
           borderRadius="xl"
-          p="4"
+          p={{ base: "3", md: "4" }}
           borderWidth="1px"
           borderColor="gray.700"
           textAlign="center"
         >
-          <Text fontSize="xs" color="gray.500" mb="1">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
             Expenses
           </Text>
-          <Text fontSize="xl" fontWeight="bold" color="red.400">
+          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color="red.400">
             {formatCurrency(totalExpenses)}
           </Text>
         </Box>
@@ -1161,23 +1173,23 @@ function MetricsSummary({
         <Box
           bg="gray.800"
           borderRadius="xl"
-          p="4"
+          p={{ base: "3", md: "4" }}
           borderWidth="1px"
           borderColor="gray.700"
           textAlign="center"
         >
-          <Text fontSize="xs" color="gray.500" mb="1">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
             You Save
           </Text>
           <Text
-            fontSize="xl"
+            fontSize={{ base: "lg", md: "xl" }}
             fontWeight="bold"
             color={monthlySavings >= 0 ? "cyan.400" : "red.400"}
           >
             {formatCurrency(Math.abs(monthlySavings))}
           </Text>
           <Text
-            fontSize="xs"
+            fontSize={{ base: "2xs", md: "xs" }}
             color={monthlySavings >= 0 ? "cyan.600" : "red.600"}
           >
             {savingsRate}% rate
@@ -1188,19 +1200,19 @@ function MetricsSummary({
         <Box
           bg="gray.800"
           borderRadius="xl"
-          p="4"
+          p={{ base: "3", md: "4" }}
           borderWidth="1px"
           borderColor="gray.700"
           textAlign="center"
         >
-          <Text fontSize="xs" color="gray.500" mb="1">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
             Goal Progress
           </Text>
-          <Text fontSize="xl" fontWeight="bold" color="purple.400">
+          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color="purple.400">
             {savingsGoal ? formatCurrency(currentSavings || 0) : "--"}
           </Text>
           {savingsGoal && (
-            <Text fontSize="xs" color="purple.600">
+            <Text fontSize={{ base: "2xs", md: "xs" }} color="purple.600">
               of {formatCurrency(savingsGoal)}
             </Text>
           )}
@@ -1223,7 +1235,7 @@ export function FinancialChart({ data }) {
 
   return (
     <Box>
-      <VStack align="stretch" spacing="5">
+      <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
         {/* Plan Header */}
         <PlanHeader plan={plan} potentialSavings={plan?.potentialSavings} />
 
@@ -1246,22 +1258,29 @@ export function FinancialChart({ data }) {
         >
           {/* Custom Tab List */}
           <HStack
-            p="4"
+            p={{ base: "3", md: "4" }}
             bg="gray.850"
             borderBottomWidth="1px"
             borderColor="gray.800"
-            gap="2"
+            gap={{ base: "1", md: "2" }}
+            overflowX="auto"
+            css={{
+              "&::-webkit-scrollbar": { display: "none" },
+              scrollbarWidth: "none",
+            }}
           >
             {["Overview", "Your Plan", "Expenses"].map((tab, index) => (
               <Button
                 key={tab}
-                size="sm"
-                fontSize="sm"
+                size={{ base: "xs", md: "sm" }}
+                fontSize={{ base: "xs", md: "sm" }}
                 borderRadius="full"
                 bg={activeTab === index ? "blue.600" : "transparent"}
                 color={activeTab === index ? "white" : "gray.400"}
                 _hover={{ bg: activeTab === index ? "blue.600" : "gray.700" }}
                 onClick={() => setActiveTab(index)}
+                flexShrink="0"
+                px={{ base: "3", md: "4" }}
               >
                 {tab}
               </Button>
@@ -1269,11 +1288,11 @@ export function FinancialChart({ data }) {
           </HStack>
 
           {/* Tab Panels */}
-          <Box p="5">
+          <Box p={{ base: "3", md: "5" }}>
             {/* Overview Tab */}
             {activeTab === 0 && (
-              <VStack align="stretch" spacing="5">
-                <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
+              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={{ base: "3", md: "5" }}>
                   <GridItem>
                     <OverviewChart
                       income={data.income || 0}
@@ -1301,8 +1320,8 @@ export function FinancialChart({ data }) {
 
             {/* Plan Tab */}
             {activeTab === 1 && (
-              <VStack align="stretch" spacing="5">
-                <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
+              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={{ base: "3", md: "5" }}>
                   <GridItem>
                     <SavingsStrategies strategies={plan?.strategies} />
                   </GridItem>

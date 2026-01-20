@@ -355,6 +355,7 @@ export function useFinancialParser() {
     parseFinancialInput,
     clearData,
     financialData,
+    setFinancialData,
     isLoading,
     error,
   };

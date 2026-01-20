@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { Box, HStack, VStack, Text, Spinner } from "@chakra-ui/react";
 import { useDecentralizedIdentity } from "@/hooks/useDecentralizedIdentity";
 import { useFinancialParser } from "@/hooks/useFinancialParser";
@@ -8,17 +9,55 @@ import { FinancialChart } from "@/components/FinancialChart";
 import "./App.css";
 
 function App() {
-  const { identity, userData, isLoading, error, switchAccount, logout } =
-    useDecentralizedIdentity();
+  const {
+    identity,
+    userData,
+    isLoading,
+    error,
+    switchAccount,
+    logout,
+    saveRoadmap,
+  } = useDecentralizedIdentity();
   const {
     parseFinancialInput,
     financialData,
+    setFinancialData,
     isLoading: isGenerating,
     error: parseError,
   } = useFinancialParser();
 
-  const handleGenerate = async (input, additionalContext) => {
-    await parseFinancialInput(input, additionalContext);
+  // Get saved roadmap from userData directly
+  const savedRoadmap = userData?.roadmap;
+
+  // Initialize input state - use saved input if available
+  const [userInput, setUserInput] = useState("");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize from saved data (called once by callback ref)
+  const initializeFromSaved = useCallback(
+    (node) => {
+      if (node && savedRoadmap && !isInitialized) {
+        if (savedRoadmap.userInput) {
+          setUserInput(savedRoadmap.userInput);
+        }
+        if (savedRoadmap.financialData && !financialData) {
+          setFinancialData(savedRoadmap.financialData);
+        }
+        setIsInitialized(true);
+      }
+    },
+    [savedRoadmap, isInitialized, financialData, setFinancialData],
+  );
+
+  const hasSavedData =
+    Boolean(savedRoadmap?.financialData) || Boolean(financialData);
+
+  const handleGenerate = async (input) => {
+    const result = await parseFinancialInput(input);
+    if (result) {
+      // Save the roadmap data after successful generation
+      await saveRoadmap(input, result);
+    }
   };
 
   return (
@@ -46,25 +85,34 @@ function App() {
         />
       </HStack>
 
-      <Box as="main" p="6">
+      <Box as="main" p={{ base: "3", md: "6" }}>
         {isLoading ? (
-          <VStack py="20">
+          <VStack py={{ base: "10", md: "20" }}>
             <Spinner size="xl" color="blue.400" />
             <Text color="gray.400" mt="4">
               Initializing identity...
             </Text>
           </VStack>
         ) : error ? (
-          <VStack py="20">
+          <VStack py={{ base: "10", md: "20" }}>
             <Text color="red.400" fontSize="lg">
               Error: {error}
             </Text>
           </VStack>
         ) : identity ? (
-          <VStack align="stretch" gap="6" maxW="900px" mx="auto">
+          <VStack
+            ref={initializeFromSaved}
+            align="stretch"
+            gap={{ base: "4", md: "6" }}
+            maxW="900px"
+            mx="auto"
+          >
             <FinancialInput
               onGenerate={handleGenerate}
               isGenerating={isGenerating}
+              input={userInput}
+              onInputChange={setUserInput}
+              hasSavedData={hasSavedData}
             />
 
             {parseError && (
