@@ -16,10 +16,12 @@ const financialDataSchema = Schema.object({
             description: "Monthly amount for this expense",
           }),
           recommendation: Schema.string({
-            description: "Specific recommendation for this expense - be opinionated about whether to cut, maintain, or optimize",
+            description:
+              "Specific recommendation for this expense - be opinionated about whether to cut, maintain, or optimize",
           }),
           priority: Schema.string({
-            description: "Priority level: essential, important, or discretionary",
+            description:
+              "Priority level: essential, important, or discretionary",
             enum: ["essential", "important", "discretionary"],
           }),
         },
@@ -38,25 +40,39 @@ const financialDataSchema = Schema.object({
     plan: Schema.object({
       properties: {
         title: Schema.string({
-          description: "A motivating title for their financial plan, personalized to their goal",
+          description:
+            "A motivating title for their financial plan, personalized to their goal",
         }),
         overview: Schema.string({
-          description: "2-3 sentence overview of their financial situation and the path forward",
+          description:
+            "2-3 sentence overview of their financial situation and the path forward",
         }),
         monthlyBudget: Schema.object({
           properties: {
-            needs: Schema.number({ description: "Recommended amount for needs (50% rule target)" }),
-            wants: Schema.number({ description: "Recommended amount for wants (30% rule target)" }),
-            savings: Schema.number({ description: "Recommended amount for savings (20% rule target)" }),
+            needs: Schema.number({
+              description: "Recommended amount for needs (50% rule target)",
+            }),
+            wants: Schema.number({
+              description: "Recommended amount for wants (30% rule target)",
+            }),
+            savings: Schema.number({
+              description: "Recommended amount for savings (20% rule target)",
+            }),
           },
           required: ["needs", "wants", "savings"],
         }),
         strategies: Schema.array({
           items: Schema.object({
             properties: {
-              title: Schema.string({ description: "Short title for the strategy" }),
-              description: Schema.string({ description: "Detailed explanation of the strategy" }),
-              impact: Schema.string({ description: "Expected monthly savings or benefit" }),
+              title: Schema.string({
+                description: "Short title for the strategy",
+              }),
+              description: Schema.string({
+                description: "Detailed explanation of the strategy",
+              }),
+              impact: Schema.string({
+                description: "Expected monthly savings or benefit",
+              }),
               difficulty: Schema.string({
                 description: "How hard this is to implement",
                 enum: ["easy", "medium", "hard"],
@@ -64,13 +80,16 @@ const financialDataSchema = Schema.object({
             },
             required: ["title", "description", "impact", "difficulty"],
           }),
-          description: "3-5 specific savings strategies tailored to their situation",
+          description:
+            "3-5 specific savings strategies tailored to their situation",
         }),
         actionItems: Schema.array({
           items: Schema.object({
             properties: {
               action: Schema.string({ description: "Specific action to take" }),
-              timeframe: Schema.string({ description: "When to do this: this week, this month, ongoing" }),
+              timeframe: Schema.string({
+                description: "When to do this: this week, this month, ongoing",
+              }),
               category: Schema.string({
                 description: "Category of action",
                 enum: ["cut", "optimize", "earn", "automate", "track"],
@@ -81,16 +100,28 @@ const financialDataSchema = Schema.object({
           description: "5-8 specific action items to implement immediately",
         }),
         weeklyCheckIn: Schema.string({
-          description: "What they should review/check each week to stay on track",
+          description:
+            "What they should review/check each week to stay on track",
         }),
         potentialSavings: Schema.number({
-          description: "Estimated additional monthly savings if they follow all recommendations",
+          description:
+            "Estimated additional monthly savings if they follow all recommendations",
         }),
         motivationalNote: Schema.string({
-          description: "A personalized, encouraging note about their journey - be specific to their goals",
+          description:
+            "A personalized, encouraging note about their journey - be specific to their goals",
         }),
       },
-      required: ["title", "overview", "monthlyBudget", "strategies", "actionItems", "weeklyCheckIn", "potentialSavings", "motivationalNote"],
+      required: [
+        "title",
+        "overview",
+        "monthlyBudget",
+        "strategies",
+        "actionItems",
+        "weeklyCheckIn",
+        "potentialSavings",
+        "motivationalNote",
+      ],
     }),
   },
   required: ["expenses", "plan"],
@@ -270,14 +301,24 @@ export function useFinancialParser() {
     }
 
     result.expenses = result.expenses
-      .filter((expense) => expense && expense.name && typeof expense.amount === "number" && expense.amount > 0)
+      .filter(
+        (expense) =>
+          expense &&
+          expense.name &&
+          typeof expense.amount === "number" &&
+          expense.amount > 0,
+      )
       .map((expense) => ({
         ...expense,
         recommendation: expense.recommendation || "Review this expense",
         priority: expense.priority || "important",
       }));
 
-    if (result.income === null || result.income === undefined || result.income === 0) {
+    if (
+      result.income === null ||
+      result.income === undefined ||
+      result.income === 0
+    ) {
       result.income = fallback.income ?? 0;
     }
 
@@ -289,16 +330,20 @@ export function useFinancialParser() {
       result.savingsGoal = fallback.savingsGoal ?? null;
     }
 
-    const totalExpenses = result.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalExpenses = result.expenses.reduce(
+      (sum, expense) => sum + expense.amount,
+      0,
+    );
     const monthlySavings = (result.income || 0) - totalExpenses;
     const basePlan = fallback.plan || {};
     const plan = result.plan || {};
 
-    const monthlyBudget = plan.monthlyBudget || basePlan.monthlyBudget || {
-      needs: Math.round((result.income || 0) * 0.5),
-      wants: Math.round((result.income || 0) * 0.3),
-      savings: Math.round((result.income || 0) * 0.2),
-    };
+    const monthlyBudget = plan.monthlyBudget ||
+      basePlan.monthlyBudget || {
+        needs: Math.round((result.income || 0) * 0.5),
+        wants: Math.round((result.income || 0) * 0.3),
+        savings: Math.round((result.income || 0) * 0.2),
+      };
 
     result.plan = {
       title: plan.title || basePlan.title || "Your Financial Roadmap",
@@ -326,35 +371,38 @@ export function useFinancialParser() {
     return result;
   }, []);
 
-  const parseFinancialInput = useCallback(async (userInput, additionalContext = "") => {
-    setIsLoading(true);
-    setError(null);
+  const parseFinancialInput = useCallback(
+    async (userInput, additionalContext = "") => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      let prompt = `${SYSTEM_PROMPT}\n\nUser's financial information:\n${userInput}`;
+      try {
+        let prompt = `${SYSTEM_PROMPT}\n\nUser's financial information:\n${userInput}`;
 
-      if (additionalContext.trim()) {
-        prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+        if (additionalContext.trim()) {
+          prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+        }
+
+        const result = await financialModel.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+
+        const parsed = JSON.parse(text);
+        const fallback = extractLooseData(userInput);
+        const finalized = finalizeFinancialData(parsed, fallback);
+
+        setFinancialData(finalized);
+        return finalized;
+      } catch (err) {
+        console.error("Error parsing financial data:", err);
+        setError(err.message || "Failed to analyze financial data");
+        return null;
+      } finally {
+        setIsLoading(false);
       }
-
-      const result = await financialModel.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
-
-      const parsed = JSON.parse(text);
-      const fallback = extractLooseData(userInput);
-      const finalized = finalizeFinancialData(parsed, fallback);
-
-      setFinancialData(finalized);
-      return finalized;
-    } catch (err) {
-      console.error("Error parsing financial data:", err);
-      setError(err.message || "Failed to analyze financial data");
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [finalizeFinancialData]);
+    },
+    [finalizeFinancialData],
+  );
 
   const clearData = useCallback(() => {
     setFinancialData(null);
@@ -406,7 +454,7 @@ ${updateRequest}`;
         setIsUpdating(false);
       }
     },
-    [finalizeFinancialData]
+    [finalizeFinancialData],
   );
 
   return {
