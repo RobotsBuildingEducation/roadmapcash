@@ -15,10 +15,17 @@ const financialDataSchema = Schema.object({
           amount: Schema.number({
             description: "Monthly amount for this expense",
           }),
+          recommendation: Schema.string({
+            description: "Specific recommendation for this expense - be opinionated about whether to cut, maintain, or optimize",
+          }),
+          priority: Schema.string({
+            description: "Priority level: essential, important, or discretionary",
+            enum: ["essential", "important", "discretionary"],
+          }),
         },
-        required: ["name", "amount"],
+        required: ["name", "amount", "recommendation", "priority"],
       }),
-      description: "List of monthly expenses",
+      description: "List of monthly expenses with recommendations",
     }),
     savingsGoal: Schema.number({
       description: "Total savings goal amount",
@@ -28,11 +35,65 @@ const financialDataSchema = Schema.object({
       description: "Current savings amount",
       nullable: true,
     }),
-    summary: Schema.string({
-      description: "Brief analysis and advice for the user",
+    plan: Schema.object({
+      properties: {
+        title: Schema.string({
+          description: "A motivating title for their financial plan, personalized to their goal",
+        }),
+        overview: Schema.string({
+          description: "2-3 sentence overview of their financial situation and the path forward",
+        }),
+        monthlyBudget: Schema.object({
+          properties: {
+            needs: Schema.number({ description: "Recommended amount for needs (50% rule target)" }),
+            wants: Schema.number({ description: "Recommended amount for wants (30% rule target)" }),
+            savings: Schema.number({ description: "Recommended amount for savings (20% rule target)" }),
+          },
+          required: ["needs", "wants", "savings"],
+        }),
+        strategies: Schema.array({
+          items: Schema.object({
+            properties: {
+              title: Schema.string({ description: "Short title for the strategy" }),
+              description: Schema.string({ description: "Detailed explanation of the strategy" }),
+              impact: Schema.string({ description: "Expected monthly savings or benefit" }),
+              difficulty: Schema.string({
+                description: "How hard this is to implement",
+                enum: ["easy", "medium", "hard"],
+              }),
+            },
+            required: ["title", "description", "impact", "difficulty"],
+          }),
+          description: "3-5 specific savings strategies tailored to their situation",
+        }),
+        actionItems: Schema.array({
+          items: Schema.object({
+            properties: {
+              action: Schema.string({ description: "Specific action to take" }),
+              timeframe: Schema.string({ description: "When to do this: this week, this month, ongoing" }),
+              category: Schema.string({
+                description: "Category of action",
+                enum: ["cut", "optimize", "earn", "automate", "track"],
+              }),
+            },
+            required: ["action", "timeframe", "category"],
+          }),
+          description: "5-8 specific action items to implement immediately",
+        }),
+        weeklyCheckIn: Schema.string({
+          description: "What they should review/check each week to stay on track",
+        }),
+        potentialSavings: Schema.number({
+          description: "Estimated additional monthly savings if they follow all recommendations",
+        }),
+        motivationalNote: Schema.string({
+          description: "A personalized, encouraging note about their journey - be specific to their goals",
+        }),
+      },
+      required: ["title", "overview", "monthlyBudget", "strategies", "actionItems", "weeklyCheckIn", "potentialSavings", "motivationalNote"],
     }),
   },
-  required: ["expenses", "summary"],
+  required: ["expenses", "plan"],
 });
 
 const financialModel = getGenerativeModel(ai, {
@@ -43,19 +104,37 @@ const financialModel = getGenerativeModel(ai, {
   },
 });
 
-const SYSTEM_PROMPT = `You are a financial analyst assistant. Parse the user's financial information and extract structured data.
+const SYSTEM_PROMPT = `You are an opinionated financial coach who creates personalized, actionable financial plans. You're direct, specific, and encouraging.
 
-Guidelines:
+IMPORTANT: Generate a COMPLETE, DETAILED financial plan with specific recommendations.
+
+Guidelines for parsing:
 - Extract monthly income if mentioned
 - Identify all expense categories and their monthly amounts
 - Look for savings goals, emergency fund targets, or financial objectives
 - If current savings are mentioned, include them
-- Provide a brief, encouraging summary with actionable advice
 - If amounts are given weekly, multiply by 4.33 for monthly
 - If amounts are given yearly, divide by 12 for monthly
 - Round all amounts to whole numbers
-- Be conservative with estimates if information is vague
-- Handle short or loose statements like "I make 3500 a month and want to save 7000"`;
+
+Guidelines for recommendations (BE OPINIONATED):
+- For each expense, give a SPECIFIC recommendation - don't be generic
+- Classify expenses as essential (housing, utilities, basic food, healthcare), important (transportation, insurance, reasonable phone), or discretionary (entertainment, dining out, subscriptions)
+- If an expense seems high for its category, say so and suggest a specific target
+- If they're overspending on discretionary items, be direct about cutting back
+- Suggest specific alternatives (e.g., "Switch from $150 cable to $15 streaming")
+
+For the plan:
+- Create a motivating, personalized title based on their goal (e.g., "Your Path to a $10K Emergency Fund")
+- Use the 50/30/20 rule as a baseline but adjust based on their situation
+- Strategies should be SPECIFIC to their expenses, not generic advice
+- Action items should be things they can do THIS WEEK
+- Be encouraging but realistic about the timeline
+- If they have high-interest debt, prioritize that
+- If they have no emergency fund, that's priority #1
+- Calculate potential savings by looking at expenses that could be reduced
+
+Additional context about the user (if provided) should heavily influence your recommendations.`;
 
 const MONTHLY_MULTIPLIERS = {
   week: 4.33,
@@ -173,12 +252,17 @@ export function useFinancialParser() {
   const [error, setError] = useState(null);
   const [financialData, setFinancialData] = useState(null);
 
-  const parseFinancialInput = useCallback(async (userInput) => {
+  const parseFinancialInput = useCallback(async (userInput, additionalContext = "") => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const prompt = `${SYSTEM_PROMPT}\n\nUser's financial information:\n${userInput}`;
+      let prompt = `${SYSTEM_PROMPT}\n\nUser's financial information:\n${userInput}`;
+
+      if (additionalContext.trim()) {
+        prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+      }
+
       const result = await financialModel.generateContent(prompt);
       const response = result.response;
       const text = response.text();
@@ -192,13 +276,24 @@ export function useFinancialParser() {
       }
 
       if (parsed.expenses.length === 0 && fallback.expenses.length > 0) {
-        parsed.expenses = fallback.expenses;
+        parsed.expenses = fallback.expenses.map((e) => ({
+          ...e,
+          recommendation: "Review this expense",
+          priority: "important",
+        }));
       }
 
       // Filter out any invalid expenses
       parsed.expenses = parsed.expenses.filter(
         (e) => e && e.name && typeof e.amount === "number" && e.amount > 0,
       );
+
+      // Ensure all expenses have recommendations
+      parsed.expenses = parsed.expenses.map((e) => ({
+        ...e,
+        recommendation: e.recommendation || "Review this expense",
+        priority: e.priority || "important",
+      }));
 
       // Set default values
       if (
@@ -218,6 +313,26 @@ export function useFinancialParser() {
 
       if (parsed.savingsGoal === null || parsed.savingsGoal === undefined) {
         parsed.savingsGoal = fallback.savingsGoal ?? null;
+      }
+
+      // Ensure plan exists with defaults
+      if (!parsed.plan) {
+        const totalExpenses = parsed.expenses.reduce((sum, e) => sum + e.amount, 0);
+        const monthlySavings = Math.max(0, (parsed.income || 0) - totalExpenses);
+        parsed.plan = {
+          title: "Your Financial Roadmap",
+          overview: "Let's analyze your finances and create a plan to reach your goals.",
+          monthlyBudget: {
+            needs: Math.round((parsed.income || 0) * 0.5),
+            wants: Math.round((parsed.income || 0) * 0.3),
+            savings: Math.round((parsed.income || 0) * 0.2),
+          },
+          strategies: [],
+          actionItems: [],
+          weeklyCheckIn: "Review your spending and track progress toward your goal.",
+          potentialSavings: monthlySavings,
+          motivationalNote: "You've taken the first step by creating a plan. Stay consistent!",
+        };
       }
 
       setFinancialData(parsed);

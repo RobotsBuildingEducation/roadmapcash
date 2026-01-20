@@ -17,8 +17,8 @@ function App() {
     error: parseError,
   } = useFinancialParser();
 
-  const handleGenerate = async (input) => {
-    await parseFinancialInput(input);
+  const handleGenerate = async (input, additionalContext) => {
+    await parseFinancialInput(input, additionalContext);
   };
 
   return (
@@ -82,23 +82,6 @@ function App() {
             )}
 
             {financialData && <FinancialChart data={financialData} />}
-
-            {financialData?.summary && (
-              <Box
-                p="6"
-                bg="gray.900"
-                borderRadius="lg"
-                borderWidth="1px"
-                borderColor="gray.800"
-              >
-                <Text fontSize="lg" fontWeight="bold" mb="3">
-                  AI Analysis
-                </Text>
-                <Text color="gray.300" lineHeight="tall">
-                  {financialData.summary}
-                </Text>
-              </Box>
-            )}
           </VStack>
         ) : null}
       </Box>
