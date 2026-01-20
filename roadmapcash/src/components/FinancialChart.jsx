@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { Box, VStack, Text, HStack, Badge, Progress } from "@chakra-ui/react";
+import { Box, VStack, Text, HStack, Badge, ProgressRoot, ProgressTrack, ProgressRange } from "@chakra-ui/react";
 
 // Create a cute fat dog mesh
 function createFatDog(color, x, z) {
@@ -567,13 +567,15 @@ export function FinancialChart({ data }) {
                 {progressPercent.toFixed(1)}%
               </Text>
             </HStack>
-            <Progress
+            <ProgressRoot
               value={progressPercent}
-              colorScheme="green"
               size="sm"
               borderRadius="full"
-              bg="gray.700"
-            />
+            >
+              <ProgressTrack bg="gray.700">
+                <ProgressRange bg="green.500" />
+              </ProgressTrack>
+            </ProgressRoot>
           </Box>
         )}
 
