@@ -225,6 +225,36 @@ export function useDecentralizedIdentity() {
     [identity, userData]
   );
 
+  const saveRoadmap = useCallback(
+    async (userInput, financialData) => {
+      if (!identity?.npub) return;
+
+      try {
+        const userRef = doc(database, "users", identity.npub);
+        const roadmapData = {
+          roadmap: {
+            userInput,
+            financialData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          updatedAt: new Date().toISOString(),
+        };
+        await setDoc(userRef, roadmapData, { merge: true });
+        setUserData((prev) => ({ ...prev, ...roadmapData }));
+        return roadmapData.roadmap;
+      } catch (err) {
+        setError(err.message);
+        throw err;
+      }
+    },
+    [identity]
+  );
+
+  const getSavedRoadmap = useCallback(() => {
+    return userData?.roadmap || null;
+  }, [userData]);
+
   useEffect(() => {
     initializeIdentity();
   }, [initializeIdentity]);
@@ -237,6 +267,8 @@ export function useDecentralizedIdentity() {
     switchAccount,
     logout,
     updateUserData,
+    saveRoadmap,
+    getSavedRoadmap,
     decodeNsec,
     decodeNpub,
   };
