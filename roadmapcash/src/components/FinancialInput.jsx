@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, VStack, Text, Textarea, Button, HStack, Collapse } from "@chakra-ui/react";
+import { Box, VStack, Text, Textarea, Button, HStack } from "@chakra-ui/react";
 
 const PLACEHOLDER_TEXT = `Enter your expenses and financial goals. For example:
 
@@ -84,7 +84,7 @@ export function FinancialInput({ onGenerate, isGenerating }) {
             {showContext ? "− Hide additional details" : "+ Add more details for a personalized plan"}
           </Button>
 
-          <Collapse in={showContext} animateOpacity>
+          {showContext && (
             <Box
               p="4"
               bg="gray.800"
@@ -114,7 +114,7 @@ export function FinancialInput({ onGenerate, isGenerating }) {
                 resize="vertical"
               />
             </Box>
-          </Collapse>
+          )}
         </Box>
 
         <HStack justify="flex-end">
