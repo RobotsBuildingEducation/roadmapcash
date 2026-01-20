@@ -2,6 +2,7 @@ import { Box, HStack, VStack, Text, Spinner } from "@chakra-ui/react";
 import { useDecentralizedIdentity } from "@/hooks/useDecentralizedIdentity";
 import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { AccountMenu } from "@/components/AccountMenu";
+import { MonthlyGoalChart } from "@/components/MonthlyGoalChart";
 import "./App.css";
 
 function App() {
@@ -49,57 +50,32 @@ function App() {
           </VStack>
         ) : identity ? (
           <VStack align="stretch" gap="6" maxW="600px" mx="auto">
+            {/* Monthly Goal Chart with Fat Dogs */}
+            <MonthlyGoalChart />
+
+            {/* Identity Info (collapsed) */}
             <Box
-              p="6"
+              p="4"
               bg="gray.900"
               borderRadius="lg"
               borderWidth="1px"
               borderColor="gray.800"
             >
-              <Text fontSize="xl" fontWeight="bold" mb="4">
-                Welcome to roadmap.cash
+              <Text fontSize="sm" color="gray.500" mb="1">
+                Your public identity:
               </Text>
-              <Text color="gray.400" mb="4">
-                Your decentralized identity is ready. Your account is tied to
-                your unique keys - no email or password required.
+              <Text color="blue.300" wordBreak="break-all" fontSize="xs" fontFamily="mono">
+                {identity.npub}
               </Text>
-
-              <Box
-                p="4"
-                bg="gray.800"
-                borderRadius="md"
-                fontFamily="mono"
-                fontSize="sm"
-              >
-                <Text color="gray.500" mb="1">
-                  Your public identity:
-                </Text>
-                <Text color="blue.300" wordBreak="break-all" fontSize="xs">
-                  {identity.npub}
-                </Text>
-              </Box>
-            </Box>
-
-            {userData && (
-              <Box
-                p="6"
-                bg="gray.900"
-                borderRadius="lg"
-                borderWidth="1px"
-                borderColor="gray.800"
-              >
-                <Text fontSize="lg" fontWeight="medium" mb="2">
-                  Account Created
-                </Text>
-                <Text color="gray.400" fontSize="sm">
-                  {new Date(userData.createdAt).toLocaleDateString("en-US", {
+              {userData && (
+                <Text color="gray.600" fontSize="xs" mt="2">
+                  Member since {new Date(userData.createdAt).toLocaleDateString("en-US", {
                     year: "numeric",
-                    month: "long",
-                    day: "numeric",
+                    month: "short",
                   })}
                 </Text>
-              </Box>
-            )}
+              )}
+            </Box>
           </VStack>
         ) : null}
       </Box>
