@@ -303,6 +303,241 @@ function createArrow(teamColor) {
   return arrowGroup;
 }
 
+// Create fancy fat cat with top hat and cane
+function createFancyCat(color, x, z) {
+  const catGroup = new THREE.Group();
+
+  // Fat round body
+  const bodyGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+  bodyGeometry.scale(1, 1.1, 0.9);
+  const bodyMaterial = new THREE.MeshStandardMaterial({ color, metalness: 0.1, roughness: 0.8 });
+  const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+  body.position.y = 0.4;
+  catGroup.add(body);
+
+  // Fancy vest/jacket
+  const jacketGeometry = new THREE.SphereGeometry(0.42, 16, 16);
+  jacketGeometry.scale(0.95, 0.7, 0.85);
+  const jacketMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a3a, metalness: 0.3, roughness: 0.6 });
+  const jacket = new THREE.Mesh(jacketGeometry, jacketMaterial);
+  jacket.position.y = 0.35;
+  catGroup.add(jacket);
+
+  // Gold buttons on jacket
+  const buttonGeometry = new THREE.SphereGeometry(0.03, 8, 8);
+  const buttonMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 });
+  for (let i = 0; i < 3; i++) {
+    const button = new THREE.Mesh(buttonGeometry, buttonMaterial);
+    button.position.set(0.38, 0.25 + i * 0.12, 0);
+    catGroup.add(button);
+  }
+
+  // Round head
+  const headGeometry = new THREE.SphereGeometry(0.28, 16, 16);
+  const headMaterial = new THREE.MeshStandardMaterial({ color, metalness: 0.1, roughness: 0.8 });
+  const head = new THREE.Mesh(headGeometry, headMaterial);
+  head.position.set(0, 0.85, 0);
+  catGroup.add(head);
+
+  // Pointy ears
+  const earGeometry = new THREE.ConeGeometry(0.08, 0.15, 4);
+  const earMaterial = new THREE.MeshStandardMaterial({ color });
+  const leftEar = new THREE.Mesh(earGeometry, earMaterial);
+  leftEar.position.set(0, 1.1, 0.15);
+  leftEar.rotation.x = -0.2;
+  catGroup.add(leftEar);
+  const rightEar = new THREE.Mesh(earGeometry, earMaterial);
+  rightEar.position.set(0, 1.1, -0.15);
+  rightEar.rotation.x = 0.2;
+  catGroup.add(rightEar);
+
+  // Inner ears (pink)
+  const innerEarGeometry = new THREE.ConeGeometry(0.04, 0.08, 4);
+  const innerEarMaterial = new THREE.MeshStandardMaterial({ color: 0xffb6c1 });
+  const leftInnerEar = new THREE.Mesh(innerEarGeometry, innerEarMaterial);
+  leftInnerEar.position.set(0, 1.08, 0.15);
+  leftInnerEar.rotation.x = -0.2;
+  catGroup.add(leftInnerEar);
+  const rightInnerEar = new THREE.Mesh(innerEarGeometry, innerEarMaterial);
+  rightInnerEar.position.set(0, 1.08, -0.15);
+  rightInnerEar.rotation.x = 0.2;
+  catGroup.add(rightInnerEar);
+
+  // === TOP HAT ===
+  const hatGroup = new THREE.Group();
+
+  // Hat brim
+  const brimGeometry = new THREE.CylinderGeometry(0.25, 0.25, 0.03, 16);
+  const hatMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.3, roughness: 0.7 });
+  const brim = new THREE.Mesh(brimGeometry, hatMaterial);
+  hatGroup.add(brim);
+
+  // Hat top
+  const topGeometry = new THREE.CylinderGeometry(0.18, 0.2, 0.35, 16);
+  const top = new THREE.Mesh(topGeometry, hatMaterial);
+  top.position.y = 0.19;
+  hatGroup.add(top);
+
+  // Hat band (gold)
+  const bandGeometry = new THREE.CylinderGeometry(0.201, 0.201, 0.05, 16);
+  const bandMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.7, roughness: 0.3 });
+  const band = new THREE.Mesh(bandGeometry, bandMaterial);
+  band.position.y = 0.05;
+  hatGroup.add(band);
+
+  hatGroup.position.set(0, 1.15, 0);
+  catGroup.add(hatGroup);
+
+  // Smug face - eyes
+  const eyeGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+  const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x90EE90 }); // Light green cat eyes
+  const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+  leftEye.position.set(0.2, 0.9, 0.12);
+  catGroup.add(leftEye);
+  const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+  rightEye.position.set(0.2, 0.9, -0.12);
+  catGroup.add(rightEye);
+
+  // Pupils (vertical slits)
+  const pupilGeometry = new THREE.BoxGeometry(0.02, 0.06, 0.01);
+  const pupilMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+  const leftPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+  leftPupil.position.set(0.25, 0.9, 0.12);
+  catGroup.add(leftPupil);
+  const rightPupil = new THREE.Mesh(pupilGeometry, pupilMaterial);
+  rightPupil.position.set(0.25, 0.9, -0.12);
+  catGroup.add(rightPupil);
+
+  // Smug smile
+  const smileGeometry = new THREE.TorusGeometry(0.08, 0.015, 8, 12, Math.PI);
+  const smileMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+  const smile = new THREE.Mesh(smileGeometry, smileMaterial);
+  smile.position.set(0.25, 0.75, 0);
+  smile.rotation.x = Math.PI;
+  smile.rotation.y = Math.PI / 2;
+  catGroup.add(smile);
+
+  // Whiskers
+  const whiskerMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+  const whiskerPositions = [
+    [[0.25, 0.8, 0.1], [0.4, 0.82, 0.25]],
+    [[0.25, 0.78, 0.1], [0.4, 0.78, 0.28]],
+    [[0.25, 0.76, 0.1], [0.4, 0.74, 0.25]],
+    [[0.25, 0.8, -0.1], [0.4, 0.82, -0.25]],
+    [[0.25, 0.78, -0.1], [0.4, 0.78, -0.28]],
+    [[0.25, 0.76, -0.1], [0.4, 0.74, -0.25]],
+  ];
+  whiskerPositions.forEach(([start, end]) => {
+    const points = [new THREE.Vector3(...start), new THREE.Vector3(...end)];
+    const whiskerGeometry = new THREE.BufferGeometry().setFromPoints(points);
+    const whisker = new THREE.Line(whiskerGeometry, whiskerMaterial);
+    catGroup.add(whisker);
+  });
+
+  // Pink nose
+  const noseGeometry = new THREE.SphereGeometry(0.04, 8, 8);
+  noseGeometry.scale(1, 0.7, 0.8);
+  const noseMaterial = new THREE.MeshStandardMaterial({ color: 0xffb6c1 });
+  const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+  nose.position.set(0.27, 0.82, 0);
+  catGroup.add(nose);
+
+  // Stubby legs
+  const legGeometry = new THREE.CylinderGeometry(0.07, 0.08, 0.15, 8);
+  const legMaterial = new THREE.MeshStandardMaterial({ color });
+  [[0.15, 0.08, 0.2], [0.15, 0.08, -0.2], [-0.15, 0.08, 0.2], [-0.15, 0.08, -0.2]].forEach((pos) => {
+    const leg = new THREE.Mesh(legGeometry, legMaterial);
+    leg.position.set(...pos);
+    catGroup.add(leg);
+  });
+
+  // Fancy tail (curled up)
+  const tailCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.35, 0.3, 0),
+    new THREE.Vector3(-0.5, 0.4, 0),
+    new THREE.Vector3(-0.55, 0.6, 0),
+    new THREE.Vector3(-0.45, 0.75, 0),
+    new THREE.Vector3(-0.35, 0.8, 0),
+  ]);
+  const tailGeometry = new THREE.TubeGeometry(tailCurve, 12, 0.04, 8, false);
+  const tailMaterial = new THREE.MeshStandardMaterial({ color });
+  const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+  catGroup.add(tail);
+
+  // === CANE ===
+  const caneGroup = new THREE.Group();
+
+  // Cane shaft
+  const shaftGeometry = new THREE.CylinderGeometry(0.025, 0.025, 0.7, 8);
+  const caneMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.4, roughness: 0.6 });
+  const shaft = new THREE.Mesh(shaftGeometry, caneMaterial);
+  shaft.position.y = 0.35;
+  caneGroup.add(shaft);
+
+  // Cane handle (gold curved top)
+  const handleCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.7, 0),
+    new THREE.Vector3(0.05, 0.75, 0),
+    new THREE.Vector3(0.12, 0.73, 0),
+    new THREE.Vector3(0.15, 0.68, 0),
+  ]);
+  const handleGeometry = new THREE.TubeGeometry(handleCurve, 8, 0.03, 8, false);
+  const handleMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 });
+  const handle = new THREE.Mesh(handleGeometry, handleMaterial);
+  caneGroup.add(handle);
+
+  // Cane tip (gold)
+  const tipGeometry = new THREE.SphereGeometry(0.035, 8, 8);
+  const tip = new THREE.Mesh(tipGeometry, handleMaterial);
+  tip.position.y = 0;
+  caneGroup.add(tip);
+
+  caneGroup.position.set(0.45, 0, 0.25);
+  caneGroup.rotation.z = 0.2;
+  catGroup.add(caneGroup);
+
+  // Monocle on right eye
+  const monocleGeometry = new THREE.TorusGeometry(0.06, 0.008, 8, 16);
+  const monocleMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 });
+  const monocle = new THREE.Mesh(monocleGeometry, monocleMaterial);
+  monocle.position.set(0.26, 0.9, -0.12);
+  monocle.rotation.y = Math.PI / 2;
+  catGroup.add(monocle);
+
+  // Monocle chain
+  const chainPoints = [
+    new THREE.Vector3(0.26, 0.84, -0.12),
+    new THREE.Vector3(0.2, 0.7, -0.1),
+    new THREE.Vector3(0.15, 0.5, -0.05),
+  ];
+  const chainGeometry = new THREE.BufferGeometry().setFromPoints(chainPoints);
+  const chainMaterial = new THREE.LineBasicMaterial({ color: 0xffd700 });
+  const chain = new THREE.Line(chainGeometry, chainMaterial);
+  catGroup.add(chain);
+
+  // Bow tie
+  const bowTieGroup = new THREE.Group();
+  const bowGeometry = new THREE.BoxGeometry(0.12, 0.06, 0.03);
+  const bowMaterial = new THREE.MeshStandardMaterial({ color: 0x8b0000 });
+  const leftBow = new THREE.Mesh(bowGeometry, bowMaterial);
+  leftBow.position.z = 0.05;
+  leftBow.rotation.y = 0.3;
+  bowTieGroup.add(leftBow);
+  const rightBow = new THREE.Mesh(bowGeometry, bowMaterial);
+  rightBow.position.z = -0.05;
+  rightBow.rotation.y = -0.3;
+  bowTieGroup.add(rightBow);
+  const knotGeometry = new THREE.SphereGeometry(0.03, 8, 8);
+  const knot = new THREE.Mesh(knotGeometry, bowMaterial);
+  bowTieGroup.add(knot);
+  bowTieGroup.position.set(0.35, 0.6, 0);
+  catGroup.add(bowTieGroup);
+
+  catGroup.position.set(x, 0, z);
+
+  return catGroup;
+}
+
 // Create 3D bar for chart
 function createBar(height, color, x) {
   const barGroup = new THREE.Group();
@@ -528,6 +763,26 @@ export function FinancialChart({ data }) {
       if (isArcher) archers.push(dog);
     }
 
+    // === FANCY FAT CATS - Spectators cheering in front ===
+    const catColors = [0x808080, 0xffa500, 0x2f2f2f, 0xf5f5dc, 0xd2691e];
+    const fancyCats = [];
+
+    for (let i = 0; i < 5; i++) {
+      const x = -4 + i * 2;
+      const z = 8.5;
+      const cat = createFancyCat(catColors[i % catColors.length], x, z);
+      cat.rotation.y = Math.PI; // Face the battle
+      cat.userData = {
+        baseY: 0,
+        danceOffset: Math.random() * Math.PI * 2,
+        danceSpeed: 2 + Math.random(),
+        caneOffset: Math.random() * Math.PI * 2,
+        cheerTimer: Math.random() * 2,
+      };
+      scene.add(cat);
+      fancyCats.push(cat);
+    }
+
     // Spawn arrow function
     function spawnArrow(archer) {
       const teamColor = archer.userData.team === 'red' ? 0xff4444 : 0x4444ff;
@@ -688,6 +943,48 @@ export function FinancialChart({ data }) {
         }
       }
 
+      // Animate fancy cats - dancing and cheering
+      fancyCats.forEach((cat, index) => {
+        const ud = cat.userData;
+
+        // Bouncy dance
+        const bounce = Math.abs(Math.sin(time * ud.danceSpeed + ud.danceOffset)) * 0.15;
+        cat.position.y = ud.baseY + bounce;
+
+        // Side-to-side sway
+        cat.rotation.z = Math.sin(time * 1.5 + ud.danceOffset) * 0.1;
+
+        // Slight forward/back lean
+        cat.rotation.x = Math.sin(time * 2 + ud.danceOffset + 1) * 0.05;
+
+        // Find and animate the cane (twirl it)
+        const cane = cat.children.find(c => c.children && c.position.x > 0.4 && c.position.z > 0.2);
+        if (cane) {
+          cane.rotation.z = 0.2 + Math.sin(time * 3 + ud.caneOffset) * 0.3;
+          // Occasionally lift the cane high
+          if (Math.sin(time * 1.5 + ud.caneOffset) > 0.8) {
+            cane.rotation.z = -0.5;
+            cane.position.y = 0.2;
+          } else {
+            cane.position.y = 0;
+          }
+        }
+
+        // Find and animate the top hat (tip it)
+        const hat = cat.children.find(c => c.children && c.position.y > 1);
+        if (hat) {
+          hat.rotation.z = Math.sin(time * 2 + ud.danceOffset) * 0.15;
+          // Occasionally tip the hat
+          if (Math.sin(time + ud.danceOffset * 2) > 0.9) {
+            hat.position.y = 1.2;
+            hat.rotation.x = 0.3;
+          } else {
+            hat.position.y = 1.15;
+            hat.rotation.x = 0;
+          }
+        }
+      });
+
       // Animate flag
       const flag = projectionChart.children.find(c => c.geometry?.type === 'BoxGeometry' && c.position.y > 2.5);
       if (flag) flag.rotation.z = Math.sin(time * 4) * 0.1;
@@ -739,7 +1036,7 @@ export function FinancialChart({ data }) {
         <HStack justify="space-between" align="center" flexWrap="wrap" gap="2">
           <VStack align="start" gap="0">
             <Text fontSize="xl" fontWeight="bold">Financial Battle Plan</Text>
-            <Text fontSize="sm" color="gray.500">20 Warriors & Archers: Expenses vs Savings</Text>
+            <Text fontSize="sm" color="gray.500">Warriors, Archers & Fat Cat Spectators</Text>
           </VStack>
           {monthsToGoal !== null && monthsToGoal !== Infinity && (
             <Badge colorScheme={monthsToGoal <= 6 ? "green" : monthsToGoal <= 12 ? "blue" : "purple"} fontSize="sm" px="3" py="1" borderRadius="full">
