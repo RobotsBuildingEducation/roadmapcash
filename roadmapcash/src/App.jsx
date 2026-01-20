@@ -9,8 +9,15 @@ import { FinancialChart } from "@/components/FinancialChart";
 import "./App.css";
 
 function App() {
-  const { identity, userData, isLoading, error, switchAccount, logout, saveRoadmap } =
-    useDecentralizedIdentity();
+  const {
+    identity,
+    userData,
+    isLoading,
+    error,
+    switchAccount,
+    logout,
+    saveRoadmap,
+  } = useDecentralizedIdentity();
   const {
     parseFinancialInput,
     financialData,
@@ -27,19 +34,23 @@ function App() {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize from saved data (called once by callback ref)
-  const initializeFromSaved = useCallback((node) => {
-    if (node && savedRoadmap && !isInitialized) {
-      if (savedRoadmap.userInput) {
-        setUserInput(savedRoadmap.userInput);
+  const initializeFromSaved = useCallback(
+    (node) => {
+      if (node && savedRoadmap && !isInitialized) {
+        if (savedRoadmap.userInput) {
+          setUserInput(savedRoadmap.userInput);
+        }
+        if (savedRoadmap.financialData && !financialData) {
+          setFinancialData(savedRoadmap.financialData);
+        }
+        setIsInitialized(true);
       }
-      if (savedRoadmap.financialData && !financialData) {
-        setFinancialData(savedRoadmap.financialData);
-      }
-      setIsInitialized(true);
-    }
-  }, [savedRoadmap, isInitialized, financialData, setFinancialData]);
+    },
+    [savedRoadmap, isInitialized, financialData, setFinancialData],
+  );
 
-  const hasSavedData = Boolean(savedRoadmap?.financialData) || Boolean(financialData);
+  const hasSavedData =
+    Boolean(savedRoadmap?.financialData) || Boolean(financialData);
 
   const handleGenerate = async (input) => {
     const result = await parseFinancialInput(input);
@@ -89,7 +100,13 @@ function App() {
             </Text>
           </VStack>
         ) : identity ? (
-          <VStack ref={initializeFromSaved} align="stretch" gap={{ base: "4", md: "6" }} maxW="900px" mx="auto">
+          <VStack
+            ref={initializeFromSaved}
+            align="stretch"
+            gap={{ base: "4", md: "6" }}
+            maxW="900px"
+            mx="auto"
+          >
             <FinancialInput
               onGenerate={handleGenerate}
               isGenerating={isGenerating}
