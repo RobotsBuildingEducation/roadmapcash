@@ -1,6 +1,220 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { Box, VStack, Text, HStack, Badge } from "@chakra-ui/react";
+import { Box, VStack, Text, HStack, Badge, Progress } from "@chakra-ui/react";
+
+// Create a cute fat dog mesh
+function createFatDog(color, x, z) {
+  const dogGroup = new THREE.Group();
+
+  // Fat body (big ellipsoid)
+  const bodyGeometry = new THREE.SphereGeometry(0.6, 16, 16);
+  bodyGeometry.scale(1.3, 0.9, 1);
+  const bodyMaterial = new THREE.MeshStandardMaterial({
+    color: color,
+    metalness: 0.1,
+    roughness: 0.8,
+  });
+  const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+  body.position.y = 0.5;
+  dogGroup.add(body);
+
+  // Round head
+  const headGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+  const headMaterial = new THREE.MeshStandardMaterial({
+    color: color,
+    metalness: 0.1,
+    roughness: 0.8,
+  });
+  const head = new THREE.Mesh(headGeometry, headMaterial);
+  head.position.set(0.7, 0.7, 0);
+  dogGroup.add(head);
+
+  // Snout
+  const snoutGeometry = new THREE.SphereGeometry(0.15, 12, 12);
+  snoutGeometry.scale(1.2, 0.8, 1);
+  const snoutMaterial = new THREE.MeshStandardMaterial({
+    color: 0xd4a574,
+    metalness: 0.1,
+    roughness: 0.9,
+  });
+  const snout = new THREE.Mesh(snoutGeometry, snoutMaterial);
+  snout.position.set(1.0, 0.6, 0);
+  dogGroup.add(snout);
+
+  // Nose
+  const noseGeometry = new THREE.SphereGeometry(0.06, 8, 8);
+  const noseMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1a1a1a,
+    metalness: 0.3,
+    roughness: 0.5,
+  });
+  const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+  nose.position.set(1.12, 0.62, 0);
+  dogGroup.add(nose);
+
+  // Eyes
+  const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+  const eyeMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1a1a1a,
+    metalness: 0.5,
+    roughness: 0.3,
+  });
+  const eyeWhiteGeometry = new THREE.SphereGeometry(0.03, 6, 6);
+  const eyeWhiteMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    metalness: 0,
+    roughness: 1,
+  });
+
+  const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+  leftEye.position.set(0.9, 0.82, 0.2);
+  dogGroup.add(leftEye);
+
+  const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+  rightEye.position.set(0.9, 0.82, -0.2);
+  dogGroup.add(rightEye);
+
+  const leftEyeWhite = new THREE.Mesh(eyeWhiteGeometry, eyeWhiteMaterial);
+  leftEyeWhite.position.set(0.95, 0.85, 0.22);
+  dogGroup.add(leftEyeWhite);
+
+  const rightEyeWhite = new THREE.Mesh(eyeWhiteGeometry, eyeWhiteMaterial);
+  rightEyeWhite.position.set(0.95, 0.85, -0.18);
+  dogGroup.add(rightEyeWhite);
+
+  // Floppy ears
+  const earGeometry = new THREE.SphereGeometry(0.18, 10, 10);
+  earGeometry.scale(0.6, 1.2, 0.8);
+  const earMaterial = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(color).multiplyScalar(0.7),
+    metalness: 0.1,
+    roughness: 0.9,
+  });
+
+  const leftEar = new THREE.Mesh(earGeometry, earMaterial);
+  leftEar.position.set(0.5, 0.85, 0.35);
+  leftEar.rotation.z = 0.3;
+  dogGroup.add(leftEar);
+
+  const rightEar = new THREE.Mesh(earGeometry, earMaterial);
+  rightEar.position.set(0.5, 0.85, -0.35);
+  rightEar.rotation.z = 0.3;
+  dogGroup.add(rightEar);
+
+  // Stubby legs
+  const legGeometry = new THREE.CylinderGeometry(0.12, 0.14, 0.3, 8);
+  const legMaterial = new THREE.MeshStandardMaterial({
+    color: color,
+    metalness: 0.1,
+    roughness: 0.8,
+  });
+
+  const positions = [
+    [0.4, 0.15, 0.35],
+    [0.4, 0.15, -0.35],
+    [-0.4, 0.15, 0.35],
+    [-0.4, 0.15, -0.35],
+  ];
+
+  positions.forEach((pos) => {
+    const leg = new THREE.Mesh(legGeometry, legMaterial);
+    leg.position.set(...pos);
+    dogGroup.add(leg);
+  });
+
+  // Curly tail
+  const tailGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+  const tailMaterial = new THREE.MeshStandardMaterial({
+    color: color,
+    metalness: 0.1,
+    roughness: 0.8,
+  });
+  const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+  tail.position.set(-0.85, 0.7, 0);
+  dogGroup.add(tail);
+
+  // Tongue (sticking out - very cute!)
+  const tongueGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+  tongueGeometry.scale(1.5, 0.4, 0.8);
+  const tongueMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff6b9d,
+    metalness: 0.2,
+    roughness: 0.6,
+  });
+  const tongue = new THREE.Mesh(tongueGeometry, tongueMaterial);
+  tongue.position.set(1.05, 0.48, 0);
+  dogGroup.add(tongue);
+
+  dogGroup.position.set(x, 0, z);
+
+  return dogGroup;
+}
+
+// Create a bone treat
+function createBone(color, x, z, size = 1) {
+  const boneGroup = new THREE.Group();
+
+  // Shaft
+  const shaftGeometry = new THREE.CylinderGeometry(0.08 * size, 0.08 * size, 0.4 * size, 8);
+  shaftGeometry.rotateZ(Math.PI / 2);
+  const boneMaterial = new THREE.MeshStandardMaterial({
+    color: color,
+    metalness: 0.2,
+    roughness: 0.7,
+    emissive: color,
+    emissiveIntensity: 0.2,
+  });
+  const shaft = new THREE.Mesh(shaftGeometry, boneMaterial);
+  boneGroup.add(shaft);
+
+  // End caps
+  const capGeometry = new THREE.SphereGeometry(0.12 * size, 8, 8);
+  const leftCap = new THREE.Mesh(capGeometry, boneMaterial);
+  leftCap.position.set(-0.2 * size, 0, 0);
+  boneGroup.add(leftCap);
+
+  const rightCap = new THREE.Mesh(capGeometry, boneMaterial);
+  rightCap.position.set(0.2 * size, 0, 0);
+  boneGroup.add(rightCap);
+
+  boneGroup.position.set(x, 0.15 * size, z);
+
+  return boneGroup;
+}
+
+// Create a food bowl
+function createFoodBowl(color, x, z, fillLevel = 0.5) {
+  const bowlGroup = new THREE.Group();
+
+  // Bowl outer
+  const bowlGeometry = new THREE.CylinderGeometry(0.5, 0.3, 0.3, 16);
+  const bowlMaterial = new THREE.MeshStandardMaterial({
+    color: 0x4a4a5c,
+    metalness: 0.6,
+    roughness: 0.3,
+  });
+  const bowl = new THREE.Mesh(bowlGeometry, bowlMaterial);
+  bowl.position.y = 0.15;
+  bowlGroup.add(bowl);
+
+  // Food inside
+  if (fillLevel > 0) {
+    const foodGeometry = new THREE.CylinderGeometry(0.4 * fillLevel + 0.1, 0.25, 0.15, 16);
+    const foodMaterial = new THREE.MeshStandardMaterial({
+      color: color,
+      metalness: 0.1,
+      roughness: 0.9,
+      emissive: color,
+      emissiveIntensity: 0.15,
+    });
+    const food = new THREE.Mesh(foodGeometry, foodMaterial);
+    food.position.y = 0.22;
+    bowlGroup.add(food);
+  }
+
+  bowlGroup.position.set(x, 0, z);
+  return bowlGroup;
+}
 
 export function FinancialChart({ data }) {
   const containerRef = useRef(null);
@@ -15,59 +229,88 @@ export function FinancialChart({ data }) {
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0d0d0d);
+    scene.background = new THREE.Color(0x1a1a2e);
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.set(0, 8, 12);
-    camera.lookAt(0, 0, 0);
+    // Camera - adjusted for better view of dogs and timeline
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    camera.position.set(0, 6, 14);
+    camera.lookAt(0, 1, 0);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 10, 5);
+    directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    const pointLight = new THREE.PointLight(0x6366f1, 1, 50);
-    pointLight.position.set(-5, 5, 5);
-    scene.add(pointLight);
+    const warmLight = new THREE.PointLight(0xffa500, 0.5, 20);
+    warmLight.position.set(-5, 4, 3);
+    scene.add(warmLight);
 
-    // Ground plane with grid
-    const groundGeometry = new THREE.PlaneGeometry(20, 20);
+    // Ground - grassy park
+    const groundGeometry = new THREE.CircleGeometry(12, 32);
     const groundMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1a1a2e,
-      transparent: true,
-      opacity: 0.8,
+      color: 0x2d5a3d,
+      roughness: 0.9,
     });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.1;
+    ground.position.y = -0.01;
+    ground.receiveShadow = true;
     scene.add(ground);
 
-    // Grid helper
-    const gridHelper = new THREE.GridHelper(20, 20, 0x3b3b5c, 0x2a2a40);
-    scene.add(gridHelper);
-
-    // Create expense bars
-    const bars = [];
+    // Calculate financial metrics
     const expenses = data.expenses || [];
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const maxAmount = Math.max(...expenses.map((e) => e.amount), data.income || 1);
+    const monthlySavings = (data.income || 0) - totalExpenses;
+    const savingsGoal = data.savingsGoal || 0;
+    const currentSavings = data.currentSavings || 0;
+    const remainingToGoal = Math.max(0, savingsGoal - currentSavings);
+    const monthsToGoal = monthlySavings > 0 ? Math.ceil(remainingToGoal / monthlySavings) : Infinity;
 
-    const barWidth = 1;
-    const spacing = 1.8;
-    const startX = -((expenses.length - 1) * spacing) / 2;
+    // Dog colors - cute fat dogs!
+    const dogColors = [
+      0xc4a574, // golden/tan
+      0x8b6914, // brown
+      0xf5f5dc, // cream
+      0x4a4a4a, // gray
+      0xd4956a, // corgi orange
+    ];
 
-    // Color palette for bars
-    const colors = [
+    // Create dogs based on expense categories (dogs competing for resources)
+    const dogs = [];
+    const numDogs = Math.min(expenses.length + 1, 5); // Max 5 dogs
+
+    for (let i = 0; i < numDogs; i++) {
+      const angle = (i / numDogs) * Math.PI * 2 - Math.PI / 2;
+      const radius = 3.5 + Math.random() * 0.5;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const dog = createFatDog(dogColors[i % dogColors.length], x, z);
+      dog.rotation.y = -angle + Math.PI / 2; // Face center
+      dog.userData = {
+        baseX: x,
+        baseZ: z,
+        angle: angle,
+        speed: 0.3 + Math.random() * 0.3,
+        wobbleOffset: Math.random() * Math.PI * 2,
+      };
+      scene.add(dog);
+      dogs.push(dog);
+    }
+
+    // Color palette for resources
+    const resourceColors = [
       0x3b82f6, // blue
       0x8b5cf6, // purple
       0x06b6d4, // cyan
@@ -75,119 +318,112 @@ export function FinancialChart({ data }) {
       0xf59e0b, // amber
       0xef4444, // red
       0xec4899, // pink
-      0x6366f1, // indigo
     ];
 
-    expenses.forEach((expense, index) => {
-      const normalizedHeight = (expense.amount / maxAmount) * 6;
-      const geometry = new THREE.BoxGeometry(barWidth, normalizedHeight, barWidth);
-      const material = new THREE.MeshStandardMaterial({
-        color: colors[index % colors.length],
-        metalness: 0.3,
-        roughness: 0.4,
-      });
-
-      const bar = new THREE.Mesh(geometry, material);
-      bar.position.x = startX + index * spacing;
-      bar.position.y = normalizedHeight / 2;
-      bar.position.z = 0;
-
-      // Add glow effect
-      const glowGeometry = new THREE.BoxGeometry(
-        barWidth + 0.1,
-        normalizedHeight + 0.1,
-        barWidth + 0.1
-      );
-      const glowMaterial = new THREE.MeshBasicMaterial({
-        color: colors[index % colors.length],
-        transparent: true,
-        opacity: 0.2,
-      });
-      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-      glow.position.copy(bar.position);
-
-      scene.add(bar);
-      scene.add(glow);
-      bars.push({ bar, glow, targetHeight: normalizedHeight });
+    // Create food bowls representing expenses (resources dogs compete for)
+    const bowls = [];
+    expenses.slice(0, 6).forEach((expense, index) => {
+      const angle = (index / Math.min(expenses.length, 6)) * Math.PI * 2;
+      const radius = 1.5;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      const fillLevel = Math.min(expense.amount / (data.income || 1), 1);
+      const bowl = createFoodBowl(resourceColors[index % resourceColors.length], x, z, fillLevel);
+      scene.add(bowl);
+      bowls.push(bowl);
     });
 
-    // Progress ring for savings goal
-    if (data.savingsGoal && data.currentSavings !== undefined) {
-      const progress = Math.min(data.currentSavings / data.savingsGoal, 1);
+    // Create progress path/timeline toward goal
+    const pathGroup = new THREE.Group();
 
-      // Outer ring (goal)
-      const outerRingGeometry = new THREE.TorusGeometry(2.5, 0.15, 16, 100);
-      const outerRingMaterial = new THREE.MeshStandardMaterial({
-        color: 0x3b3b5c,
-        metalness: 0.5,
-        roughness: 0.3,
-      });
-      const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
-      outerRing.position.set(8, 3, 0);
-      outerRing.rotation.y = Math.PI / 4;
-      scene.add(outerRing);
+    // Main path line
+    const pathLength = 10;
+    const pathGeometry = new THREE.BoxGeometry(pathLength, 0.1, 0.8);
+    const pathMaterial = new THREE.MeshStandardMaterial({
+      color: 0x3b3b5c,
+      metalness: 0.3,
+      roughness: 0.7,
+    });
+    const path = new THREE.Mesh(pathGeometry, pathMaterial);
+    path.position.set(0, 0.05, -5);
+    pathGroup.add(path);
 
-      // Progress ring
-      const progressAngle = progress * Math.PI * 2;
-      const progressRingGeometry = new THREE.TorusGeometry(
-        2.5,
-        0.25,
-        16,
-        Math.max(3, Math.floor(100 * progress)),
-        progressAngle
-      );
-      const progressRingMaterial = new THREE.MeshStandardMaterial({
+    // Progress on path (how far along to goal)
+    const progress = savingsGoal > 0 ? Math.min(currentSavings / savingsGoal, 1) : 0;
+    const progressLength = pathLength * progress;
+    if (progressLength > 0.1) {
+      const progressGeometry = new THREE.BoxGeometry(progressLength, 0.15, 0.85);
+      const progressMaterial = new THREE.MeshStandardMaterial({
         color: 0x10b981,
-        metalness: 0.6,
-        roughness: 0.2,
+        metalness: 0.4,
+        roughness: 0.5,
         emissive: 0x10b981,
         emissiveIntensity: 0.3,
       });
-      const progressRing = new THREE.Mesh(progressRingGeometry, progressRingMaterial);
-      progressRing.position.set(8, 3, 0);
-      progressRing.rotation.y = Math.PI / 4;
-      progressRing.rotation.z = -Math.PI / 2;
-      scene.add(progressRing);
+      const progressBar = new THREE.Mesh(progressGeometry, progressMaterial);
+      progressBar.position.set(-pathLength / 2 + progressLength / 2, 0.08, -5);
+      pathGroup.add(progressBar);
+    }
 
-      // Center sphere
-      const sphereGeometry = new THREE.SphereGeometry(0.8, 32, 32);
-      const sphereMaterial = new THREE.MeshStandardMaterial({
-        color: progress >= 1 ? 0x10b981 : 0x6366f1,
-        metalness: 0.7,
-        roughness: 0.2,
-        emissive: progress >= 1 ? 0x10b981 : 0x6366f1,
-        emissiveIntensity: 0.4,
+    // Milestone markers (months)
+    const maxMonthsToShow = Math.min(monthsToGoal === Infinity ? 12 : monthsToGoal, 12);
+    for (let i = 0; i <= maxMonthsToShow; i += Math.max(1, Math.floor(maxMonthsToShow / 6))) {
+      const x = -pathLength / 2 + (i / maxMonthsToShow) * pathLength;
+      const markerGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.4, 8);
+      const isReached = savingsGoal > 0 && currentSavings >= (savingsGoal * i) / maxMonthsToShow;
+      const markerMaterial = new THREE.MeshStandardMaterial({
+        color: isReached ? 0x10b981 : 0x6366f1,
+        metalness: 0.5,
+        roughness: 0.3,
+        emissive: isReached ? 0x10b981 : 0x6366f1,
+        emissiveIntensity: 0.2,
       });
-      const centerSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-      centerSphere.position.set(8, 3, 0);
-      scene.add(centerSphere);
+      const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+      marker.position.set(x, 0.25, -5);
+      pathGroup.add(marker);
     }
 
-    // Floating particles
-    const particleCount = 50;
-    const particleGeometry = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
+    // Goal flag at the end
+    const flagPoleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 8);
+    const flagPoleMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700 });
+    const flagPole = new THREE.Mesh(flagPoleGeometry, flagPoleMaterial);
+    flagPole.position.set(pathLength / 2, 0.75, -5);
+    pathGroup.add(flagPole);
 
-    for (let i = 0; i < particleCount * 3; i += 3) {
-      particlePositions[i] = (Math.random() - 0.5) * 20;
-      particlePositions[i + 1] = Math.random() * 10;
-      particlePositions[i + 2] = (Math.random() - 0.5) * 20;
-    }
-
-    particleGeometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(particlePositions, 3)
-    );
-
-    const particleMaterial = new THREE.PointsMaterial({
-      color: 0x6366f1,
-      size: 0.1,
-      transparent: true,
-      opacity: 0.6,
+    const flagGeometry = new THREE.BoxGeometry(0.6, 0.4, 0.05);
+    const flagMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      metalness: 0.3,
+      roughness: 0.6,
+      emissive: 0xffd700,
+      emissiveIntensity: 0.3,
     });
+    const flag = new THREE.Mesh(flagGeometry, flagMaterial);
+    flag.position.set(pathLength / 2 + 0.3, 1.3, -5);
+    pathGroup.add(flag);
 
-    const particles = new THREE.Points(particleGeometry, particleMaterial);
-    scene.add(particles);
+    // Goal bone at the end (big reward!)
+    const goalBone = createBone(0xffd700, pathLength / 2, -5, 2);
+    goalBone.position.y = 0.5;
+    pathGroup.add(goalBone);
+
+    scene.add(pathGroup);
+
+    // Scatter some bonus bones around
+    const bonusResources = [];
+    for (let i = 0; i < 3; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 5 + Math.random() * 2;
+      const bone = createBone(
+        resourceColors[Math.floor(Math.random() * resourceColors.length)],
+        Math.cos(angle) * radius,
+        Math.sin(angle) * radius,
+        0.7
+      );
+      bone.rotation.y = Math.random() * Math.PI;
+      scene.add(bone);
+      bonusResources.push(bone);
+    }
 
     // Animation
     let animationId;
@@ -195,25 +431,50 @@ export function FinancialChart({ data }) {
 
     const animate = () => {
       animationId = requestAnimationFrame(animate);
-      time += 0.01;
+      time += 0.016;
 
-      // Rotate scene slowly
-      scene.rotation.y = Math.sin(time * 0.2) * 0.1;
+      // Animate dogs - wobble, look around, occasionally move
+      dogs.forEach((dog, index) => {
+        const wobble = Math.sin(time * 2 + dog.userData.wobbleOffset) * 0.05;
+        dog.position.y = wobble;
 
-      // Animate particles
-      const positions = particles.geometry.attributes.position.array;
-      for (let i = 1; i < positions.length; i += 3) {
-        positions[i] += Math.sin(time + i) * 0.002;
-      }
-      particles.geometry.attributes.position.needsUpdate = true;
+        // Body bounce when "walking"
+        dog.rotation.z = Math.sin(time * 4 + dog.userData.wobbleOffset) * 0.03;
 
-      // Pulse bars
-      bars.forEach(({ bar, glow }, index) => {
-        const pulse = 1 + Math.sin(time * 2 + index * 0.5) * 0.02;
-        bar.scale.x = pulse;
-        bar.scale.z = pulse;
-        glow.scale.x = pulse * 1.1;
-        glow.scale.z = pulse * 1.1;
+        // Dogs slowly circle, competing for resources
+        const circleSpeed = dog.userData.speed * 0.1;
+        const newAngle = dog.userData.angle + time * circleSpeed;
+        const radius = 3.5 + Math.sin(time * 0.5 + index) * 0.5;
+        dog.position.x = Math.cos(newAngle) * radius;
+        dog.position.z = Math.sin(newAngle) * radius;
+        dog.rotation.y = -newAngle + Math.PI / 2;
+
+        // Tail wag (find tail and animate)
+        const tail = dog.children.find(
+          (c) => c.position.x < -0.8 && c.position.y > 0.5
+        );
+        if (tail) {
+          tail.position.z = Math.sin(time * 8 + index) * 0.1;
+        }
+      });
+
+      // Animate bowls - subtle float
+      bowls.forEach((bowl, index) => {
+        bowl.position.y = Math.sin(time * 1.5 + index) * 0.02;
+      });
+
+      // Animate flag wave
+      flag.rotation.z = Math.sin(time * 3) * 0.1;
+      flag.position.x = pathLength / 2 + 0.3 + Math.sin(time * 3) * 0.02;
+
+      // Animate goal bone spin
+      goalBone.rotation.y = time * 0.5;
+      goalBone.position.y = 0.5 + Math.sin(time * 2) * 0.1;
+
+      // Animate bonus bones
+      bonusResources.forEach((bone, index) => {
+        bone.rotation.y += 0.01;
+        bone.position.y = 0.15 + Math.sin(time * 2 + index * 2) * 0.05;
       });
 
       renderer.render(scene, camera);
@@ -261,8 +522,13 @@ export function FinancialChart({ data }) {
 
   const totalExpenses = (data.expenses || []).reduce((sum, e) => sum + e.amount, 0);
   const monthlySavings = (data.income || 0) - totalExpenses;
-  const progressPercent = data.savingsGoal
-    ? Math.min(((data.currentSavings || 0) / data.savingsGoal) * 100, 100)
+  const savingsGoal = data.savingsGoal || 0;
+  const currentSavings = data.currentSavings || 0;
+  const remainingToGoal = Math.max(0, savingsGoal - currentSavings);
+  const monthsToGoal =
+    monthlySavings > 0 ? Math.ceil(remainingToGoal / monthlySavings) : null;
+  const progressPercent = savingsGoal
+    ? Math.min((currentSavings / savingsGoal) * 100, 100)
     : 0;
 
   return (
@@ -278,18 +544,38 @@ export function FinancialChart({ data }) {
           <Text fontSize="xl" fontWeight="bold">
             Your Financial Roadmap
           </Text>
-          {data.savingsGoal && (
+          {monthsToGoal !== null && monthsToGoal !== Infinity && (
             <Badge
-              colorScheme={progressPercent >= 100 ? "green" : "blue"}
+              colorScheme={monthsToGoal <= 6 ? "green" : monthsToGoal <= 12 ? "blue" : "purple"}
               fontSize="sm"
               px="3"
               py="1"
               borderRadius="full"
             >
-              {progressPercent.toFixed(1)}% to goal
+              {monthsToGoal} {monthsToGoal === 1 ? "month" : "months"} to goal
             </Badge>
           )}
         </HStack>
+
+        {savingsGoal > 0 && (
+          <Box>
+            <HStack justify="space-between" mb="1">
+              <Text fontSize="sm" color="gray.400">
+                Progress to ${savingsGoal.toLocaleString()} goal
+              </Text>
+              <Text fontSize="sm" color="green.400" fontWeight="bold">
+                {progressPercent.toFixed(1)}%
+              </Text>
+            </HStack>
+            <Progress
+              value={progressPercent}
+              colorScheme="green"
+              size="sm"
+              borderRadius="full"
+              bg="gray.700"
+            />
+          </Box>
+        )}
 
         <Box
           ref={containerRef}
@@ -330,22 +616,48 @@ export function FinancialChart({ data }) {
             </Text>
           </VStack>
 
-          {data.savingsGoal && (
+          {savingsGoal > 0 && (
             <VStack align="start" gap="1">
               <Text color="gray.500" fontSize="xs" textTransform="uppercase">
-                Savings Goal
+                Remaining to Goal
               </Text>
               <Text color="purple.400" fontSize="lg" fontWeight="bold">
-                ${data.savingsGoal.toLocaleString()}
+                ${remainingToGoal.toLocaleString()}
               </Text>
             </VStack>
           )}
         </HStack>
 
+        {monthsToGoal !== null && monthsToGoal !== Infinity && savingsGoal > 0 && (
+          <Box
+            p="4"
+            bg="gray.800"
+            borderRadius="md"
+            borderWidth="1px"
+            borderColor="gray.700"
+          >
+            <HStack gap="3" align="center">
+              <Text fontSize="2xl">🐕</Text>
+              <VStack align="start" gap="0">
+                <Text fontWeight="bold" color="white">
+                  Monthly Progress Plan
+                </Text>
+                <Text fontSize="sm" color="gray.400">
+                  Save ${monthlySavings.toLocaleString()}/month to reach your $
+                  {savingsGoal.toLocaleString()} goal in{" "}
+                  <Text as="span" color="green.400" fontWeight="bold">
+                    {monthsToGoal} {monthsToGoal === 1 ? "month" : "months"}
+                  </Text>
+                </Text>
+              </VStack>
+            </HStack>
+          </Box>
+        )}
+
         {data.expenses && data.expenses.length > 0 && (
           <Box pt="2">
             <Text color="gray.500" fontSize="xs" textTransform="uppercase" mb="2">
-              Expense Breakdown
+              Resources Being Competed For (Expenses)
             </Text>
             <HStack flexWrap="wrap" gap="2">
               {data.expenses.map((expense, index) => (
