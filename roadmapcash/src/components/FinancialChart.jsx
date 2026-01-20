@@ -671,13 +671,13 @@ function ExpenseBarChart({ expenses, income }) {
 
   // Calculate total items including savings bar
   const totalItems = sortedExpenses.length + (savingsAmount > 0 && income > 0 ? 1 : 0);
-  const barHeight = 28;
-  const barGap = 10;
-  const chartHeight = Math.max(120, totalItems * (barHeight + barGap) + 50);
-  const labelWidth = 160;
-  const amountWidth = 80;
-  const chartWidth = 500;
-  const barAreaWidth = chartWidth - labelWidth - amountWidth - 20;
+  const barHeight = 26;
+  const barGap = 8;
+  const chartHeight = Math.max(100, totalItems * (barHeight + barGap) + 40);
+  const labelWidth = 130;
+  const amountWidth = 65;
+  const chartWidth = 450;
+  const barAreaWidth = chartWidth - labelWidth - amountWidth - 10;
 
   return (
     <Box
@@ -744,15 +744,15 @@ function ExpenseBarChart({ expenses, income }) {
               <g key={index}>
                 {/* Label */}
                 <text
-                  x={labelWidth - 8}
-                  y={y + barHeight / 2 + 5}
+                  x={labelWidth - 6}
+                  y={y + barHeight / 2 + 4}
                   textAnchor="end"
                   fill="#d1d5db"
-                  fontSize="13"
+                  fontSize="11"
                   fontWeight="500"
                 >
-                  {expense.name.length > 20
-                    ? expense.name.substring(0, 20) + "..."
+                  {expense.name.length > 16
+                    ? expense.name.substring(0, 16) + "..."
                     : expense.name}
                 </text>
 
@@ -779,11 +779,11 @@ function ExpenseBarChart({ expenses, income }) {
 
                 {/* Amount label */}
                 <text
-                  x={labelWidth + barAreaWidth + 10}
-                  y={y + barHeight / 2 + 5}
+                  x={labelWidth + barAreaWidth + 6}
+                  y={y + barHeight / 2 + 4}
                   textAnchor="start"
                   fill="#9ca3af"
-                  fontSize="13"
+                  fontSize="11"
                   fontWeight="600"
                 >
                   {formatCurrency(expense.amount)}
@@ -796,11 +796,11 @@ function ExpenseBarChart({ expenses, income }) {
           {savingsAmount > 0 && income > 0 && (
             <g>
               <text
-                x={labelWidth - 8}
-                y={20 + sortedExpenses.length * (barHeight + barGap) + barHeight / 2 + 5}
+                x={labelWidth - 6}
+                y={20 + sortedExpenses.length * (barHeight + barGap) + barHeight / 2 + 4}
                 textAnchor="end"
                 fill="#10b981"
-                fontSize="13"
+                fontSize="11"
                 fontWeight="600"
               >
                 Savings
@@ -826,11 +826,11 @@ function ExpenseBarChart({ expenses, income }) {
               />
 
               <text
-                x={labelWidth + barAreaWidth + 10}
-                y={20 + sortedExpenses.length * (barHeight + barGap) + barHeight / 2 + 5}
+                x={labelWidth + barAreaWidth + 6}
+                y={20 + sortedExpenses.length * (barHeight + barGap) + barHeight / 2 + 4}
                 textAnchor="start"
                 fill="#10b981"
-                fontSize="13"
+                fontSize="11"
                 fontWeight="600"
               >
                 {formatCurrency(savingsAmount)}
@@ -843,10 +843,10 @@ function ExpenseBarChart({ expenses, income }) {
             <text
               key={i}
               x={labelWidth + ratio * barAreaWidth}
-              y={chartHeight - 12}
+              y={chartHeight - 8}
               textAnchor="middle"
               fill="#6b7280"
-              fontSize="11"
+              fontSize="10"
             >
               {formatCurrency(maxAmount * ratio)}
             </text>
