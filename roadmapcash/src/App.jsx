@@ -20,10 +20,13 @@ function App() {
   } = useDecentralizedIdentity();
   const {
     parseFinancialInput,
+    updateFinancialData,
     financialData,
     setFinancialData,
     isLoading: isGenerating,
     error: parseError,
+    isUpdating,
+    updateError,
   } = useFinancialParser();
 
   // Get saved roadmap from userData directly
@@ -32,7 +35,6 @@ function App() {
   // Initialize input state - use saved input if available
   const [userInput, setUserInput] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
-
   // Initialize from saved data (called once by callback ref)
   const initializeFromSaved = useCallback(
     (node) => {
@@ -57,6 +59,14 @@ function App() {
     if (result) {
       // Save the roadmap data after successful generation
       await saveRoadmap(input, result);
+    }
+  };
+
+  const handleUpdate = async (updateInput) => {
+    if (!financialData) return;
+    const result = await updateFinancialData(financialData, updateInput);
+    if (result) {
+      await saveRoadmap(userInput, result, updateInput);
     }
   };
 
@@ -115,7 +125,7 @@ function App() {
               hasSavedData={hasSavedData}
             />
 
-            {parseError && (
+            {(parseError || updateError) && (
               <Box
                 p="4"
                 bg="red.900"
@@ -124,12 +134,18 @@ function App() {
                 borderColor="red.700"
               >
                 <Text color="red.200" fontSize="sm">
-                  {parseError}
+                  {parseError || updateError}
                 </Text>
               </Box>
             )}
 
-            {financialData && <FinancialChart data={financialData} />}
+            {financialData && (
+              <FinancialChart
+                data={financialData}
+                onUpdate={handleUpdate}
+                isUpdating={isUpdating}
+              />
+            )}
           </VStack>
         ) : null}
       </Box>

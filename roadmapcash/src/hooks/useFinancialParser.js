@@ -16,10 +16,12 @@ const financialDataSchema = Schema.object({
             description: "Monthly amount for this expense",
           }),
           recommendation: Schema.string({
-            description: "Specific recommendation for this expense - be opinionated about whether to cut, maintain, or optimize",
+            description:
+              "Specific recommendation for this expense - be opinionated about whether to cut, maintain, or optimize",
           }),
           priority: Schema.string({
-            description: "Priority level: essential, important, or discretionary",
+            description:
+              "Priority level: essential, important, or discretionary",
             enum: ["essential", "important", "discretionary"],
           }),
         },
@@ -38,25 +40,39 @@ const financialDataSchema = Schema.object({
     plan: Schema.object({
       properties: {
         title: Schema.string({
-          description: "A motivating title for their financial plan, personalized to their goal",
+          description:
+            "A motivating title for their financial plan, personalized to their goal",
         }),
         overview: Schema.string({
-          description: "2-3 sentence overview of their financial situation and the path forward",
+          description:
+            "2-3 sentence overview of their financial situation and the path forward",
         }),
         monthlyBudget: Schema.object({
           properties: {
-            needs: Schema.number({ description: "Recommended amount for needs (50% rule target)" }),
-            wants: Schema.number({ description: "Recommended amount for wants (30% rule target)" }),
-            savings: Schema.number({ description: "Recommended amount for savings (20% rule target)" }),
+            needs: Schema.number({
+              description: "Recommended amount for needs (50% rule target)",
+            }),
+            wants: Schema.number({
+              description: "Recommended amount for wants (30% rule target)",
+            }),
+            savings: Schema.number({
+              description: "Recommended amount for savings (20% rule target)",
+            }),
           },
           required: ["needs", "wants", "savings"],
         }),
         strategies: Schema.array({
           items: Schema.object({
             properties: {
-              title: Schema.string({ description: "Short title for the strategy" }),
-              description: Schema.string({ description: "Detailed explanation of the strategy" }),
-              impact: Schema.string({ description: "Expected monthly savings or benefit" }),
+              title: Schema.string({
+                description: "Short title for the strategy",
+              }),
+              description: Schema.string({
+                description: "Detailed explanation of the strategy",
+              }),
+              impact: Schema.string({
+                description: "Expected monthly savings or benefit",
+              }),
               difficulty: Schema.string({
                 description: "How hard this is to implement",
                 enum: ["easy", "medium", "hard"],
@@ -64,13 +80,16 @@ const financialDataSchema = Schema.object({
             },
             required: ["title", "description", "impact", "difficulty"],
           }),
-          description: "3-5 specific savings strategies tailored to their situation",
+          description:
+            "3-5 specific savings strategies tailored to their situation",
         }),
         actionItems: Schema.array({
           items: Schema.object({
             properties: {
               action: Schema.string({ description: "Specific action to take" }),
-              timeframe: Schema.string({ description: "When to do this: this week, this month, ongoing" }),
+              timeframe: Schema.string({
+                description: "When to do this: this week, this month, ongoing",
+              }),
               category: Schema.string({
                 description: "Category of action",
                 enum: ["cut", "optimize", "earn", "automate", "track"],
@@ -81,23 +100,35 @@ const financialDataSchema = Schema.object({
           description: "5-8 specific action items to implement immediately",
         }),
         weeklyCheckIn: Schema.string({
-          description: "What they should review/check each week to stay on track",
+          description:
+            "What they should review/check each week to stay on track",
         }),
         potentialSavings: Schema.number({
-          description: "Estimated additional monthly savings if they follow all recommendations",
+          description:
+            "Estimated additional monthly savings if they follow all recommendations",
         }),
         motivationalNote: Schema.string({
-          description: "A personalized, encouraging note about their journey - be specific to their goals",
+          description:
+            "A personalized, encouraging note about their journey - be specific to their goals",
         }),
       },
-      required: ["title", "overview", "monthlyBudget", "strategies", "actionItems", "weeklyCheckIn", "potentialSavings", "motivationalNote"],
+      required: [
+        "title",
+        "overview",
+        "monthlyBudget",
+        "strategies",
+        "actionItems",
+        "weeklyCheckIn",
+        "potentialSavings",
+        "motivationalNote",
+      ],
     }),
   },
   required: ["expenses", "plan"],
 });
 
 const financialModel = getGenerativeModel(ai, {
-  model: "gemini-2.0-flash",
+  model: "gemini-3-flash-preview",
   generationConfig: {
     responseMimeType: "application/json",
     responseSchema: financialDataSchema,
@@ -251,112 +282,190 @@ export function useFinancialParser() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [financialData, setFinancialData] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState(null);
 
-  const parseFinancialInput = useCallback(async (userInput, additionalContext = "") => {
-    setIsLoading(true);
-    setError(null);
+  const finalizeFinancialData = useCallback((parsed, fallback) => {
+    const result = { ...parsed };
 
-    try {
-      let prompt = `${SYSTEM_PROMPT}\n\nUser's financial information:\n${userInput}`;
+    if (!result.expenses) {
+      result.expenses = fallback.expenses || [];
+    }
 
-      if (additionalContext.trim()) {
-        prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
-      }
+    if (result.expenses.length === 0 && fallback.expenses?.length > 0) {
+      result.expenses = fallback.expenses.map((expense) => ({
+        ...expense,
+        recommendation: expense.recommendation || "Review this expense",
+        priority: expense.priority || "important",
+      }));
+    }
 
-      const result = await financialModel.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
-
-      const parsed = JSON.parse(text);
-      const fallback = extractLooseData(userInput);
-
-      // Ensure expenses array exists and has valid data
-      if (!parsed.expenses) {
-        parsed.expenses = [];
-      }
-
-      if (parsed.expenses.length === 0 && fallback.expenses.length > 0) {
-        parsed.expenses = fallback.expenses.map((e) => ({
-          ...e,
-          recommendation: "Review this expense",
-          priority: "important",
-        }));
-      }
-
-      // Filter out any invalid expenses
-      parsed.expenses = parsed.expenses.filter(
-        (e) => e && e.name && typeof e.amount === "number" && e.amount > 0,
-      );
-
-      // Ensure all expenses have recommendations
-      parsed.expenses = parsed.expenses.map((e) => ({
-        ...e,
-        recommendation: e.recommendation || "Review this expense",
-        priority: e.priority || "important",
+    result.expenses = result.expenses
+      .filter(
+        (expense) =>
+          expense &&
+          expense.name &&
+          typeof expense.amount === "number" &&
+          expense.amount > 0,
+      )
+      .map((expense) => ({
+        ...expense,
+        recommendation: expense.recommendation || "Review this expense",
+        priority: expense.priority || "important",
       }));
 
-      // Set default values
-      if (
-        parsed.income === null ||
-        parsed.income === undefined ||
-        parsed.income === 0
-      ) {
-        parsed.income = fallback.income ?? 0;
-      }
-
-      if (
-        parsed.currentSavings === null ||
-        parsed.currentSavings === undefined
-      ) {
-        parsed.currentSavings = fallback.currentSavings ?? 0;
-      }
-
-      if (parsed.savingsGoal === null || parsed.savingsGoal === undefined) {
-        parsed.savingsGoal = fallback.savingsGoal ?? null;
-      }
-
-      // Ensure plan exists with defaults
-      if (!parsed.plan) {
-        const totalExpenses = parsed.expenses.reduce((sum, e) => sum + e.amount, 0);
-        const monthlySavings = Math.max(0, (parsed.income || 0) - totalExpenses);
-        parsed.plan = {
-          title: "Your Financial Roadmap",
-          overview: "Let's analyze your finances and create a plan to reach your goals.",
-          monthlyBudget: {
-            needs: Math.round((parsed.income || 0) * 0.5),
-            wants: Math.round((parsed.income || 0) * 0.3),
-            savings: Math.round((parsed.income || 0) * 0.2),
-          },
-          strategies: [],
-          actionItems: [],
-          weeklyCheckIn: "Review your spending and track progress toward your goal.",
-          potentialSavings: monthlySavings,
-          motivationalNote: "You've taken the first step by creating a plan. Stay consistent!",
-        };
-      }
-
-      setFinancialData(parsed);
-      return parsed;
-    } catch (err) {
-      console.error("Error parsing financial data:", err);
-      setError(err.message || "Failed to analyze financial data");
-      return null;
-    } finally {
-      setIsLoading(false);
+    if (
+      result.income === null ||
+      result.income === undefined ||
+      result.income === 0
+    ) {
+      result.income = fallback.income ?? 0;
     }
+
+    if (result.currentSavings === null || result.currentSavings === undefined) {
+      result.currentSavings = fallback.currentSavings ?? 0;
+    }
+
+    if (result.savingsGoal === null || result.savingsGoal === undefined) {
+      result.savingsGoal = fallback.savingsGoal ?? null;
+    }
+
+    const totalExpenses = result.expenses.reduce(
+      (sum, expense) => sum + expense.amount,
+      0,
+    );
+    const monthlySavings = (result.income || 0) - totalExpenses;
+    const basePlan = fallback.plan || {};
+    const plan = result.plan || {};
+
+    const monthlyBudget = plan.monthlyBudget ||
+      basePlan.monthlyBudget || {
+        needs: Math.round((result.income || 0) * 0.5),
+        wants: Math.round((result.income || 0) * 0.3),
+        savings: Math.round((result.income || 0) * 0.2),
+      };
+
+    result.plan = {
+      title: plan.title || basePlan.title || "Your Financial Roadmap",
+      overview:
+        plan.overview ||
+        basePlan.overview ||
+        "Let's analyze your finances and create a plan to reach your goals.",
+      monthlyBudget,
+      strategies: plan.strategies || basePlan.strategies || [],
+      actionItems: plan.actionItems || basePlan.actionItems || [],
+      weeklyCheckIn:
+        plan.weeklyCheckIn ||
+        basePlan.weeklyCheckIn ||
+        "Review your spending and track progress toward your goal.",
+      potentialSavings:
+        plan.potentialSavings ||
+        basePlan.potentialSavings ||
+        Math.max(0, monthlySavings),
+      motivationalNote:
+        plan.motivationalNote ||
+        basePlan.motivationalNote ||
+        "You've taken the first step by creating a plan. Stay consistent!",
+    };
+
+    return result;
   }, []);
+
+  const parseFinancialInput = useCallback(
+    async (userInput, additionalContext = "") => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        let prompt = `${SYSTEM_PROMPT}\n\nUser's financial information:\n${userInput}`;
+
+        if (additionalContext.trim()) {
+          prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+        }
+
+        const result = await financialModel.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+
+        const parsed = JSON.parse(text);
+        const fallback = extractLooseData(userInput);
+        const finalized = finalizeFinancialData(parsed, fallback);
+
+        setFinancialData(finalized);
+        return finalized;
+      } catch (err) {
+        console.error("Error parsing financial data:", err);
+        setError(err.message || "Failed to analyze financial data");
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [finalizeFinancialData],
+  );
 
   const clearData = useCallback(() => {
     setFinancialData(null);
     setError(null);
   }, []);
 
+  const updateFinancialData = useCallback(
+    async (currentData, updateRequest, additionalContext = "") => {
+      if (!currentData || !updateRequest?.trim()) return null;
+
+      setIsUpdating(true);
+      setUpdateError(null);
+
+      try {
+        let prompt = `${SYSTEM_PROMPT}
+
+You are updating an existing financial plan. Keep anything not mentioned the same.
+
+Current financial data (JSON):
+${JSON.stringify(currentData, null, 2)}
+
+Requested updates:
+${updateRequest}`;
+
+        if (additionalContext.trim()) {
+          prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+        }
+
+        const result = await financialModel.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+        const parsed = JSON.parse(text);
+        const fallback = {
+          income: currentData.income ?? 0,
+          expenses: currentData.expenses || [],
+          savingsGoal: currentData.savingsGoal ?? null,
+          currentSavings: currentData.currentSavings ?? 0,
+          plan: currentData.plan || {},
+        };
+        const finalized = finalizeFinancialData(parsed, fallback);
+
+        setFinancialData(finalized);
+        return finalized;
+      } catch (err) {
+        console.error("Error updating financial data:", err);
+        setUpdateError(err.message || "Failed to update your plan");
+        return null;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [finalizeFinancialData],
+  );
+
   return {
     parseFinancialInput,
+    updateFinancialData,
     clearData,
     financialData,
     setFinancialData,
     isLoading,
     error,
+    isUpdating,
+    updateError,
   };
 }

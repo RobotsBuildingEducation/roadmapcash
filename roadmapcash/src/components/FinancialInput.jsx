@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Textarea, Button, HStack } from "@chakra-ui/react";
+import { Box, VStack, Text, Textarea, Button } from "@chakra-ui/react";
 
 const PLACEHOLDER_TEXT = `Enter your expenses and financial goals. For example:
 
@@ -13,7 +13,13 @@ Current savings: $2,000
 
 Describe your financial situation and goals in any format you like.`;
 
-export function FinancialInput({ onGenerate, isGenerating, input, onInputChange, hasSavedData }) {
+export function FinancialInput({
+  onGenerate,
+  isGenerating,
+  input,
+  onInputChange,
+  hasSavedData,
+}) {
   const handleGenerate = () => {
     if (input.trim() && onGenerate) {
       onGenerate(input);
