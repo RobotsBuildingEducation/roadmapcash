@@ -1,12 +1,25 @@
 import { Box, HStack, VStack, Text, Spinner } from "@chakra-ui/react";
 import { useDecentralizedIdentity } from "@/hooks/useDecentralizedIdentity";
+import { useFinancialParser } from "@/hooks/useFinancialParser";
 import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { AccountMenu } from "@/components/AccountMenu";
+import { FinancialInput } from "@/components/FinancialInput";
+import { FinancialChart } from "@/components/FinancialChart";
 import "./App.css";
 
 function App() {
   const { identity, userData, isLoading, error, switchAccount, logout } =
     useDecentralizedIdentity();
+  const {
+    parseFinancialInput,
+    financialData,
+    isLoading: isGenerating,
+    error: parseError,
+  } = useFinancialParser();
+
+  const handleGenerate = async (input) => {
+    await parseFinancialInput(input);
+  };
 
   return (
     <Box minH="100vh" bg="gray.950" color="white">
@@ -48,7 +61,7 @@ function App() {
             </Text>
           </VStack>
         ) : identity ? (
-          <VStack align="stretch" gap="6" maxW="600px" mx="auto">
+          <VStack align="stretch" gap="6" maxW="900px" mx="auto">
             <Box
               p="6"
               bg="gray.900"
@@ -97,6 +110,44 @@ function App() {
                     month: "long",
                     day: "numeric",
                   })}
+                </Text>
+              </Box>
+            )}
+
+            <FinancialInput
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
+            />
+
+            {parseError && (
+              <Box
+                p="4"
+                bg="red.900"
+                borderRadius="md"
+                borderWidth="1px"
+                borderColor="red.700"
+              >
+                <Text color="red.200" fontSize="sm">
+                  {parseError}
+                </Text>
+              </Box>
+            )}
+
+            {financialData && <FinancialChart data={financialData} />}
+
+            {financialData?.summary && (
+              <Box
+                p="6"
+                bg="gray.900"
+                borderRadius="lg"
+                borderWidth="1px"
+                borderColor="gray.800"
+              >
+                <Text fontSize="lg" fontWeight="bold" mb="3">
+                  AI Analysis
+                </Text>
+                <Text color="gray.300" lineHeight="tall">
+                  {financialData.summary}
                 </Text>
               </Box>
             )}
