@@ -647,6 +647,236 @@ function OverviewChart({ income, expenses }) {
   );
 }
 
+// Expense Bar Chart - Horizontal bars comparing expenses
+function ExpenseBarChart({ expenses, income }) {
+  if (!expenses || expenses.length === 0) return null;
+
+  const maxAmount = Math.max(...expenses.map((e) => e.amount), 1);
+  const sortedExpenses = [...expenses].sort((a, b) => b.amount - a.amount);
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const savingsAmount = Math.max(0, (income || 0) - totalExpenses);
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "essential":
+        return "#3b82f6"; // blue
+      case "important":
+        return "#8b5cf6"; // purple
+      case "discretionary":
+        return "#f97316"; // orange
+      default:
+        return "#6b7280"; // gray
+    }
+  };
+
+  const chartHeight = Math.max(200, sortedExpenses.length * 36 + 60);
+  const barHeight = 24;
+  const barGap = 12;
+  const labelWidth = 120;
+  const amountWidth = 70;
+  const chartWidth = 320;
+  const barAreaWidth = chartWidth - labelWidth - amountWidth - 20;
+
+  return (
+    <Box
+      bg="gray.800"
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
+      <HStack justify="space-between" mb={{ base: "3", md: "4" }} flexWrap="wrap" gap="2">
+        <Text
+          fontSize={{ base: "xs", md: "sm" }}
+          fontWeight="semibold"
+          color="gray.400"
+          textTransform="uppercase"
+          letterSpacing="wide"
+        >
+          Expense Breakdown
+        </Text>
+        <HStack spacing="3" flexWrap="wrap">
+          <HStack spacing="1">
+            <Box w="2" h="2" borderRadius="full" bg="#3b82f6" />
+            <Text fontSize="2xs" color="gray.500">Essential</Text>
+          </HStack>
+          <HStack spacing="1">
+            <Box w="2" h="2" borderRadius="full" bg="#8b5cf6" />
+            <Text fontSize="2xs" color="gray.500">Important</Text>
+          </HStack>
+          <HStack spacing="1">
+            <Box w="2" h="2" borderRadius="full" bg="#f97316" />
+            <Text fontSize="2xs" color="gray.500">Discretionary</Text>
+          </HStack>
+        </HStack>
+      </HStack>
+
+      <Box overflowX="auto">
+        <svg
+          width="100%"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ minWidth: "280px" }}
+        >
+          {/* Background grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+            <line
+              key={i}
+              x1={labelWidth + ratio * barAreaWidth}
+              y1={10}
+              x2={labelWidth + ratio * barAreaWidth}
+              y2={chartHeight - 30}
+              stroke="#374151"
+              strokeWidth="1"
+              strokeDasharray={i === 0 ? "0" : "4,4"}
+            />
+          ))}
+
+          {/* Expense bars */}
+          {sortedExpenses.map((expense, index) => {
+            const barWidth = (expense.amount / maxAmount) * barAreaWidth;
+            const y = 20 + index * (barHeight + barGap);
+            const color = getPriorityColor(expense.priority);
+
+            return (
+              <g key={index}>
+                {/* Label */}
+                <text
+                  x={labelWidth - 8}
+                  y={y + barHeight / 2 + 4}
+                  textAnchor="end"
+                  fill="#d1d5db"
+                  fontSize="11"
+                  fontWeight="500"
+                >
+                  {expense.name.length > 14
+                    ? expense.name.substring(0, 14) + "..."
+                    : expense.name}
+                </text>
+
+                {/* Bar background */}
+                <rect
+                  x={labelWidth}
+                  y={y}
+                  width={barAreaWidth}
+                  height={barHeight}
+                  fill="#1f2937"
+                  rx="4"
+                />
+
+                {/* Bar fill */}
+                <rect
+                  x={labelWidth}
+                  y={y}
+                  width={barWidth}
+                  height={barHeight}
+                  fill={color}
+                  rx="4"
+                  opacity="0.85"
+                />
+
+                {/* Amount label */}
+                <text
+                  x={labelWidth + barAreaWidth + 8}
+                  y={y + barHeight / 2 + 4}
+                  textAnchor="start"
+                  fill="#9ca3af"
+                  fontSize="11"
+                  fontWeight="600"
+                >
+                  {formatCurrency(expense.amount)}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Savings bar (if positive) */}
+          {savingsAmount > 0 && income > 0 && (
+            <g>
+              <text
+                x={labelWidth - 8}
+                y={20 + sortedExpenses.length * (barHeight + barGap) + barHeight / 2 + 4}
+                textAnchor="end"
+                fill="#10b981"
+                fontSize="11"
+                fontWeight="600"
+              >
+                Savings
+              </text>
+
+              <rect
+                x={labelWidth}
+                y={20 + sortedExpenses.length * (barHeight + barGap)}
+                width={barAreaWidth}
+                height={barHeight}
+                fill="#1f2937"
+                rx="4"
+              />
+
+              <rect
+                x={labelWidth}
+                y={20 + sortedExpenses.length * (barHeight + barGap)}
+                width={(savingsAmount / maxAmount) * barAreaWidth}
+                height={barHeight}
+                fill="#10b981"
+                rx="4"
+                opacity="0.85"
+              />
+
+              <text
+                x={labelWidth + barAreaWidth + 8}
+                y={20 + sortedExpenses.length * (barHeight + barGap) + barHeight / 2 + 4}
+                textAnchor="start"
+                fill="#10b981"
+                fontSize="11"
+                fontWeight="600"
+              >
+                {formatCurrency(savingsAmount)}
+              </text>
+            </g>
+          )}
+
+          {/* X-axis labels */}
+          {[0, 0.5, 1].map((ratio, i) => (
+            <text
+              key={i}
+              x={labelWidth + ratio * barAreaWidth}
+              y={chartHeight - 10}
+              textAnchor="middle"
+              fill="#6b7280"
+              fontSize="9"
+            >
+              {formatCurrency(maxAmount * ratio)}
+            </text>
+          ))}
+        </svg>
+      </Box>
+
+      {/* Summary footer */}
+      <HStack justify="space-between" mt="3" pt="3" borderTopWidth="1px" borderColor="gray.700" flexWrap="wrap" gap="2">
+        <VStack align="start" spacing="0">
+          <Text fontSize="2xs" color="gray.500">Total Expenses</Text>
+          <Text fontSize="sm" fontWeight="bold" color="red.400">
+            {formatCurrency(totalExpenses)}
+          </Text>
+        </VStack>
+        {income > 0 && (
+          <VStack align="end" spacing="0">
+            <Text fontSize="2xs" color="gray.500">% of Income</Text>
+            <Text
+              fontSize="sm"
+              fontWeight="bold"
+              color={totalExpenses / income > 0.8 ? "red.400" : "green.400"}
+            >
+              {((totalExpenses / income) * 100).toFixed(0)}%
+            </Text>
+          </VStack>
+        )}
+      </HStack>
+    </Box>
+  );
+}
+
 // Monthly Projection Chart
 function MonthlyChart({
   monthlySavings,
@@ -1630,6 +1860,12 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                     />
                   </GridItem>
                 </Grid>
+
+                {/* Expense Bar Chart */}
+                <ExpenseBarChart
+                  expenses={expenses}
+                  income={data.income || 0}
+                />
 
                 <BirdsEyeView
                   currentSavings={data.currentSavings || 0}
