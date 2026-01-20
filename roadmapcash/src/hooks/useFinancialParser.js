@@ -1,5 +1,108 @@
 import { useState, useCallback } from "react";
-import { simplemodel } from "@/database/firebaseConfig";
+import { getGenerativeModel, Schema } from "@firebase/vertexai";
+import { ai } from "@/database/firebaseConfig";
+
+const financialDataSchema = Schema.object({
+  properties: {
+    income: Schema.number({
+      description: "Monthly income amount",
+      nullable: true,
+    }),
+    expenses: Schema.array({
+      items: Schema.object({
+        properties: {
+          name: Schema.string({ description: "Name of the expense category" }),
+          amount: Schema.number({
+            description: "Monthly amount for this expense",
+          }),
+          recommendation: Schema.string({
+            description: "Specific recommendation for this expense - be opinionated about whether to cut, maintain, or optimize",
+          }),
+          priority: Schema.string({
+            description: "Priority level: essential, important, or discretionary",
+            enum: ["essential", "important", "discretionary"],
+          }),
+        },
+        required: ["name", "amount", "recommendation", "priority"],
+      }),
+      description: "List of monthly expenses with recommendations",
+    }),
+    savingsGoal: Schema.number({
+      description: "Total savings goal amount",
+      nullable: true,
+    }),
+    currentSavings: Schema.number({
+      description: "Current savings amount",
+      nullable: true,
+    }),
+    plan: Schema.object({
+      properties: {
+        title: Schema.string({
+          description: "A motivating title for their financial plan, personalized to their goal",
+        }),
+        overview: Schema.string({
+          description: "2-3 sentence overview of their financial situation and the path forward",
+        }),
+        monthlyBudget: Schema.object({
+          properties: {
+            needs: Schema.number({ description: "Recommended amount for needs (50% rule target)" }),
+            wants: Schema.number({ description: "Recommended amount for wants (30% rule target)" }),
+            savings: Schema.number({ description: "Recommended amount for savings (20% rule target)" }),
+          },
+          required: ["needs", "wants", "savings"],
+        }),
+        strategies: Schema.array({
+          items: Schema.object({
+            properties: {
+              title: Schema.string({ description: "Short title for the strategy" }),
+              description: Schema.string({ description: "Detailed explanation of the strategy" }),
+              impact: Schema.string({ description: "Expected monthly savings or benefit" }),
+              difficulty: Schema.string({
+                description: "How hard this is to implement",
+                enum: ["easy", "medium", "hard"],
+              }),
+            },
+            required: ["title", "description", "impact", "difficulty"],
+          }),
+          description: "3-5 specific savings strategies tailored to their situation",
+        }),
+        actionItems: Schema.array({
+          items: Schema.object({
+            properties: {
+              action: Schema.string({ description: "Specific action to take" }),
+              timeframe: Schema.string({ description: "When to do this: this week, this month, ongoing" }),
+              category: Schema.string({
+                description: "Category of action",
+                enum: ["cut", "optimize", "earn", "automate", "track"],
+              }),
+            },
+            required: ["action", "timeframe", "category"],
+          }),
+          description: "5-8 specific action items to implement immediately",
+        }),
+        weeklyCheckIn: Schema.string({
+          description: "What they should review/check each week to stay on track",
+        }),
+        potentialSavings: Schema.number({
+          description: "Estimated additional monthly savings if they follow all recommendations",
+        }),
+        motivationalNote: Schema.string({
+          description: "A personalized, encouraging note about their journey - be specific to their goals",
+        }),
+      },
+      required: ["title", "overview", "monthlyBudget", "strategies", "actionItems", "weeklyCheckIn", "potentialSavings", "motivationalNote"],
+    }),
+  },
+  required: ["expenses", "plan"],
+});
+
+const financialModel = getGenerativeModel(ai, {
+  model: "gemini-3-flash-preview",
+  generationConfig: {
+    responseMimeType: "application/json",
+    responseSchema: financialDataSchema,
+  },
+});
 
 const SYSTEM_PROMPT = `You are an opinionated financial coach who creates personalized, actionable financial plans. You're direct, specific, and encouraging.
 
@@ -31,9 +134,7 @@ For the plan:
 - If they have no emergency fund, that's priority #1
 - Calculate potential savings by looking at expenses that could be reduced
 
-Additional context about the user (if provided) should heavily influence your recommendations.
-
-Return ONLY valid JSON with the structure described in the prompt.`;
+Additional context about the user (if provided) should heavily influence your recommendations.`;
 
 const MONTHLY_MULTIPLIERS = {
   week: 4.33,
@@ -236,7 +337,7 @@ export function useFinancialParser() {
         prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
       }
 
-      const result = await simplemodel.generateContent(prompt);
+      const result = await financialModel.generateContent(prompt);
       const response = result.response;
       const text = response.text();
 
@@ -282,7 +383,7 @@ ${updateRequest}`;
           prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
         }
 
-        const result = await simplemodel.generateContent(prompt);
+        const result = await financialModel.generateContent(prompt);
         const response = result.response;
         const text = response.text();
         const parsed = JSON.parse(text);
