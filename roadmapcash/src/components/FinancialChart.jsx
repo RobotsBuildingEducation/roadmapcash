@@ -1,5 +1,14 @@
 import { useMemo, useState } from "react";
-import { Box, VStack, Text, HStack, Badge, Grid, GridItem, Button } from "@chakra-ui/react";
+import {
+  Box,
+  VStack,
+  Text,
+  HStack,
+  Badge,
+  Grid,
+  GridItem,
+  Button,
+} from "@chakra-ui/react";
 
 // Color palette for consistent theming
 const COLORS = {
@@ -11,13 +20,44 @@ const COLORS = {
   cyan: "#06b6d4",
   pink: "#ec4899",
   blue: "#3b82f6",
-  expenses: ["#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e", "#14b8a6", "#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"],
+  expenses: [
+    "#ef4444",
+    "#f97316",
+    "#f59e0b",
+    "#eab308",
+    "#84cc16",
+    "#22c55e",
+    "#14b8a6",
+    "#06b6d4",
+    "#0ea5e9",
+    "#3b82f6",
+    "#6366f1",
+    "#8b5cf6",
+    "#a855f7",
+    "#d946ef",
+    "#ec4899",
+  ],
 };
 
 const PRIORITY_COLORS = {
-  essential: { bg: "blue.900", border: "blue.700", text: "blue.300", badge: "blue" },
-  important: { bg: "purple.900", border: "purple.700", text: "purple.300", badge: "purple" },
-  discretionary: { bg: "orange.900", border: "orange.700", text: "orange.300", badge: "orange" },
+  essential: {
+    bg: "blue.900",
+    border: "blue.700",
+    text: "blue.300",
+    badge: "blue",
+  },
+  important: {
+    bg: "purple.900",
+    border: "purple.700",
+    text: "purple.300",
+    badge: "purple",
+  },
+  discretionary: {
+    bg: "orange.900",
+    border: "orange.700",
+    text: "orange.300",
+    badge: "orange",
+  },
 };
 
 const DIFFICULTY_CONFIG = {
@@ -74,7 +114,13 @@ function PlanHeader({ plan, potentialSavings }) {
             {plan.title || "Your Financial Plan"}
           </Text>
           {potentialSavings > 0 && (
-            <Badge colorScheme="green" fontSize="sm" px="3" py="1" borderRadius="full">
+            <Badge
+              colorScheme="green"
+              fontSize="sm"
+              px="3"
+              py="1"
+              borderRadius="full"
+            >
               +{formatCurrency(potentialSavings)}/mo potential
             </Badge>
           )}
@@ -88,16 +134,28 @@ function PlanHeader({ plan, potentialSavings }) {
         {plan.monthlyBudget && (
           <HStack spacing="4" pt="2" flexWrap="wrap">
             <Box bg="blue.800" px="4" py="2" borderRadius="lg">
-              <Text fontSize="xs" color="blue.300" fontWeight="medium">NEEDS (50%)</Text>
-              <Text fontSize="lg" fontWeight="bold" color="white">{formatCurrency(plan.monthlyBudget.needs)}</Text>
+              <Text fontSize="xs" color="blue.300" fontWeight="medium">
+                NEEDS (50%)
+              </Text>
+              <Text fontSize="lg" fontWeight="bold" color="white">
+                {formatCurrency(plan.monthlyBudget.needs)}
+              </Text>
             </Box>
             <Box bg="purple.800" px="4" py="2" borderRadius="lg">
-              <Text fontSize="xs" color="purple.300" fontWeight="medium">WANTS (30%)</Text>
-              <Text fontSize="lg" fontWeight="bold" color="white">{formatCurrency(plan.monthlyBudget.wants)}</Text>
+              <Text fontSize="xs" color="purple.300" fontWeight="medium">
+                WANTS (30%)
+              </Text>
+              <Text fontSize="lg" fontWeight="bold" color="white">
+                {formatCurrency(plan.monthlyBudget.wants)}
+              </Text>
             </Box>
             <Box bg="green.800" px="4" py="2" borderRadius="lg">
-              <Text fontSize="xs" color="green.300" fontWeight="medium">SAVINGS (20%)</Text>
-              <Text fontSize="lg" fontWeight="bold" color="white">{formatCurrency(plan.monthlyBudget.savings)}</Text>
+              <Text fontSize="xs" color="green.300" fontWeight="medium">
+                SAVINGS (20%)
+              </Text>
+              <Text fontSize="lg" fontWeight="bold" color="white">
+                {formatCurrency(plan.monthlyBudget.savings)}
+              </Text>
             </Box>
           </HStack>
         )}
@@ -111,14 +169,27 @@ function ExpenseAnalysis({ expenses }) {
   if (!expenses || expenses.length === 0) return null;
 
   const groupedByPriority = {
-    essential: expenses.filter(e => e.priority === "essential"),
-    important: expenses.filter(e => e.priority === "important"),
-    discretionary: expenses.filter(e => e.priority === "discretionary"),
+    essential: expenses.filter((e) => e.priority === "essential"),
+    important: expenses.filter((e) => e.priority === "important"),
+    discretionary: expenses.filter((e) => e.priority === "discretionary"),
   };
 
   return (
-    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
-      <Text fontSize="sm" fontWeight="semibold" color="gray.400" mb="4" textTransform="uppercase" letterSpacing="wide">
+    <Box
+      bg="gray.800"
+      borderRadius="xl"
+      p="5"
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
+      <Text
+        fontSize="sm"
+        fontWeight="semibold"
+        color="gray.400"
+        mb="4"
+        textTransform="uppercase"
+        letterSpacing="wide"
+      >
         Expense Analysis & Recommendations
       </Text>
 
@@ -131,7 +202,11 @@ function ExpenseAnalysis({ expenses }) {
           return (
             <Box key={priority}>
               <HStack mb="2">
-                <Badge colorScheme={config.badge} fontSize="xs" textTransform="capitalize">
+                <Badge
+                  colorScheme={config.badge}
+                  fontSize="xs"
+                  textTransform="capitalize"
+                >
                   {priority}
                 </Badge>
                 <Text fontSize="xs" color="gray.500">
@@ -151,7 +226,11 @@ function ExpenseAnalysis({ expenses }) {
                     borderLeftWidth="3px"
                   >
                     <HStack justify="space-between" mb="1">
-                      <Text fontSize="sm" fontWeight="semibold" color={config.text}>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="semibold"
+                        color={config.text}
+                      >
                         {expense.name}
                       </Text>
                       <Text fontSize="sm" fontWeight="bold" color="white">
@@ -177,14 +256,28 @@ function SavingsStrategies({ strategies }) {
   if (!strategies || strategies.length === 0) return null;
 
   return (
-    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
-      <Text fontSize="sm" fontWeight="semibold" color="gray.400" mb="4" textTransform="uppercase" letterSpacing="wide">
+    <Box
+      bg="gray.800"
+      borderRadius="xl"
+      p="5"
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
+      <Text
+        fontSize="sm"
+        fontWeight="semibold"
+        color="gray.400"
+        mb="4"
+        textTransform="uppercase"
+        letterSpacing="wide"
+      >
         Your Savings Strategies
       </Text>
 
       <VStack align="stretch" spacing="3">
         {strategies.map((strategy, index) => {
-          const difficultyConfig = DIFFICULTY_CONFIG[strategy.difficulty] || DIFFICULTY_CONFIG.medium;
+          const difficultyConfig =
+            DIFFICULTY_CONFIG[strategy.difficulty] || DIFFICULTY_CONFIG.medium;
 
           return (
             <Box
@@ -194,7 +287,10 @@ function SavingsStrategies({ strategies }) {
               borderRadius="lg"
               borderWidth="1px"
               borderColor="gray.700"
-              _hover={{ borderColor: "gray.600", transform: "translateY(-1px)" }}
+              _hover={{
+                borderColor: "gray.600",
+                transform: "translateY(-1px)",
+              }}
               transition="all 0.2s"
             >
               <HStack justify="space-between" mb="2">
@@ -209,7 +305,13 @@ function SavingsStrategies({ strategies }) {
                     justifyContent="center"
                     fontSize="lg"
                   >
-                    {index === 0 ? "🎯" : index === 1 ? "💡" : index === 2 ? "🚀" : "✨"}
+                    {index === 0
+                      ? "🎯"
+                      : index === 1
+                        ? "💡"
+                        : index === 2
+                          ? "🚀"
+                          : "✨"}
                   </Box>
                   <Text fontSize="sm" fontWeight="semibold" color="white">
                     {strategy.title}
@@ -242,14 +344,28 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
   if (!actionItems || actionItems.length === 0) return null;
 
   return (
-    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
-      <Text fontSize="sm" fontWeight="semibold" color="gray.400" mb="4" textTransform="uppercase" letterSpacing="wide">
+    <Box
+      bg="gray.800"
+      borderRadius="xl"
+      p="5"
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
+      <Text
+        fontSize="sm"
+        fontWeight="semibold"
+        color="gray.400"
+        mb="4"
+        textTransform="uppercase"
+        letterSpacing="wide"
+      >
         Action Items - Start This Week
       </Text>
 
       <VStack align="stretch" spacing="2">
         {actionItems.map((item, index) => {
-          const categoryConfig = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
+          const categoryConfig =
+            CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
 
           return (
             <HStack
@@ -282,7 +398,9 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
                   <Text fontSize="xs" color={categoryConfig.color}>
                     {categoryConfig.label}
                   </Text>
-                  <Text fontSize="xs" color="gray.500">•</Text>
+                  <Text fontSize="xs" color="gray.500">
+                    •
+                  </Text>
                   <Text fontSize="xs" color="gray.500">
                     {item.timeframe}
                   </Text>
@@ -294,12 +412,23 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
       </VStack>
 
       {weeklyCheckIn && (
-        <Box mt="4" p="3" bg="purple.900" borderRadius="lg" borderWidth="1px" borderColor="purple.700">
+        <Box
+          mt="4"
+          p="3"
+          bg="purple.900"
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor="purple.700"
+        >
           <HStack spacing="2">
             <Text fontSize="lg">📅</Text>
             <VStack align="start" spacing="0">
-              <Text fontSize="xs" color="purple.300" fontWeight="medium">WEEKLY CHECK-IN</Text>
-              <Text fontSize="sm" color="gray.300">{weeklyCheckIn}</Text>
+              <Text fontSize="xs" color="purple.300" fontWeight="medium">
+                WEEKLY CHECK-IN
+              </Text>
+              <Text fontSize="sm" color="gray.300">
+                {weeklyCheckIn}
+              </Text>
             </VStack>
           </HStack>
         </Box>
@@ -381,8 +510,17 @@ function OverviewChart({ income, expenses }) {
     const end = polarToCartesian(cx, cy, radius, startAngle);
     const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
     return [
-      "M", start.x, start.y,
-      "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+      "M",
+      start.x,
+      start.y,
+      "A",
+      radius,
+      radius,
+      0,
+      largeArcFlag,
+      0,
+      end.x,
+      end.y,
     ].join(" ");
   };
 
@@ -394,11 +532,25 @@ function OverviewChart({ income, expenses }) {
     };
   };
 
-  const savingsPercentage = income > 0 ? ((savingsAmount / income) * 100).toFixed(0) : 0;
+  const savingsPercentage =
+    income > 0 ? ((savingsAmount / income) * 100).toFixed(0) : 0;
 
   return (
-    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
-      <Text fontSize="sm" fontWeight="semibold" color="gray.400" mb="4" textTransform="uppercase" letterSpacing="wide">
+    <Box
+      bg="gray.800"
+      borderRadius="xl"
+      p="5"
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
+      <Text
+        fontSize="sm"
+        fontWeight="semibold"
+        color="gray.400"
+        mb="4"
+        textTransform="uppercase"
+        letterSpacing="wide"
+      >
         Income Allocation
       </Text>
 
@@ -408,22 +560,43 @@ function OverviewChart({ income, expenses }) {
             {segments.map((segment, index) => (
               <path
                 key={index}
-                d={describeArc(80, 80, 60, segment.startAngle, segment.endAngle - 0.5)}
+                d={describeArc(
+                  80,
+                  80,
+                  60,
+                  segment.startAngle,
+                  segment.endAngle - 0.5,
+                )}
                 fill="none"
                 stroke={segment.color}
                 strokeWidth="20"
                 strokeLinecap="round"
                 style={{
-                  filter: segment.isSavings ? "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))" : "none",
+                  filter: segment.isSavings
+                    ? "drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))"
+                    : "none",
                   transition: "all 0.3s ease",
                 }}
               />
             ))}
             <circle cx="80" cy="80" r="45" fill="#1f2937" />
-            <text x="80" y="72" textAnchor="middle" fill="#10b981" fontSize="24" fontWeight="bold">
+            <text
+              x="80"
+              y="72"
+              textAnchor="middle"
+              fill="#10b981"
+              fontSize="24"
+              fontWeight="bold"
+            >
               {savingsPercentage}%
             </text>
-            <text x="80" y="92" textAnchor="middle" fill="#9ca3af" fontSize="11">
+            <text
+              x="80"
+              y="92"
+              textAnchor="middle"
+              fill="#9ca3af"
+              fontSize="11"
+            >
               saved
             </text>
           </svg>
@@ -438,13 +611,19 @@ function OverviewChart({ income, expenses }) {
                   {segment.name}
                 </Text>
               </HStack>
-              <Text fontSize="sm" color={segment.isSavings ? "green.400" : "gray.400"} fontWeight="medium">
+              <Text
+                fontSize="sm"
+                color={segment.isSavings ? "green.400" : "gray.400"}
+                fontWeight="medium"
+              >
                 {formatCurrency(segment.amount)}
               </Text>
             </HStack>
           ))}
           {segments.length > 5 && (
-            <Text fontSize="xs" color="gray.500">+{segments.length - 5} more</Text>
+            <Text fontSize="xs" color="gray.500">
+              +{segments.length - 5} more
+            </Text>
           )}
         </VStack>
       </HStack>
@@ -453,7 +632,12 @@ function OverviewChart({ income, expenses }) {
 }
 
 // Monthly Projection Chart
-function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSavings }) {
+function MonthlyChart({
+  monthlySavings,
+  currentSavings,
+  savingsGoal,
+  potentialSavings,
+}) {
   const projectionMonths = 24;
 
   // Calculate both current path and optimized path
@@ -468,7 +652,8 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSa
         month,
         balance,
         optimizedBalance,
-        label: month === 0 ? "Now" : month === 12 ? "1Y" : month === 24 ? "2Y" : "",
+        label:
+          month === 0 ? "Now" : month === 12 ? "1Y" : month === 24 ? "2Y" : "",
       });
       balance += Math.max(0, monthlySavings);
       optimizedBalance += Math.max(0, optimizedMonthlySavings);
@@ -478,9 +663,9 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSa
   }, [monthlySavings, currentSavings, potentialSavings]);
 
   const maxBalance = Math.max(
-    ...projectionData.map(d => Math.max(d.balance, d.optimizedBalance)),
+    ...projectionData.map((d) => Math.max(d.balance, d.optimizedBalance)),
     savingsGoal || 0,
-    1
+    1,
   );
   const chartWidth = 320;
   const chartHeight = 160;
@@ -494,7 +679,10 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSa
       const y = padding.top + innerHeight - (d[key] / maxBalance) * innerHeight;
       return `${x},${y}`;
     });
-    return `M${points[0]} ${points.slice(1).map(p => `L${p}`).join(" ")}`;
+    return `M${points[0]} ${points
+      .slice(1)
+      .map((p) => `L${p}`)
+      .join(" ")}`;
   };
 
   const generateAreaPath = (key) => {
@@ -505,7 +693,10 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSa
     });
     const bottomRight = `${padding.left + innerWidth},${padding.top + innerHeight}`;
     const bottomLeft = `${padding.left},${padding.top + innerHeight}`;
-    return `M${points[0]} ${points.slice(1).map(p => `L${p}`).join(" ")} L${bottomRight} L${bottomLeft} Z`;
+    return `M${points[0]} ${points
+      .slice(1)
+      .map((p) => `L${p}`)
+      .join(" ")} L${bottomRight} L${bottomLeft} Z`;
   };
 
   const goalY = savingsGoal
@@ -513,20 +704,38 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSa
     : null;
 
   const endBalance = projectionData[projectionData.length - 1].balance;
-  const optimizedEndBalance = projectionData[projectionData.length - 1].optimizedBalance;
+  const optimizedEndBalance =
+    projectionData[projectionData.length - 1].optimizedBalance;
 
   return (
-    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
+    <Box
+      bg="gray.800"
+      borderRadius="xl"
+      p="5"
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
       <HStack justify="space-between" mb="3">
-        <Text fontSize="sm" fontWeight="semibold" color="gray.400" textTransform="uppercase" letterSpacing="wide">
+        <Text
+          fontSize="sm"
+          fontWeight="semibold"
+          color="gray.400"
+          textTransform="uppercase"
+          letterSpacing="wide"
+        >
           Growth Projection
         </Text>
         <Badge colorScheme={monthlySavings > 0 ? "green" : "red"} fontSize="xs">
-          {monthlySavings >= 0 ? "+" : ""}{formatCurrency(monthlySavings)}/mo
+          {monthlySavings >= 0 ? "+" : ""}
+          {formatCurrency(monthlySavings)}/mo
         </Badge>
       </HStack>
 
-      <svg width="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="xMidYMid meet">
+      <svg
+        width="100%"
+        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+        preserveAspectRatio="xMidYMid meet"
+      >
         <defs>
           <linearGradient id="currentGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
@@ -564,7 +773,13 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSa
               strokeWidth="2"
               strokeDasharray="6,4"
             />
-            <text x={padding.left + 5} y={goalY - 5} fill="#f59e0b" fontSize="10" fontWeight="bold">
+            <text
+              x={padding.left + 5}
+              y={goalY - 5}
+              fill="#f59e0b"
+              fontSize="10"
+              fontWeight="bold"
+            >
               GOAL
             </text>
           </>
@@ -573,47 +788,74 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSa
         {/* Optimized path (if there's potential savings) */}
         {potentialSavings > 0 && (
           <>
-            <path d={generateAreaPath("optimizedBalance")} fill="url(#optimizedGradient)" />
-            <path d={generatePath("optimizedBalance")} fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="4,4" />
+            <path
+              d={generateAreaPath("optimizedBalance")}
+              fill="url(#optimizedGradient)"
+            />
+            <path
+              d={generatePath("optimizedBalance")}
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="2"
+              strokeDasharray="4,4"
+            />
           </>
         )}
 
         {/* Current path */}
         <path d={generateAreaPath("balance")} fill="url(#currentGradient)" />
-        <path d={generatePath("balance")} fill="none" stroke="#06b6d4" strokeWidth="3" strokeLinecap="round" />
+        <path
+          d={generatePath("balance")}
+          fill="none"
+          stroke="#06b6d4"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
 
         {/* End point */}
         <circle
           cx={padding.left + innerWidth}
-          cy={padding.top + innerHeight - (endBalance / maxBalance) * innerHeight}
+          cy={
+            padding.top + innerHeight - (endBalance / maxBalance) * innerHeight
+          }
           r="5"
           fill="#06b6d4"
         />
 
         {/* X-axis labels */}
-        {projectionData.filter(d => d.label).map((d, i) => (
-          <text
-            key={i}
-            x={padding.left + (d.month / projectionMonths) * innerWidth}
-            y={chartHeight - 5}
-            textAnchor="middle"
-            fill="#9ca3af"
-            fontSize="10"
-          >
-            {d.label}
-          </text>
-        ))}
+        {projectionData
+          .filter((d) => d.label)
+          .map((d, i) => (
+            <text
+              key={i}
+              x={padding.left + (d.month / projectionMonths) * innerWidth}
+              y={chartHeight - 5}
+              textAnchor="middle"
+              fill="#9ca3af"
+              fontSize="10"
+            >
+              {d.label}
+            </text>
+          ))}
       </svg>
 
       <HStack justify="space-between" mt="2">
         <VStack align="start" spacing="0">
-          <Text fontSize="xs" color="gray.500">Current path</Text>
-          <Text fontSize="sm" fontWeight="bold" color="cyan.400">{formatCurrency(endBalance)} in 2Y</Text>
+          <Text fontSize="xs" color="gray.500">
+            Current path
+          </Text>
+          <Text fontSize="sm" fontWeight="bold" color="cyan.400">
+            {formatCurrency(endBalance)} in 2Y
+          </Text>
         </VStack>
         {potentialSavings > 0 && (
           <VStack align="end" spacing="0">
-            <Text fontSize="xs" color="gray.500">With plan</Text>
-            <Text fontSize="sm" fontWeight="bold" color="green.400">{formatCurrency(optimizedEndBalance)} in 2Y</Text>
+            <Text fontSize="xs" color="gray.500">
+              With plan
+            </Text>
+            <Text fontSize="sm" fontWeight="bold" color="green.400">
+              {formatCurrency(optimizedEndBalance)} in 2Y
+            </Text>
           </VStack>
         )}
       </HStack>
@@ -622,18 +864,27 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSa
 }
 
 // Bird's Eye View - Timeline
-function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses }) {
+function BirdsEyeView({
+  currentSavings,
+  savingsGoal,
+  monthlySavings,
+  expenses,
+}) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
   const milestones = useMemo(() => {
     if (!savingsGoal || monthlySavings <= 0) return [];
 
-    const monthsToGoal = Math.ceil((savingsGoal - (currentSavings || 0)) / monthlySavings);
+    const monthsToGoal = Math.ceil(
+      (savingsGoal - (currentSavings || 0)) / monthlySavings,
+    );
     const milestonePoints = [];
 
     const emergencyFund = totalExpenses * 3;
     if (emergencyFund > (currentSavings || 0) && emergencyFund < savingsGoal) {
-      const monthsToEmergency = Math.ceil((emergencyFund - (currentSavings || 0)) / monthlySavings);
+      const monthsToEmergency = Math.ceil(
+        (emergencyFund - (currentSavings || 0)) / monthlySavings,
+      );
       milestonePoints.push({
         label: "Emergency Fund",
         sublabel: "3 months expenses",
@@ -645,7 +896,9 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses })
 
     const quarter = savingsGoal * 0.25;
     if (quarter > (currentSavings || 0)) {
-      const monthsTo25 = Math.ceil((quarter - (currentSavings || 0)) / monthlySavings);
+      const monthsTo25 = Math.ceil(
+        (quarter - (currentSavings || 0)) / monthlySavings,
+      );
       milestonePoints.push({
         label: "25% Progress",
         amount: quarter,
@@ -656,7 +909,9 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses })
 
     const half = savingsGoal * 0.5;
     if (half > (currentSavings || 0)) {
-      const monthsTo50 = Math.ceil((half - (currentSavings || 0)) / monthlySavings);
+      const monthsTo50 = Math.ceil(
+        (half - (currentSavings || 0)) / monthlySavings,
+      );
       milestonePoints.push({
         label: "Halfway",
         amount: half,
@@ -680,32 +935,54 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses })
     ? Math.min(((currentSavings || 0) / savingsGoal) * 100, 100)
     : 0;
 
-  const monthsToGoal = monthlySavings > 0 && savingsGoal
-    ? Math.ceil((savingsGoal - (currentSavings || 0)) / monthlySavings)
-    : null;
+  const monthsToGoal =
+    monthlySavings > 0 && savingsGoal
+      ? Math.ceil((savingsGoal - (currentSavings || 0)) / monthlySavings)
+      : null;
 
   return (
-    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
+    <Box
+      bg="gray.800"
+      borderRadius="xl"
+      p="5"
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
       <HStack justify="space-between" mb="4">
-        <Text fontSize="sm" fontWeight="semibold" color="gray.400" textTransform="uppercase" letterSpacing="wide">
+        <Text
+          fontSize="sm"
+          fontWeight="semibold"
+          color="gray.400"
+          textTransform="uppercase"
+          letterSpacing="wide"
+        >
           Your Roadmap
         </Text>
         {monthsToGoal && monthsToGoal > 0 && (
           <Badge colorScheme="purple" fontSize="xs">
             {monthsToGoal < 12
               ? `${monthsToGoal} months to go`
-              : `${(monthsToGoal / 12).toFixed(1)} years to go`
-            }
+              : `${(monthsToGoal / 12).toFixed(1)} years to go`}
           </Badge>
         )}
       </HStack>
 
       <Box mb="5">
         <HStack justify="space-between" mb="2">
-          <Text fontSize="xs" color="gray.500">Current Progress</Text>
-          <Text fontSize="xs" color="green.400" fontWeight="bold">{progressPercent.toFixed(1)}%</Text>
+          <Text fontSize="xs" color="gray.500">
+            Current Progress
+          </Text>
+          <Text fontSize="xs" color="green.400" fontWeight="bold">
+            {progressPercent.toFixed(1)}%
+          </Text>
         </HStack>
-        <Box position="relative" h="3" bg="gray.700" borderRadius="full" overflow="hidden">
+        <Box
+          position="relative"
+          h="3"
+          bg="gray.700"
+          borderRadius="full"
+          overflow="hidden"
+        >
           <Box
             position="absolute"
             left="0"
@@ -746,14 +1023,26 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses })
                 bg={isReached ? "green.900" : "gray.750"}
                 borderRadius="lg"
                 borderWidth="1px"
-                borderColor={isReached ? "green.700" : milestone.isFinal ? "purple.700" : "gray.700"}
+                borderColor={
+                  isReached
+                    ? "green.700"
+                    : milestone.isFinal
+                      ? "purple.700"
+                      : "gray.700"
+                }
                 opacity={isReached ? 0.7 : 1}
               >
                 <Box
                   w="10"
                   h="10"
                   borderRadius="lg"
-                  bg={isReached ? "green.600" : milestone.isFinal ? "purple.600" : "gray.600"}
+                  bg={
+                    isReached
+                      ? "green.600"
+                      : milestone.isFinal
+                        ? "purple.600"
+                        : "gray.600"
+                  }
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
@@ -767,7 +1056,11 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses })
                   </Text>
                 </Box>
                 <VStack align="start" spacing="0" flex="1">
-                  <Text fontSize="sm" fontWeight="semibold" color={isReached ? "green.300" : "gray.200"}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="semibold"
+                    color={isReached ? "green.300" : "gray.200"}
+                  >
                     {milestone.label}
                   </Text>
                   <Text fontSize="xs" color="gray.500">
@@ -775,7 +1068,17 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses })
                   </Text>
                 </VStack>
                 <VStack align="end" spacing="0">
-                  <Text fontSize="sm" fontWeight="bold" color={isReached ? "green.400" : milestone.isFinal ? "purple.400" : "gray.400"}>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color={
+                      isReached
+                        ? "green.400"
+                        : milestone.isFinal
+                          ? "purple.400"
+                          : "gray.400"
+                    }
+                  >
                     {isReached ? "Done" : `${milestone.months} mo`}
                   </Text>
                   {!isReached && (
@@ -795,8 +1098,7 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses })
           <Text fontSize="sm" color="gray.400">
             {!savingsGoal
               ? "Set a savings goal to see your roadmap"
-              : "Increase your savings rate to start building your roadmap"
-            }
+              : "Increase your savings rate to start building your roadmap"}
           </Text>
         </Box>
       )}
@@ -805,38 +1107,95 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses })
 }
 
 // Key Metrics Summary
-function MetricsSummary({ income, expenses, monthlySavings, savingsGoal, currentSavings }) {
+function MetricsSummary({
+  income,
+  expenses,
+  monthlySavings,
+  savingsGoal,
+  currentSavings,
+}) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const savingsRate = income > 0 ? ((monthlySavings / income) * 100).toFixed(0) : 0;
+  const savingsRate =
+    income > 0 ? ((monthlySavings / income) * 100).toFixed(0) : 0;
 
   return (
-    <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap="3">
+    <Grid
+      templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }}
+      gap="3"
+    >
       <GridItem>
-        <Box bg="gray.800" borderRadius="xl" p="4" borderWidth="1px" borderColor="gray.700" textAlign="center">
-          <Text fontSize="xs" color="gray.500" mb="1">Monthly Income</Text>
-          <Text fontSize="xl" fontWeight="bold" color="green.400">{formatCurrency(income)}</Text>
+        <Box
+          bg="gray.800"
+          borderRadius="xl"
+          p="4"
+          borderWidth="1px"
+          borderColor="gray.700"
+          textAlign="center"
+        >
+          <Text fontSize="xs" color="gray.500" mb="1">
+            Monthly Income
+          </Text>
+          <Text fontSize="xl" fontWeight="bold" color="green.400">
+            {formatCurrency(income)}
+          </Text>
         </Box>
       </GridItem>
       <GridItem>
-        <Box bg="gray.800" borderRadius="xl" p="4" borderWidth="1px" borderColor="gray.700" textAlign="center">
-          <Text fontSize="xs" color="gray.500" mb="1">Expenses</Text>
-          <Text fontSize="xl" fontWeight="bold" color="red.400">{formatCurrency(totalExpenses)}</Text>
+        <Box
+          bg="gray.800"
+          borderRadius="xl"
+          p="4"
+          borderWidth="1px"
+          borderColor="gray.700"
+          textAlign="center"
+        >
+          <Text fontSize="xs" color="gray.500" mb="1">
+            Expenses
+          </Text>
+          <Text fontSize="xl" fontWeight="bold" color="red.400">
+            {formatCurrency(totalExpenses)}
+          </Text>
         </Box>
       </GridItem>
       <GridItem>
-        <Box bg="gray.800" borderRadius="xl" p="4" borderWidth="1px" borderColor="gray.700" textAlign="center">
-          <Text fontSize="xs" color="gray.500" mb="1">You Save</Text>
-          <Text fontSize="xl" fontWeight="bold" color={monthlySavings >= 0 ? "cyan.400" : "red.400"}>
+        <Box
+          bg="gray.800"
+          borderRadius="xl"
+          p="4"
+          borderWidth="1px"
+          borderColor="gray.700"
+          textAlign="center"
+        >
+          <Text fontSize="xs" color="gray.500" mb="1">
+            You Save
+          </Text>
+          <Text
+            fontSize="xl"
+            fontWeight="bold"
+            color={monthlySavings >= 0 ? "cyan.400" : "red.400"}
+          >
             {formatCurrency(Math.abs(monthlySavings))}
           </Text>
-          <Text fontSize="xs" color={monthlySavings >= 0 ? "cyan.600" : "red.600"}>
+          <Text
+            fontSize="xs"
+            color={monthlySavings >= 0 ? "cyan.600" : "red.600"}
+          >
             {savingsRate}% rate
           </Text>
         </Box>
       </GridItem>
       <GridItem>
-        <Box bg="gray.800" borderRadius="xl" p="4" borderWidth="1px" borderColor="gray.700" textAlign="center">
-          <Text fontSize="xs" color="gray.500" mb="1">Goal Progress</Text>
+        <Box
+          bg="gray.800"
+          borderRadius="xl"
+          p="4"
+          borderWidth="1px"
+          borderColor="gray.700"
+          textAlign="center"
+        >
+          <Text fontSize="xs" color="gray.500" mb="1">
+            Goal Progress
+          </Text>
           <Text fontSize="xl" fontWeight="bold" color="purple.400">
             {savingsGoal ? formatCurrency(currentSavings || 0) : "--"}
           </Text>
@@ -878,9 +1237,21 @@ export function FinancialChart({ data }) {
         />
 
         {/* Tabbed Content */}
-        <Box bg="gray.900" borderRadius="xl" borderWidth="1px" borderColor="gray.800" overflow="hidden">
+        <Box
+          bg="gray.900"
+          borderRadius="xl"
+          borderWidth="1px"
+          borderColor="gray.800"
+          overflow="hidden"
+        >
           {/* Custom Tab List */}
-          <HStack p="4" bg="gray.850" borderBottomWidth="1px" borderColor="gray.800" gap="2">
+          <HStack
+            p="4"
+            bg="gray.850"
+            borderBottomWidth="1px"
+            borderColor="gray.800"
+            gap="2"
+          >
             {["Overview", "Your Plan", "Expenses"].map((tab, index) => (
               <Button
                 key={tab}
@@ -948,9 +1319,7 @@ export function FinancialChart({ data }) {
             )}
 
             {/* Expenses Tab */}
-            {activeTab === 2 && (
-              <ExpenseAnalysis expenses={expenses} />
-            )}
+            {activeTab === 2 && <ExpenseAnalysis expenses={expenses} />}
           </Box>
         </Box>
       </VStack>
