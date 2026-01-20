@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { Box, VStack, Text, HStack, Badge, Grid, GridItem } from "@chakra-ui/react";
+import { useMemo, useState } from "react";
+import { Box, VStack, Text, HStack, Badge, Grid, GridItem, Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
 
 // Color palette for consistent theming
 const COLORS = {
@@ -14,15 +14,329 @@ const COLORS = {
   expenses: ["#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e", "#14b8a6", "#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"],
 };
 
+const PRIORITY_COLORS = {
+  essential: { bg: "blue.900", border: "blue.700", text: "blue.300", badge: "blue" },
+  important: { bg: "purple.900", border: "purple.700", text: "purple.300", badge: "purple" },
+  discretionary: { bg: "orange.900", border: "orange.700", text: "orange.300", badge: "orange" },
+};
+
+const DIFFICULTY_CONFIG = {
+  easy: { color: "green", label: "Easy win" },
+  medium: { color: "yellow", label: "Some effort" },
+  hard: { color: "red", label: "Challenging" },
+};
+
+const CATEGORY_CONFIG = {
+  cut: { icon: "✂️", color: "red.400", label: "Cut" },
+  optimize: { icon: "⚡", color: "yellow.400", label: "Optimize" },
+  earn: { icon: "💰", color: "green.400", label: "Earn More" },
+  automate: { icon: "🤖", color: "blue.400", label: "Automate" },
+  track: { icon: "📊", color: "purple.400", label: "Track" },
+};
+
 // Format currency
 const formatCurrency = (amount) => {
   if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
   if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`;
-  return `$${amount.toLocaleString()}`;
+  return `$${amount?.toLocaleString() || 0}`;
 };
 
+// Plan Header with title and overview
+function PlanHeader({ plan, potentialSavings }) {
+  if (!plan) return null;
+
+  return (
+    <Box
+      bg="linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%)"
+      borderRadius="xl"
+      p="6"
+      borderWidth="1px"
+      borderColor="blue.800"
+      position="relative"
+      overflow="hidden"
+    >
+      {/* Background decoration */}
+      <Box
+        position="absolute"
+        top="-20"
+        right="-20"
+        w="150px"
+        h="150px"
+        bg="blue.500"
+        opacity="0.1"
+        borderRadius="full"
+        filter="blur(40px)"
+      />
+
+      <VStack align="start" spacing="3">
+        <HStack justify="space-between" w="100%">
+          <Text fontSize="2xl" fontWeight="bold" color="white">
+            {plan.title || "Your Financial Plan"}
+          </Text>
+          {potentialSavings > 0 && (
+            <Badge colorScheme="green" fontSize="sm" px="3" py="1" borderRadius="full">
+              +{formatCurrency(potentialSavings)}/mo potential
+            </Badge>
+          )}
+        </HStack>
+
+        <Text fontSize="md" color="gray.300" lineHeight="tall">
+          {plan.overview}
+        </Text>
+
+        {/* 50/30/20 Budget Breakdown */}
+        {plan.monthlyBudget && (
+          <HStack spacing="4" pt="2" flexWrap="wrap">
+            <Box bg="blue.800" px="4" py="2" borderRadius="lg">
+              <Text fontSize="xs" color="blue.300" fontWeight="medium">NEEDS (50%)</Text>
+              <Text fontSize="lg" fontWeight="bold" color="white">{formatCurrency(plan.monthlyBudget.needs)}</Text>
+            </Box>
+            <Box bg="purple.800" px="4" py="2" borderRadius="lg">
+              <Text fontSize="xs" color="purple.300" fontWeight="medium">WANTS (30%)</Text>
+              <Text fontSize="lg" fontWeight="bold" color="white">{formatCurrency(plan.monthlyBudget.wants)}</Text>
+            </Box>
+            <Box bg="green.800" px="4" py="2" borderRadius="lg">
+              <Text fontSize="xs" color="green.300" fontWeight="medium">SAVINGS (20%)</Text>
+              <Text fontSize="lg" fontWeight="bold" color="white">{formatCurrency(plan.monthlyBudget.savings)}</Text>
+            </Box>
+          </HStack>
+        )}
+      </VStack>
+    </Box>
+  );
+}
+
+// Expense Analysis with recommendations
+function ExpenseAnalysis({ expenses }) {
+  if (!expenses || expenses.length === 0) return null;
+
+  const groupedByPriority = {
+    essential: expenses.filter(e => e.priority === "essential"),
+    important: expenses.filter(e => e.priority === "important"),
+    discretionary: expenses.filter(e => e.priority === "discretionary"),
+  };
+
+  return (
+    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
+      <Text fontSize="sm" fontWeight="semibold" color="gray.400" mb="4" textTransform="uppercase" letterSpacing="wide">
+        Expense Analysis & Recommendations
+      </Text>
+
+      <VStack align="stretch" spacing="4">
+        {Object.entries(groupedByPriority).map(([priority, items]) => {
+          if (items.length === 0) return null;
+          const config = PRIORITY_COLORS[priority];
+          const total = items.reduce((sum, e) => sum + e.amount, 0);
+
+          return (
+            <Box key={priority}>
+              <HStack mb="2">
+                <Badge colorScheme={config.badge} fontSize="xs" textTransform="capitalize">
+                  {priority}
+                </Badge>
+                <Text fontSize="xs" color="gray.500">
+                  {items.length} items - {formatCurrency(total)}/mo
+                </Text>
+              </HStack>
+
+              <VStack align="stretch" spacing="2">
+                {items.map((expense, index) => (
+                  <Box
+                    key={index}
+                    p="3"
+                    bg={config.bg}
+                    borderRadius="lg"
+                    borderWidth="1px"
+                    borderColor={config.border}
+                    borderLeftWidth="3px"
+                  >
+                    <HStack justify="space-between" mb="1">
+                      <Text fontSize="sm" fontWeight="semibold" color={config.text}>
+                        {expense.name}
+                      </Text>
+                      <Text fontSize="sm" fontWeight="bold" color="white">
+                        {formatCurrency(expense.amount)}
+                      </Text>
+                    </HStack>
+                    <Text fontSize="xs" color="gray.400" lineHeight="tall">
+                      {expense.recommendation}
+                    </Text>
+                  </Box>
+                ))}
+              </VStack>
+            </Box>
+          );
+        })}
+      </VStack>
+    </Box>
+  );
+}
+
+// Savings Strategies
+function SavingsStrategies({ strategies }) {
+  if (!strategies || strategies.length === 0) return null;
+
+  return (
+    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
+      <Text fontSize="sm" fontWeight="semibold" color="gray.400" mb="4" textTransform="uppercase" letterSpacing="wide">
+        Your Savings Strategies
+      </Text>
+
+      <VStack align="stretch" spacing="3">
+        {strategies.map((strategy, index) => {
+          const difficultyConfig = DIFFICULTY_CONFIG[strategy.difficulty] || DIFFICULTY_CONFIG.medium;
+
+          return (
+            <Box
+              key={index}
+              p="4"
+              bg="gray.750"
+              borderRadius="lg"
+              borderWidth="1px"
+              borderColor="gray.700"
+              _hover={{ borderColor: "gray.600", transform: "translateY(-1px)" }}
+              transition="all 0.2s"
+            >
+              <HStack justify="space-between" mb="2">
+                <HStack>
+                  <Box
+                    w="8"
+                    h="8"
+                    borderRadius="lg"
+                    bg="cyan.900"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    fontSize="lg"
+                  >
+                    {index === 0 ? "🎯" : index === 1 ? "💡" : index === 2 ? "🚀" : "✨"}
+                  </Box>
+                  <Text fontSize="sm" fontWeight="semibold" color="white">
+                    {strategy.title}
+                  </Text>
+                </HStack>
+                <Badge colorScheme={difficultyConfig.color} fontSize="xs">
+                  {difficultyConfig.label}
+                </Badge>
+              </HStack>
+
+              <Text fontSize="sm" color="gray.400" mb="2" pl="10">
+                {strategy.description}
+              </Text>
+
+              <HStack pl="10">
+                <Badge colorScheme="green" variant="subtle" fontSize="xs">
+                  Impact: {strategy.impact}
+                </Badge>
+              </HStack>
+            </Box>
+          );
+        })}
+      </VStack>
+    </Box>
+  );
+}
+
+// Action Items Checklist
+function ActionItems({ actionItems, weeklyCheckIn }) {
+  if (!actionItems || actionItems.length === 0) return null;
+
+  return (
+    <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
+      <Text fontSize="sm" fontWeight="semibold" color="gray.400" mb="4" textTransform="uppercase" letterSpacing="wide">
+        Action Items - Start This Week
+      </Text>
+
+      <VStack align="stretch" spacing="2">
+        {actionItems.map((item, index) => {
+          const categoryConfig = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
+
+          return (
+            <HStack
+              key={index}
+              p="3"
+              bg="gray.750"
+              borderRadius="lg"
+              spacing="3"
+              borderWidth="1px"
+              borderColor="gray.700"
+            >
+              <Box
+                w="8"
+                h="8"
+                borderRadius="lg"
+                bg="gray.700"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                fontSize="md"
+                flexShrink="0"
+              >
+                {categoryConfig.icon}
+              </Box>
+              <VStack align="start" spacing="0" flex="1">
+                <Text fontSize="sm" color="gray.200">
+                  {item.action}
+                </Text>
+                <HStack spacing="2">
+                  <Text fontSize="xs" color={categoryConfig.color}>
+                    {categoryConfig.label}
+                  </Text>
+                  <Text fontSize="xs" color="gray.500">•</Text>
+                  <Text fontSize="xs" color="gray.500">
+                    {item.timeframe}
+                  </Text>
+                </HStack>
+              </VStack>
+            </HStack>
+          );
+        })}
+      </VStack>
+
+      {weeklyCheckIn && (
+        <Box mt="4" p="3" bg="purple.900" borderRadius="lg" borderWidth="1px" borderColor="purple.700">
+          <HStack spacing="2">
+            <Text fontSize="lg">📅</Text>
+            <VStack align="start" spacing="0">
+              <Text fontSize="xs" color="purple.300" fontWeight="medium">WEEKLY CHECK-IN</Text>
+              <Text fontSize="sm" color="gray.300">{weeklyCheckIn}</Text>
+            </VStack>
+          </HStack>
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+// Motivational Note
+function MotivationalNote({ note }) {
+  if (!note) return null;
+
+  return (
+    <Box
+      bg="linear-gradient(135deg, #065f46 0%, #064e3b 100%)"
+      borderRadius="xl"
+      p="5"
+      borderWidth="1px"
+      borderColor="green.700"
+    >
+      <HStack spacing="3" align="start">
+        <Text fontSize="2xl">💪</Text>
+        <VStack align="start" spacing="1">
+          <Text fontSize="sm" fontWeight="semibold" color="green.300">
+            Your Coach Says...
+          </Text>
+          <Text fontSize="md" color="white" lineHeight="tall">
+            {note}
+          </Text>
+        </VStack>
+      </HStack>
+    </Box>
+  );
+}
+
 // Overview Chart - Donut showing income allocation
-function OverviewChart({ income, expenses, savings }) {
+function OverviewChart({ income, expenses }) {
   const total = income || 1;
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const savingsAmount = Math.max(0, income - totalExpenses);
@@ -31,7 +345,6 @@ function OverviewChart({ income, expenses, savings }) {
     const result = [];
     let currentAngle = -90;
 
-    // Add expense segments
     expenses.forEach((expense, index) => {
       const percentage = (expense.amount / total) * 100;
       const angle = (percentage / 100) * 360;
@@ -46,7 +359,6 @@ function OverviewChart({ income, expenses, savings }) {
       currentAngle += angle;
     });
 
-    // Add savings segment if positive
     if (savingsAmount > 0) {
       const percentage = (savingsAmount / total) * 100;
       const angle = (percentage / 100) * 360;
@@ -107,7 +419,6 @@ function OverviewChart({ income, expenses, savings }) {
                 }}
               />
             ))}
-            {/* Center circle */}
             <circle cx="80" cy="80" r="45" fill="#1f2937" />
             <text x="80" y="72" textAnchor="middle" fill="#10b981" fontSize="24" fontWeight="bold">
               {savingsPercentage}%
@@ -141,70 +452,68 @@ function OverviewChart({ income, expenses, savings }) {
   );
 }
 
-// Monthly Projection Chart - Area chart showing savings growth
-function MonthlyChart({ monthlySavings, currentSavings, savingsGoal }) {
+// Monthly Projection Chart
+function MonthlyChart({ monthlySavings, currentSavings, savingsGoal, potentialSavings }) {
   const projectionMonths = 24;
 
+  // Calculate both current path and optimized path
   const projectionData = useMemo(() => {
     const data = [];
     let balance = currentSavings || 0;
+    let optimizedBalance = currentSavings || 0;
+    const optimizedMonthlySavings = monthlySavings + (potentialSavings || 0);
 
     for (let month = 0; month <= projectionMonths; month++) {
       data.push({
         month,
         balance,
+        optimizedBalance,
         label: month === 0 ? "Now" : month === 12 ? "1Y" : month === 24 ? "2Y" : "",
       });
       balance += Math.max(0, monthlySavings);
+      optimizedBalance += Math.max(0, optimizedMonthlySavings);
     }
 
     return data;
-  }, [monthlySavings, currentSavings]);
+  }, [monthlySavings, currentSavings, potentialSavings]);
 
-  const maxBalance = Math.max(...projectionData.map(d => d.balance), savingsGoal || 0, 1);
+  const maxBalance = Math.max(
+    ...projectionData.map(d => Math.max(d.balance, d.optimizedBalance)),
+    savingsGoal || 0,
+    1
+  );
   const chartWidth = 320;
-  const chartHeight = 140;
+  const chartHeight = 160;
   const padding = { top: 10, right: 10, bottom: 25, left: 10 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
 
-  // Generate path for area
-  const areaPath = useMemo(() => {
+  const generatePath = (key) => {
     const points = projectionData.map((d, i) => {
       const x = padding.left + (i / projectionMonths) * innerWidth;
-      const y = padding.top + innerHeight - (d.balance / maxBalance) * innerHeight;
+      const y = padding.top + innerHeight - (d[key] / maxBalance) * innerHeight;
       return `${x},${y}`;
     });
+    return `M${points[0]} ${points.slice(1).map(p => `L${p}`).join(" ")}`;
+  };
 
+  const generateAreaPath = (key) => {
+    const points = projectionData.map((d, i) => {
+      const x = padding.left + (i / projectionMonths) * innerWidth;
+      const y = padding.top + innerHeight - (d[key] / maxBalance) * innerHeight;
+      return `${x},${y}`;
+    });
     const bottomRight = `${padding.left + innerWidth},${padding.top + innerHeight}`;
     const bottomLeft = `${padding.left},${padding.top + innerHeight}`;
-
     return `M${points[0]} ${points.slice(1).map(p => `L${p}`).join(" ")} L${bottomRight} L${bottomLeft} Z`;
-  }, [projectionData, maxBalance, innerWidth, innerHeight]);
+  };
 
-  // Generate path for line
-  const linePath = useMemo(() => {
-    const points = projectionData.map((d, i) => {
-      const x = padding.left + (i / projectionMonths) * innerWidth;
-      const y = padding.top + innerHeight - (d.balance / maxBalance) * innerHeight;
-      return `${x},${y}`;
-    });
-
-    return `M${points[0]} ${points.slice(1).map(p => `L${p}`).join(" ")}`;
-  }, [projectionData, maxBalance, innerWidth, innerHeight]);
-
-  // Calculate goal line position
   const goalY = savingsGoal
     ? padding.top + innerHeight - (savingsGoal / maxBalance) * innerHeight
     : null;
 
-  // Find month when goal is reached
-  const goalReachedMonth = projectionData.findIndex(d => d.balance >= (savingsGoal || Infinity));
-  const goalReachedX = goalReachedMonth >= 0
-    ? padding.left + (goalReachedMonth / projectionMonths) * innerWidth
-    : null;
-
   const endBalance = projectionData[projectionData.length - 1].balance;
+  const optimizedEndBalance = projectionData[projectionData.length - 1].optimizedBalance;
 
   return (
     <Box bg="gray.800" borderRadius="xl" p="5" borderWidth="1px" borderColor="gray.700">
@@ -219,13 +528,13 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal }) {
 
       <svg width="100%" viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="xMidYMid meet">
         <defs>
-          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0.05" />
+          <linearGradient id="currentGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.05" />
           </linearGradient>
-          <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#06b6d4" />
-            <stop offset="100%" stopColor="#10b981" />
+          <linearGradient id="optimizedGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#10b981" stopOpacity="0.05" />
           </linearGradient>
         </defs>
 
@@ -261,26 +570,24 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal }) {
           </>
         )}
 
-        {/* Area fill */}
-        <path d={areaPath} fill="url(#areaGradient)" />
-
-        {/* Line */}
-        <path d={linePath} fill="none" stroke="url(#lineGradient)" strokeWidth="3" strokeLinecap="round" />
-
-        {/* Goal reached indicator */}
-        {goalReachedX && goalY && (
-          <g>
-            <circle cx={goalReachedX} cy={goalY} r="6" fill="#10b981" />
-            <circle cx={goalReachedX} cy={goalY} r="10" fill="none" stroke="#10b981" strokeWidth="2" opacity="0.5" />
-          </g>
+        {/* Optimized path (if there's potential savings) */}
+        {potentialSavings > 0 && (
+          <>
+            <path d={generateAreaPath("optimizedBalance")} fill="url(#optimizedGradient)" />
+            <path d={generatePath("optimizedBalance")} fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="4,4" />
+          </>
         )}
+
+        {/* Current path */}
+        <path d={generateAreaPath("balance")} fill="url(#currentGradient)" />
+        <path d={generatePath("balance")} fill="none" stroke="#06b6d4" strokeWidth="3" strokeLinecap="round" />
 
         {/* End point */}
         <circle
           cx={padding.left + innerWidth}
           cy={padding.top + innerHeight - (endBalance / maxBalance) * innerHeight}
           r="5"
-          fill="#10b981"
+          fill="#06b6d4"
         />
 
         {/* X-axis labels */}
@@ -300,20 +607,22 @@ function MonthlyChart({ monthlySavings, currentSavings, savingsGoal }) {
 
       <HStack justify="space-between" mt="2">
         <VStack align="start" spacing="0">
-          <Text fontSize="xs" color="gray.500">Now</Text>
-          <Text fontSize="sm" fontWeight="bold" color="cyan.400">{formatCurrency(currentSavings || 0)}</Text>
+          <Text fontSize="xs" color="gray.500">Current path</Text>
+          <Text fontSize="sm" fontWeight="bold" color="cyan.400">{formatCurrency(endBalance)} in 2Y</Text>
         </VStack>
-        <VStack align="end" spacing="0">
-          <Text fontSize="xs" color="gray.500">In 2 years</Text>
-          <Text fontSize="sm" fontWeight="bold" color="green.400">{formatCurrency(endBalance)}</Text>
-        </VStack>
+        {potentialSavings > 0 && (
+          <VStack align="end" spacing="0">
+            <Text fontSize="xs" color="gray.500">With plan</Text>
+            <Text fontSize="sm" fontWeight="bold" color="green.400">{formatCurrency(optimizedEndBalance)} in 2Y</Text>
+          </VStack>
+        )}
       </HStack>
     </Box>
   );
 }
 
-// Bird's Eye View - Timeline showing the journey
-function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, expenses }) {
+// Bird's Eye View - Timeline
+function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, expenses }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
   const milestones = useMemo(() => {
@@ -322,7 +631,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
     const monthsToGoal = Math.ceil((savingsGoal - (currentSavings || 0)) / monthlySavings);
     const milestonePoints = [];
 
-    // Emergency fund milestone (3 months expenses)
     const emergencyFund = totalExpenses * 3;
     if (emergencyFund > (currentSavings || 0) && emergencyFund < savingsGoal) {
       const monthsToEmergency = Math.ceil((emergencyFund - (currentSavings || 0)) / monthlySavings);
@@ -335,7 +643,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
       });
     }
 
-    // 25% milestone
     const quarter = savingsGoal * 0.25;
     if (quarter > (currentSavings || 0)) {
       const monthsTo25 = Math.ceil((quarter - (currentSavings || 0)) / monthlySavings);
@@ -347,7 +654,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
       });
     }
 
-    // 50% milestone
     const half = savingsGoal * 0.5;
     if (half > (currentSavings || 0)) {
       const monthsTo50 = Math.ceil((half - (currentSavings || 0)) / monthlySavings);
@@ -359,7 +665,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
       });
     }
 
-    // Final goal
     milestonePoints.push({
       label: "Goal Reached",
       amount: savingsGoal,
@@ -395,7 +700,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
         )}
       </HStack>
 
-      {/* Progress bar */}
       <Box mb="5">
         <HStack justify="space-between" mb="2">
           <Text fontSize="xs" color="gray.500">Current Progress</Text>
@@ -412,7 +716,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
             borderRadius="full"
             transition="width 0.5s ease"
           />
-          {/* Milestone markers */}
           {milestones.map((m, i) => {
             const position = savingsGoal ? (m.amount / savingsGoal) * 100 : 0;
             return (
@@ -432,7 +735,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
         </Box>
       </Box>
 
-      {/* Milestones timeline */}
       {milestones.length > 0 && (
         <VStack align="stretch" spacing="3">
           {milestones.map((milestone, index) => {
@@ -467,7 +769,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
                 <VStack align="start" spacing="0" flex="1">
                   <Text fontSize="sm" fontWeight="semibold" color={isReached ? "green.300" : "gray.200"}>
                     {milestone.label}
-                    {isReached && " ✓"}
                   </Text>
                   <Text fontSize="xs" color="gray.500">
                     {milestone.sublabel || formatCurrency(milestone.amount)}
@@ -489,7 +790,6 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
         </VStack>
       )}
 
-      {/* No goal set message */}
       {(!savingsGoal || monthlySavings <= 0) && (
         <Box p="4" bg="gray.750" borderRadius="lg" textAlign="center">
           <Text fontSize="sm" color="gray.400">
@@ -508,12 +808,9 @@ function BirdsEyeView({ currentSavings, savingsGoal, monthlySavings, income, exp
 function MetricsSummary({ income, expenses, monthlySavings, savingsGoal, currentSavings }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const savingsRate = income > 0 ? ((monthlySavings / income) * 100).toFixed(0) : 0;
-  const monthsToGoal = monthlySavings > 0 && savingsGoal
-    ? Math.ceil((savingsGoal - (currentSavings || 0)) / monthlySavings)
-    : null;
 
   return (
-    <Grid templateColumns="repeat(4, 1fr)" gap="3">
+    <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap="3">
       <GridItem>
         <Box bg="gray.800" borderRadius="xl" p="4" borderWidth="1px" borderColor="gray.700" textAlign="center">
           <Text fontSize="xs" color="gray.500" mb="1">Monthly Income</Text>
@@ -556,45 +853,20 @@ function MetricsSummary({ income, expenses, monthlySavings, savingsGoal, current
 
 // Main FinancialChart component
 export function FinancialChart({ data }) {
+  const [activeTab, setActiveTab] = useState(0);
+
   if (!data) return null;
 
   const expenses = data.expenses || [];
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const monthlySavings = (data.income || 0) - totalExpenses;
+  const plan = data.plan;
 
   return (
-    <Box p="6" bg="gray.900" borderRadius="xl" borderWidth="1px" borderColor="gray.800">
+    <Box>
       <VStack align="stretch" spacing="5">
-        {/* Header */}
-        <HStack justify="space-between" align="center">
-          <Text fontSize="2xl" fontWeight="bold" bgGradient="linear(to-r, cyan.400, green.400)" bgClip="text">
-            Your Financial Outlook
-          </Text>
-          {data.savingsGoal && monthlySavings > 0 && (
-            <Badge
-              colorScheme="green"
-              fontSize="sm"
-              px="3"
-              py="1"
-              borderRadius="full"
-              variant="subtle"
-            >
-              On Track
-            </Badge>
-          )}
-          {monthlySavings < 0 && (
-            <Badge
-              colorScheme="red"
-              fontSize="sm"
-              px="3"
-              py="1"
-              borderRadius="full"
-              variant="subtle"
-            >
-              Over Budget
-            </Badge>
-          )}
-        </HStack>
+        {/* Plan Header */}
+        <PlanHeader plan={plan} potentialSavings={plan?.potentialSavings} />
 
         {/* Key Metrics */}
         <MetricsSummary
@@ -605,35 +877,71 @@ export function FinancialChart({ data }) {
           currentSavings={data.currentSavings}
         />
 
-        {/* Charts Grid */}
-        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
-          {/* Overview Chart */}
-          <GridItem>
-            <OverviewChart
-              income={data.income || 0}
-              expenses={expenses}
-              savings={monthlySavings}
-            />
-          </GridItem>
+        {/* Tabbed Content */}
+        <Box bg="gray.900" borderRadius="xl" borderWidth="1px" borderColor="gray.800" overflow="hidden">
+          <Tabs index={activeTab} onChange={setActiveTab} variant="soft-rounded" colorScheme="blue">
+            <TabList p="4" bg="gray.850" borderBottomWidth="1px" borderColor="gray.800">
+              <Tab fontSize="sm" _selected={{ bg: "blue.600", color: "white" }}>Overview</Tab>
+              <Tab fontSize="sm" _selected={{ bg: "blue.600", color: "white" }}>Your Plan</Tab>
+              <Tab fontSize="sm" _selected={{ bg: "blue.600", color: "white" }}>Expenses</Tab>
+            </TabList>
 
-          {/* Monthly Projection */}
-          <GridItem>
-            <MonthlyChart
-              monthlySavings={monthlySavings}
-              currentSavings={data.currentSavings || 0}
-              savingsGoal={data.savingsGoal}
-            />
-          </GridItem>
-        </Grid>
+            <TabPanels>
+              {/* Overview Tab */}
+              <TabPanel p="5">
+                <VStack align="stretch" spacing="5">
+                  <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
+                    <GridItem>
+                      <OverviewChart
+                        income={data.income || 0}
+                        expenses={expenses}
+                      />
+                    </GridItem>
+                    <GridItem>
+                      <MonthlyChart
+                        monthlySavings={monthlySavings}
+                        currentSavings={data.currentSavings || 0}
+                        savingsGoal={data.savingsGoal}
+                        potentialSavings={plan?.potentialSavings}
+                      />
+                    </GridItem>
+                  </Grid>
 
-        {/* Bird's Eye View - Full Width */}
-        <BirdsEyeView
-          currentSavings={data.currentSavings || 0}
-          savingsGoal={data.savingsGoal}
-          monthlySavings={monthlySavings}
-          income={data.income || 0}
-          expenses={expenses}
-        />
+                  <BirdsEyeView
+                    currentSavings={data.currentSavings || 0}
+                    savingsGoal={data.savingsGoal}
+                    monthlySavings={monthlySavings}
+                    expenses={expenses}
+                  />
+                </VStack>
+              </TabPanel>
+
+              {/* Plan Tab */}
+              <TabPanel p="5">
+                <VStack align="stretch" spacing="5">
+                  <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
+                    <GridItem>
+                      <SavingsStrategies strategies={plan?.strategies} />
+                    </GridItem>
+                    <GridItem>
+                      <ActionItems
+                        actionItems={plan?.actionItems}
+                        weeklyCheckIn={plan?.weeklyCheckIn}
+                      />
+                    </GridItem>
+                  </Grid>
+
+                  <MotivationalNote note={plan?.motivationalNote} />
+                </VStack>
+              </TabPanel>
+
+              {/* Expenses Tab */}
+              <TabPanel p="5">
+                <ExpenseAnalysis expenses={expenses} />
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
+        </Box>
       </VStack>
     </Box>
   );
