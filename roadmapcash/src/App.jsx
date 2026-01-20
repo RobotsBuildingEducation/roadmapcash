@@ -74,11 +74,7 @@ function App() {
                 <Text color="gray.500" mb="1">
                   Your public identity:
                 </Text>
-                <Text
-                  color="blue.300"
-                  wordBreak="break-all"
-                  fontSize="xs"
-                >
+                <Text color="blue.300" wordBreak="break-all" fontSize="xs">
                   {identity.npub}
                 </Text>
               </Box>

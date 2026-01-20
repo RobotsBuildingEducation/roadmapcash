@@ -2,12 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-api-key",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "roadmapcash.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "roadmapcash",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "roadmapcash.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: "roadmapcash.firebaseapp.com",
+  projectId: "roadmapcash",
+  storageBucket: "roadmapcash.firebasestorage.app",
+  messagingSenderId: "311920816757",
+  appId: "1:311920816757:web:c5f94d2cc9078ced723e3c",
+  measurementId: "G-MTTTLY5PW0",
 };
 
 const app = initializeApp(firebaseConfig);

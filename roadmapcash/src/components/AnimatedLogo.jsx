@@ -113,7 +113,7 @@ export function AnimatedLogo() {
         const originalRadius = Math.sqrt(
           positionAttr.array[idx] ** 2 +
             positionAttr.array[idx + 1] ** 2 +
-            positionAttr.array[idx + 2] ** 2
+            positionAttr.array[idx + 2] ** 2,
         );
         const pulse = 1 + Math.sin(time * 3 + i * 0.1) * 0.05;
         const scale = pulse / originalRadius;
