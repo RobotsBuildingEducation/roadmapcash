@@ -1,4 +1,4 @@
-import { Box, VStack, Text, Textarea, Button, HStack } from "@chakra-ui/react";
+import { Box, VStack, Text, Textarea, Button } from "@chakra-ui/react";
 
 const PLACEHOLDER_TEXT = `Enter your expenses and financial goals. For example:
 
@@ -13,10 +13,26 @@ Current savings: $2,000
 
 Describe your financial situation and goals in any format you like.`;
 
-export function FinancialInput({ onGenerate, isGenerating, input, onInputChange, hasSavedData }) {
+export function FinancialInput({
+  onGenerate,
+  onUpdate,
+  isGenerating,
+  isUpdating,
+  input,
+  onInputChange,
+  hasSavedData,
+  updateDraft,
+  onUpdateDraftChange,
+}) {
   const handleGenerate = () => {
     if (input.trim() && onGenerate) {
       onGenerate(input);
+    }
+  };
+
+  const handleUpdate = () => {
+    if (updateDraft?.trim() && onUpdate) {
+      onUpdate(updateDraft);
     }
   };
 
@@ -72,6 +88,59 @@ export function FinancialInput({ onGenerate, isGenerating, input, onInputChange,
             {isGenerating ? "Creating Your Plan..." : hasSavedData ? "Update My Plan" : "Generate My Plan"}
           </Button>
         </Box>
+
+        {hasSavedData && (
+          <Box
+            p={{ base: "3", md: "4" }}
+            bg="gray.850"
+            borderRadius="lg"
+            borderWidth="1px"
+            borderColor="gray.700"
+          >
+            <VStack align="stretch" spacing="3">
+              <Box>
+                <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
+                  Update Your Plan
+                </Text>
+                <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.400">
+                  Describe changes like “raise rent to $1,800”, “add a $120 gym membership”, or
+                  “increase income to $6,200 and update goals accordingly.”
+                </Text>
+              </Box>
+
+              <Textarea
+                value={updateDraft}
+                onChange={(e) => onUpdateDraftChange(e.target.value)}
+                placeholder="What changed since last time?"
+                minH={{ base: "120px", md: "140px" }}
+                bg="gray.800"
+                borderColor="gray.700"
+                _hover={{ borderColor: "gray.600" }}
+                _focus={{
+                  borderColor: "blue.400",
+                  boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",
+                }}
+                fontSize={{ base: "xs", md: "sm" }}
+                resize="vertical"
+              />
+
+              <Button
+                colorScheme="purple"
+                onClick={handleUpdate}
+                disabled={!updateDraft?.trim() || isUpdating}
+                size={{ base: "md", md: "lg" }}
+                width={{ base: "100%", md: "auto" }}
+                px={{ base: "4", md: "8" }}
+                bgGradient="linear(to-r, purple.400, blue.500)"
+                _hover={{
+                  bgGradient: "linear(to-r, purple.500, blue.600)",
+                }}
+              >
+                {isUpdating ? "Applying Updates..." : "Apply Updates"}
+              </Button>
+            </VStack>
+          </Box>
+        )}
       </VStack>
     </Box>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Box,
   VStack,
@@ -8,6 +8,9 @@ import {
   Grid,
   GridItem,
   Button,
+  Input,
+  Select,
+  Textarea,
 } from "@chakra-ui/react";
 
 // Color palette for consistent theming
@@ -1223,8 +1226,13 @@ function MetricsSummary({
 }
 
 // Main FinancialChart component
-export function FinancialChart({ data }) {
+export function FinancialChart({ data, onUpdate }) {
   const [activeTab, setActiveTab] = useState(0);
+  const [draftIncome, setDraftIncome] = useState(0);
+  const [draftSavingsGoal, setDraftSavingsGoal] = useState("");
+  const [draftCurrentSavings, setDraftCurrentSavings] = useState("");
+  const [draftExpenses, setDraftExpenses] = useState([]);
+  const [updateNotes, setUpdateNotes] = useState("");
 
   if (!data) return null;
 
@@ -1233,11 +1241,263 @@ export function FinancialChart({ data }) {
   const monthlySavings = (data.income || 0) - totalExpenses;
   const plan = data.plan;
 
+  useEffect(() => {
+    setDraftIncome(data.income || 0);
+    setDraftSavingsGoal(data.savingsGoal ?? "");
+    setDraftCurrentSavings(data.currentSavings ?? "");
+    setDraftExpenses(
+      expenses.map((expense) => ({
+        name: expense.name,
+        amount: expense.amount,
+        priority: expense.priority || "important",
+      })),
+    );
+  }, [data.income, data.savingsGoal, data.currentSavings, expenses]);
+
+  const updateExpenseField = (index, field, value) => {
+    setDraftExpenses((prev) =>
+      prev.map((expense, i) =>
+        i === index ? { ...expense, [field]: value } : expense,
+      ),
+    );
+  };
+
+  const handleAddExpense = () => {
+    setDraftExpenses((prev) => [
+      ...prev,
+      { name: "", amount: "", priority: "important" },
+    ]);
+  };
+
+  const handleRemoveExpense = (index) => {
+    setDraftExpenses((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const buildUpdatePrompt = () => {
+    const lines = [];
+    const incomeValue = Number(draftIncome);
+    const goalValue =
+      draftSavingsGoal === "" || draftSavingsGoal === null
+        ? null
+        : Number(draftSavingsGoal);
+    const currentValue =
+      draftCurrentSavings === "" || draftCurrentSavings === null
+        ? null
+        : Number(draftCurrentSavings);
+
+    if (!Number.isNaN(incomeValue) && incomeValue !== (data.income || 0)) {
+      lines.push(`Update monthly income to $${incomeValue}.`);
+    }
+    if (goalValue !== data.savingsGoal) {
+      lines.push(
+        goalValue === null
+          ? "Remove the savings goal for now."
+          : `Update savings goal to $${goalValue}.`,
+      );
+    }
+    if (currentValue !== data.currentSavings) {
+      lines.push(`Update current savings to $${currentValue || 0}.`);
+    }
+
+    const cleanedExpenses = draftExpenses
+      .filter((expense) => expense.name && Number(expense.amount) > 0)
+      .map((expense) => ({
+        name: expense.name.trim(),
+        amount: Number(expense.amount),
+        priority: expense.priority || "important",
+      }));
+
+    if (cleanedExpenses.length > 0) {
+      lines.push("Replace my expense list with:");
+      cleanedExpenses.forEach((expense) => {
+        lines.push(
+          `- ${expense.name}: $${expense.amount} (${expense.priority})`,
+        );
+      });
+    } else if (draftExpenses.length === 0 && expenses.length > 0) {
+      lines.push("Clear my expense list for now.");
+    }
+
+    if (updateNotes.trim()) {
+      lines.push(`Notes: ${updateNotes.trim()}`);
+    }
+
+    if (lines.length === 0) {
+      return "";
+    }
+
+    lines.push(
+      "Recalculate recommendations, monthly budget, potential savings, and update the plan accordingly.",
+    );
+
+    return lines.join("\n");
+  };
+
+  const handleApplyUpdates = () => {
+    const prompt = buildUpdatePrompt();
+    if (!prompt || !onUpdate) return;
+    onUpdate(prompt);
+  };
+
   return (
     <Box>
       <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
         {/* Plan Header */}
         <PlanHeader plan={plan} potentialSavings={plan?.potentialSavings} />
+
+        {/* Interactive Updates */}
+        <Box
+          bg="gray.900"
+          borderRadius="xl"
+          borderWidth="1px"
+          borderColor="gray.800"
+          p={{ base: "4", md: "5" }}
+        >
+          <VStack align="stretch" spacing="4">
+            <HStack justify="space-between" flexWrap="wrap" gap="2">
+              <Box>
+                <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
+                  Update Your Data
+                </Text>
+                <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.400">
+                  Adjust numbers directly and let AI refresh your plan.
+                </Text>
+              </Box>
+              <Button
+                size={{ base: "xs", md: "sm" }}
+                colorScheme="blue"
+                onClick={handleApplyUpdates}
+                isDisabled={!onUpdate}
+              >
+                Apply updates
+              </Button>
+            </HStack>
+
+            <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap="3">
+              <Box>
+                <Text fontSize="2xs" color="gray.500" mb="1">
+                  Monthly income
+                </Text>
+                <Input
+                  value={draftIncome}
+                  onChange={(e) => setDraftIncome(e.target.value)}
+                  type="number"
+                  bg="gray.800"
+                  borderColor="gray.700"
+                  fontSize="sm"
+                />
+              </Box>
+              <Box>
+                <Text fontSize="2xs" color="gray.500" mb="1">
+                  Current savings
+                </Text>
+                <Input
+                  value={draftCurrentSavings}
+                  onChange={(e) => setDraftCurrentSavings(e.target.value)}
+                  type="number"
+                  bg="gray.800"
+                  borderColor="gray.700"
+                  fontSize="sm"
+                />
+              </Box>
+              <Box>
+                <Text fontSize="2xs" color="gray.500" mb="1">
+                  Savings goal
+                </Text>
+                <Input
+                  value={draftSavingsGoal}
+                  onChange={(e) => setDraftSavingsGoal(e.target.value)}
+                  type="number"
+                  bg="gray.800"
+                  borderColor="gray.700"
+                  fontSize="sm"
+                />
+              </Box>
+            </Grid>
+
+            <VStack align="stretch" spacing="2">
+              <HStack justify="space-between">
+                <Text fontSize="2xs" color="gray.500">
+                  Expenses
+                </Text>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  colorScheme="blue"
+                  onClick={handleAddExpense}
+                >
+                  Add expense
+                </Button>
+              </HStack>
+              {draftExpenses.map((expense, index) => (
+                <Grid
+                  key={`${expense.name}-${index}`}
+                  templateColumns={{ base: "1fr", md: "2fr 1fr 1fr auto" }}
+                  gap="2"
+                  alignItems="center"
+                >
+                  <Input
+                    value={expense.name}
+                    onChange={(e) =>
+                      updateExpenseField(index, "name", e.target.value)
+                    }
+                    placeholder="Expense name"
+                    bg="gray.800"
+                    borderColor="gray.700"
+                    fontSize="sm"
+                  />
+                  <Input
+                    value={expense.amount}
+                    onChange={(e) =>
+                      updateExpenseField(index, "amount", e.target.value)
+                    }
+                    type="number"
+                    placeholder="Amount"
+                    bg="gray.800"
+                    borderColor="gray.700"
+                    fontSize="sm"
+                  />
+                  <Select
+                    value={expense.priority}
+                    onChange={(e) =>
+                      updateExpenseField(index, "priority", e.target.value)
+                    }
+                    bg="gray.800"
+                    borderColor="gray.700"
+                    fontSize="sm"
+                  >
+                    <option value="essential">Essential</option>
+                    <option value="important">Important</option>
+                    <option value="discretionary">Discretionary</option>
+                  </Select>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    colorScheme="red"
+                    onClick={() => handleRemoveExpense(index)}
+                  >
+                    Remove
+                  </Button>
+                </Grid>
+              ))}
+            </VStack>
+
+            <Box>
+              <Text fontSize="2xs" color="gray.500" mb="1">
+                Notes for AI (optional)
+              </Text>
+              <Textarea
+                value={updateNotes}
+                onChange={(e) => setUpdateNotes(e.target.value)}
+                placeholder="Add context: new job, moving, debt payoff, etc."
+                bg="gray.800"
+                borderColor="gray.700"
+                fontSize="sm"
+                minH="90px"
+              />
+            </Box>
+          </VStack>
+        </Box>
 
         {/* Key Metrics */}
         <MetricsSummary

@@ -251,6 +251,80 @@ export function useFinancialParser() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [financialData, setFinancialData] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState(null);
+
+  const finalizeFinancialData = useCallback((parsed, fallback) => {
+    const result = { ...parsed };
+
+    if (!result.expenses) {
+      result.expenses = fallback.expenses || [];
+    }
+
+    if (result.expenses.length === 0 && fallback.expenses?.length > 0) {
+      result.expenses = fallback.expenses.map((expense) => ({
+        ...expense,
+        recommendation: expense.recommendation || "Review this expense",
+        priority: expense.priority || "important",
+      }));
+    }
+
+    result.expenses = result.expenses
+      .filter((expense) => expense && expense.name && typeof expense.amount === "number" && expense.amount > 0)
+      .map((expense) => ({
+        ...expense,
+        recommendation: expense.recommendation || "Review this expense",
+        priority: expense.priority || "important",
+      }));
+
+    if (result.income === null || result.income === undefined || result.income === 0) {
+      result.income = fallback.income ?? 0;
+    }
+
+    if (result.currentSavings === null || result.currentSavings === undefined) {
+      result.currentSavings = fallback.currentSavings ?? 0;
+    }
+
+    if (result.savingsGoal === null || result.savingsGoal === undefined) {
+      result.savingsGoal = fallback.savingsGoal ?? null;
+    }
+
+    const totalExpenses = result.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const monthlySavings = (result.income || 0) - totalExpenses;
+    const basePlan = fallback.plan || {};
+    const plan = result.plan || {};
+
+    const monthlyBudget = plan.monthlyBudget || basePlan.monthlyBudget || {
+      needs: Math.round((result.income || 0) * 0.5),
+      wants: Math.round((result.income || 0) * 0.3),
+      savings: Math.round((result.income || 0) * 0.2),
+    };
+
+    result.plan = {
+      title: plan.title || basePlan.title || "Your Financial Roadmap",
+      overview:
+        plan.overview ||
+        basePlan.overview ||
+        "Let's analyze your finances and create a plan to reach your goals.",
+      monthlyBudget,
+      strategies: plan.strategies || basePlan.strategies || [],
+      actionItems: plan.actionItems || basePlan.actionItems || [],
+      weeklyCheckIn:
+        plan.weeklyCheckIn ||
+        basePlan.weeklyCheckIn ||
+        "Review your spending and track progress toward your goal.",
+      potentialSavings:
+        plan.potentialSavings ||
+        basePlan.potentialSavings ||
+        Math.max(0, monthlySavings),
+      motivationalNote:
+        plan.motivationalNote ||
+        basePlan.motivationalNote ||
+        "You've taken the first step by creating a plan. Stay consistent!",
+    };
+
+    return result;
+  }, []);
 
   const parseFinancialInput = useCallback(async (userInput, additionalContext = "") => {
     setIsLoading(true);
@@ -269,74 +343,10 @@ export function useFinancialParser() {
 
       const parsed = JSON.parse(text);
       const fallback = extractLooseData(userInput);
+      const finalized = finalizeFinancialData(parsed, fallback);
 
-      // Ensure expenses array exists and has valid data
-      if (!parsed.expenses) {
-        parsed.expenses = [];
-      }
-
-      if (parsed.expenses.length === 0 && fallback.expenses.length > 0) {
-        parsed.expenses = fallback.expenses.map((e) => ({
-          ...e,
-          recommendation: "Review this expense",
-          priority: "important",
-        }));
-      }
-
-      // Filter out any invalid expenses
-      parsed.expenses = parsed.expenses.filter(
-        (e) => e && e.name && typeof e.amount === "number" && e.amount > 0,
-      );
-
-      // Ensure all expenses have recommendations
-      parsed.expenses = parsed.expenses.map((e) => ({
-        ...e,
-        recommendation: e.recommendation || "Review this expense",
-        priority: e.priority || "important",
-      }));
-
-      // Set default values
-      if (
-        parsed.income === null ||
-        parsed.income === undefined ||
-        parsed.income === 0
-      ) {
-        parsed.income = fallback.income ?? 0;
-      }
-
-      if (
-        parsed.currentSavings === null ||
-        parsed.currentSavings === undefined
-      ) {
-        parsed.currentSavings = fallback.currentSavings ?? 0;
-      }
-
-      if (parsed.savingsGoal === null || parsed.savingsGoal === undefined) {
-        parsed.savingsGoal = fallback.savingsGoal ?? null;
-      }
-
-      // Ensure plan exists with defaults
-      if (!parsed.plan) {
-        const totalExpenses = parsed.expenses.reduce((sum, e) => sum + e.amount, 0);
-        const monthlySavings = Math.max(0, (parsed.income || 0) - totalExpenses);
-        parsed.plan = {
-          title: "Your Financial Roadmap",
-          overview: "Let's analyze your finances and create a plan to reach your goals.",
-          monthlyBudget: {
-            needs: Math.round((parsed.income || 0) * 0.5),
-            wants: Math.round((parsed.income || 0) * 0.3),
-            savings: Math.round((parsed.income || 0) * 0.2),
-          },
-          strategies: [],
-          actionItems: [],
-          weeklyCheckIn: "Review your spending and track progress toward your goal.",
-          potentialSavings: monthlySavings,
-          motivationalNote: "You've taken the first step by creating a plan. Stay consistent!",
-        };
-      }
-
-      setFinancialData(parsed);
-      return parsed;
+      setFinancialData(finalized);
+      return finalized;
     } catch (err) {
       console.error("Error parsing financial data:", err);
       setError(err.message || "Failed to analyze financial data");
@@ -351,12 +361,63 @@ export function useFinancialParser() {
     setError(null);
   }, []);
 
+  const updateFinancialData = useCallback(
+    async (currentData, updateRequest, additionalContext = "") => {
+      if (!currentData || !updateRequest?.trim()) return null;
+
+      setIsUpdating(true);
+      setUpdateError(null);
+
+      try {
+        let prompt = `${SYSTEM_PROMPT}
+
+You are updating an existing financial plan. Keep anything not mentioned the same.
+
+Current financial data (JSON):
+${JSON.stringify(currentData, null, 2)}
+
+Requested updates:
+${updateRequest}`;
+
+        if (additionalContext.trim()) {
+          prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+        }
+
+        const result = await financialModel.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+        const parsed = JSON.parse(text);
+        const fallback = {
+          income: currentData.income ?? 0,
+          expenses: currentData.expenses || [],
+          savingsGoal: currentData.savingsGoal ?? null,
+          currentSavings: currentData.currentSavings ?? 0,
+          plan: currentData.plan || {},
+        };
+        const finalized = finalizeFinancialData(parsed, fallback);
+
+        setFinancialData(finalized);
+        return finalized;
+      } catch (err) {
+        console.error("Error updating financial data:", err);
+        setUpdateError(err.message || "Failed to update your plan");
+        return null;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [finalizeFinancialData]
+  );
+
   return {
     parseFinancialInput,
+    updateFinancialData,
     clearData,
     financialData,
     setFinancialData,
     isLoading,
     error,
+    isUpdating,
+    updateError,
   };
 }
