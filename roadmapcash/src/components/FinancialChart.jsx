@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, VStack, Text, HStack, Badge, Grid, GridItem, Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
+import { Box, VStack, Text, HStack, Badge, Grid, GridItem, Button } from "@chakra-ui/react";
 
 // Color palette for consistent theming
 const COLORS = {
@@ -879,68 +879,79 @@ export function FinancialChart({ data }) {
 
         {/* Tabbed Content */}
         <Box bg="gray.900" borderRadius="xl" borderWidth="1px" borderColor="gray.800" overflow="hidden">
-          <Tabs index={activeTab} onChange={setActiveTab} variant="soft-rounded" colorScheme="blue">
-            <TabList p="4" bg="gray.850" borderBottomWidth="1px" borderColor="gray.800">
-              <Tab fontSize="sm" _selected={{ bg: "blue.600", color: "white" }}>Overview</Tab>
-              <Tab fontSize="sm" _selected={{ bg: "blue.600", color: "white" }}>Your Plan</Tab>
-              <Tab fontSize="sm" _selected={{ bg: "blue.600", color: "white" }}>Expenses</Tab>
-            </TabList>
+          {/* Custom Tab List */}
+          <HStack p="4" bg="gray.850" borderBottomWidth="1px" borderColor="gray.800" gap="2">
+            {["Overview", "Your Plan", "Expenses"].map((tab, index) => (
+              <Button
+                key={tab}
+                size="sm"
+                fontSize="sm"
+                borderRadius="full"
+                bg={activeTab === index ? "blue.600" : "transparent"}
+                color={activeTab === index ? "white" : "gray.400"}
+                _hover={{ bg: activeTab === index ? "blue.600" : "gray.700" }}
+                onClick={() => setActiveTab(index)}
+              >
+                {tab}
+              </Button>
+            ))}
+          </HStack>
 
-            <TabPanels>
-              {/* Overview Tab */}
-              <TabPanel p="5">
-                <VStack align="stretch" spacing="5">
-                  <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
-                    <GridItem>
-                      <OverviewChart
-                        income={data.income || 0}
-                        expenses={expenses}
-                      />
-                    </GridItem>
-                    <GridItem>
-                      <MonthlyChart
-                        monthlySavings={monthlySavings}
-                        currentSavings={data.currentSavings || 0}
-                        savingsGoal={data.savingsGoal}
-                        potentialSavings={plan?.potentialSavings}
-                      />
-                    </GridItem>
-                  </Grid>
+          {/* Tab Panels */}
+          <Box p="5">
+            {/* Overview Tab */}
+            {activeTab === 0 && (
+              <VStack align="stretch" spacing="5">
+                <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
+                  <GridItem>
+                    <OverviewChart
+                      income={data.income || 0}
+                      expenses={expenses}
+                    />
+                  </GridItem>
+                  <GridItem>
+                    <MonthlyChart
+                      monthlySavings={monthlySavings}
+                      currentSavings={data.currentSavings || 0}
+                      savingsGoal={data.savingsGoal}
+                      potentialSavings={plan?.potentialSavings}
+                    />
+                  </GridItem>
+                </Grid>
 
-                  <BirdsEyeView
-                    currentSavings={data.currentSavings || 0}
-                    savingsGoal={data.savingsGoal}
-                    monthlySavings={monthlySavings}
-                    expenses={expenses}
-                  />
-                </VStack>
-              </TabPanel>
+                <BirdsEyeView
+                  currentSavings={data.currentSavings || 0}
+                  savingsGoal={data.savingsGoal}
+                  monthlySavings={monthlySavings}
+                  expenses={expenses}
+                />
+              </VStack>
+            )}
 
-              {/* Plan Tab */}
-              <TabPanel p="5">
-                <VStack align="stretch" spacing="5">
-                  <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
-                    <GridItem>
-                      <SavingsStrategies strategies={plan?.strategies} />
-                    </GridItem>
-                    <GridItem>
-                      <ActionItems
-                        actionItems={plan?.actionItems}
-                        weeklyCheckIn={plan?.weeklyCheckIn}
-                      />
-                    </GridItem>
-                  </Grid>
+            {/* Plan Tab */}
+            {activeTab === 1 && (
+              <VStack align="stretch" spacing="5">
+                <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="5">
+                  <GridItem>
+                    <SavingsStrategies strategies={plan?.strategies} />
+                  </GridItem>
+                  <GridItem>
+                    <ActionItems
+                      actionItems={plan?.actionItems}
+                      weeklyCheckIn={plan?.weeklyCheckIn}
+                    />
+                  </GridItem>
+                </Grid>
 
-                  <MotivationalNote note={plan?.motivationalNote} />
-                </VStack>
-              </TabPanel>
+                <MotivationalNote note={plan?.motivationalNote} />
+              </VStack>
+            )}
 
-              {/* Expenses Tab */}
-              <TabPanel p="5">
-                <ExpenseAnalysis expenses={expenses} />
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
+            {/* Expenses Tab */}
+            {activeTab === 2 && (
+              <ExpenseAnalysis expenses={expenses} />
+            )}
+          </Box>
         </Box>
       </VStack>
     </Box>
