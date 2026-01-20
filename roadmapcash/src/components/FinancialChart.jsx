@@ -1,4 +1,5 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { keyframes } from "@emotion/react";
 import {
   Box,
   VStack,
@@ -1234,6 +1235,8 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   const [draftCurrentSavings, setDraftCurrentSavings] = useState("");
   const [draftExpenses, setDraftExpenses] = useState([]);
   const [updateNotes, setUpdateNotes] = useState("");
+  const [showUpdateFlash, setShowUpdateFlash] = useState(false);
+  const previousUpdatingRef = useRef(false);
 
   if (!data) return null;
 
@@ -1254,6 +1257,17 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
       })),
     );
   }, [data.income, data.savingsGoal, data.currentSavings, expenses]);
+
+  useEffect(() => {
+    if (previousUpdatingRef.current && !isUpdating) {
+      setShowUpdateFlash(true);
+      const timeout = setTimeout(() => setShowUpdateFlash(false), 1400);
+      previousUpdatingRef.current = isUpdating;
+      return () => clearTimeout(timeout);
+    }
+    previousUpdatingRef.current = isUpdating;
+    return undefined;
+  }, [isUpdating]);
 
   const updateExpenseField = (index, field, value) => {
     setDraftExpenses((prev) =>
@@ -1353,6 +1367,13 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     onUpdate(prompt);
   };
 
+  const flashAnimation = keyframes`
+    0% { box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
+    30% { box-shadow: 0 0 18px rgba(59, 130, 246, 0.45); }
+    60% { box-shadow: 0 0 12px rgba(59, 130, 246, 0.25); }
+    100% { box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
+  `;
+
   return (
     <Box>
       <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
@@ -1377,16 +1398,6 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                   Adjust numbers directly and let AI refresh your plan.
                 </Text>
               </Box>
-              <Button
-                size={{ base: "xs", md: "sm" }}
-                colorScheme="blue"
-                onClick={handleApplyUpdates}
-                isDisabled={!onUpdate || updateSummary.length === 0}
-                isLoading={isUpdating}
-                loadingText="Updating"
-              >
-                Apply updates
-              </Button>
             </HStack>
 
             <Box
@@ -1395,36 +1406,31 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
               borderRadius="lg"
               borderWidth="1px"
               borderColor="gray.700"
+              animation={showUpdateFlash ? `${flashAnimation} 1.4s ease-out` : "none"}
             >
-              <HStack justify="space-between" mb="2" flexWrap="wrap" gap="2">
-                <Text fontSize="xs" color="gray.400" fontWeight="semibold">
-                  Pending updates
-                </Text>
-                {isUpdating && (
-                  <HStack spacing="2">
-                    <Spinner size="xs" color="blue.300" />
-                    <Text fontSize="xs" color="blue.300">
-                      Applying changes...
-                    </Text>
-                  </HStack>
-                )}
-              </HStack>
-              {updateSummary.length === 0 ? (
-                <Text fontSize="xs" color="gray.500">
-                  No changes yet. Adjust any fields to update your plan.
-                </Text>
-              ) : (
-                <VStack align="start" spacing="1">
-                  {updateSummary.map((line, index) => (
-                    <HStack key={`${line}-${index}`} spacing="2" align="start">
-                      <Box w="1.5" h="1.5" bg="blue.400" borderRadius="full" mt="1" />
-                      <Text fontSize="xs" color="gray.300">
-                        {line}
-                      </Text>
-                    </HStack>
-                  ))}
+              <HStack justify="space-between" flexWrap="wrap" gap="2">
+                <VStack align="start" spacing="0">
+                  <Text fontSize="xs" color="gray.400" fontWeight="semibold">
+                    Update status
+                  </Text>
+                  <Text fontSize="xs" color="gray.300">
+                    {isUpdating
+                      ? "Applying updates to your plan..."
+                      : updateSummary.length === 0
+                        ? "Make a change below to enable updates."
+                        : "Ready to refresh your plan."}
+                  </Text>
                 </VStack>
-              )}
+                <Button
+                  size={{ base: "xs", md: "sm" }}
+                  colorScheme="blue"
+                  onClick={handleApplyUpdates}
+                  isDisabled={!onUpdate || updateSummary.length === 0 || isUpdating}
+                  aria-label="Apply updates"
+                >
+                  {isUpdating ? <Spinner size="sm" /> : "Apply updates"}
+                </Button>
+              </HStack>
             </Box>
 
             <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap="3">
