@@ -60,7 +60,10 @@ export function FinancialChart({ data }) {
     const bars = [];
     const expenses = data.expenses || [];
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const maxAmount = Math.max(...expenses.map((e) => e.amount), data.income || 1);
+    const maxAmount = Math.max(
+      ...expenses.map((e) => e.amount),
+      data.income || 1,
+    );
 
     const barWidth = 1;
     const spacing = 1.8;
@@ -80,7 +83,11 @@ export function FinancialChart({ data }) {
 
     expenses.forEach((expense, index) => {
       const normalizedHeight = (expense.amount / maxAmount) * 6;
-      const geometry = new THREE.BoxGeometry(barWidth, normalizedHeight, barWidth);
+      const geometry = new THREE.BoxGeometry(
+        barWidth,
+        normalizedHeight,
+        barWidth,
+      );
       const material = new THREE.MeshStandardMaterial({
         color: colors[index % colors.length],
         metalness: 0.3,
@@ -96,7 +103,7 @@ export function FinancialChart({ data }) {
       const glowGeometry = new THREE.BoxGeometry(
         barWidth + 0.1,
         normalizedHeight + 0.1,
-        barWidth + 0.1
+        barWidth + 0.1,
       );
       const glowMaterial = new THREE.MeshBasicMaterial({
         color: colors[index % colors.length],
@@ -134,7 +141,7 @@ export function FinancialChart({ data }) {
         0.25,
         16,
         Math.max(3, Math.floor(100 * progress)),
-        progressAngle
+        progressAngle,
       );
       const progressRingMaterial = new THREE.MeshStandardMaterial({
         color: 0x10b981,
@@ -143,7 +150,10 @@ export function FinancialChart({ data }) {
         emissive: 0x10b981,
         emissiveIntensity: 0.3,
       });
-      const progressRing = new THREE.Mesh(progressRingGeometry, progressRingMaterial);
+      const progressRing = new THREE.Mesh(
+        progressRingGeometry,
+        progressRingMaterial,
+      );
       progressRing.position.set(8, 3, 0);
       progressRing.rotation.y = Math.PI / 4;
       progressRing.rotation.z = -Math.PI / 2;
@@ -176,7 +186,7 @@ export function FinancialChart({ data }) {
 
     particleGeometry.setAttribute(
       "position",
-      new THREE.BufferAttribute(particlePositions, 3)
+      new THREE.BufferAttribute(particlePositions, 3),
     );
 
     const particleMaterial = new THREE.PointsMaterial({
@@ -259,7 +269,10 @@ export function FinancialChart({ data }) {
 
   if (!data) return null;
 
-  const totalExpenses = (data.expenses || []).reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = (data.expenses || []).reduce(
+    (sum, e) => sum + e.amount,
+    0,
+  );
   const monthlySavings = (data.income || 0) - totalExpenses;
   const progressPercent = data.savingsGoal
     ? Math.min(((data.currentSavings || 0) / data.savingsGoal) * 100, 100)
@@ -344,7 +357,12 @@ export function FinancialChart({ data }) {
 
         {data.expenses && data.expenses.length > 0 && (
           <Box pt="2">
-            <Text color="gray.500" fontSize="xs" textTransform="uppercase" mb="2">
+            <Text
+              color="gray.500"
+              fontSize="xs"
+              textTransform="uppercase"
+              mb="2"
+            >
               Expense Breakdown
             </Text>
             <HStack flexWrap="wrap" gap="2">
@@ -353,9 +371,15 @@ export function FinancialChart({ data }) {
                   key={index}
                   variant="subtle"
                   colorScheme={
-                    ["blue", "purple", "cyan", "green", "yellow", "red", "pink"][
-                      index % 7
-                    ]
+                    [
+                      "blue",
+                      "purple",
+                      "cyan",
+                      "green",
+                      "yellow",
+                      "red",
+                      "pink",
+                    ][index % 7]
                   }
                   px="3"
                   py="1"
