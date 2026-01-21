@@ -79,10 +79,13 @@ const CATEGORY_CONFIG = {
   track: { icon: "📊", color: "purple.400", label: "Track" },
 };
 
-const createItemId = (prefix, index, label) => {
-  const normalizedLabel =
-    typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : "";
-  return `${prefix}-${index}-${normalizedLabel || index}`;
+const createItemId = (prefix, index) => `${prefix}-${index}`;
+
+const getIndexFromId = (id) => {
+  if (!id) return null;
+  const parts = id.split("-");
+  const index = Number(parts[1]);
+  return Number.isNaN(index) ? null : index;
 };
 
 // Format currency
@@ -283,56 +286,61 @@ function ExpenseAnalysis({ expenses, onSelect }) {
               </HStack>
 
               <VStack align="stretch" spacing="2">
-                {items.map((expense, index) => (
-                  <Box
-                    key={expense.id || index}
-                    p={{ base: "2", md: "3" }}
-                    bg={config.bg}
-                    borderRadius="lg"
-                    borderWidth="1px"
-                    borderColor={config.border}
-                    borderLeftWidth="3px"
-                    cursor="pointer"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => onSelect?.(expense, "expense")}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        onSelect?.(expense, "expense");
+                {items.map((expense, index) => {
+                  const expenseIndex = getIndexFromId(expense.id) ?? index;
+                  return (
+                    <Box
+                      key={expense.id || index}
+                      p={{ base: "2", md: "3" }}
+                      bg={config.bg}
+                      borderRadius="lg"
+                      borderWidth="1px"
+                      borderColor={config.border}
+                      borderLeftWidth="3px"
+                      cursor="pointer"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        onSelect?.(expense, "expense", expenseIndex)
                       }
-                    }}
-                  >
-                    <HStack
-                      justify="space-between"
-                      mb="1"
-                      flexWrap="wrap"
-                      gap="1"
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onSelect?.(expense, "expense", expenseIndex);
+                        }
+                      }}
                     >
+                      <HStack
+                        justify="space-between"
+                        mb="1"
+                        flexWrap="wrap"
+                        gap="1"
+                      >
+                        <Text
+                          fontSize={{ base: "xs", md: "sm" }}
+                          fontWeight="semibold"
+                          color={config.text}
+                        >
+                          {expense.name}
+                        </Text>
+                        <Text
+                          fontSize={{ base: "xs", md: "sm" }}
+                          fontWeight="bold"
+                          color="white"
+                        >
+                          {formatCurrency(expense.amount)}
+                        </Text>
+                      </HStack>
                       <Text
-                        fontSize={{ base: "xs", md: "sm" }}
-                        fontWeight="semibold"
-                        color={config.text}
-                    >
-                      {expense.name}
-                    </Text>
-                    <Text
-                      fontSize={{ base: "xs", md: "sm" }}
-                      fontWeight="bold"
-                      color="white"
-                    >
-                      {formatCurrency(expense.amount)}
-                    </Text>
-                  </HStack>
-                  <Text
-                    fontSize={{ base: "2xs", md: "xs" }}
-                    color="gray.400"
-                    lineHeight="tall"
-                  >
-                    {expense.recommendation}
-                  </Text>
-                  </Box>
-                ))}
+                        fontSize={{ base: "2xs", md: "xs" }}
+                        color="gray.400"
+                        lineHeight="tall"
+                      >
+                        {expense.recommendation}
+                      </Text>
+                    </Box>
+                  );
+                })}
               </VStack>
             </Box>
           );
@@ -385,11 +393,11 @@ function SavingsStrategies({ strategies, onSelect }) {
               cursor="pointer"
               role="button"
               tabIndex={0}
-              onClick={() => onSelect?.(strategy, "strategy")}
+              onClick={() => onSelect?.(strategy, "strategy", index)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
-                  onSelect?.(strategy, "strategy");
+                  onSelect?.(strategy, "strategy", index);
                 }
               }}
             >
@@ -504,11 +512,11 @@ function ActionItems({
                 cursor="pointer"
                 role="button"
                 tabIndex={0}
-                onClick={() => onSelect?.(item, "action")}
+                onClick={() => onSelect?.(item, "action", index)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    onSelect?.(item, "action");
+                    onSelect?.(item, "action", index);
                   }
                 }}
               >
@@ -561,11 +569,11 @@ function ActionItems({
           cursor="pointer"
           role="button"
           tabIndex={0}
-          onClick={() => onSelectWeekly?.(weeklyCheckIn, "weekly")}
+          onClick={() => onSelectWeekly?.(weeklyCheckIn, "weekly", null)}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
-              onSelectWeekly?.(weeklyCheckIn, "weekly");
+              onSelectWeekly?.(weeklyCheckIn, "weekly", null);
             }
           }}
         >
@@ -1713,6 +1721,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   const [interactiveWeeklyCheckIn, setInteractiveWeeklyCheckIn] =
     useState(null);
   const [interaction, setInteraction] = useState(null);
+  const [interactionIndex, setInteractionIndex] = useState(null);
   const [interactionAction, setInteractionAction] = useState("");
 
   if (!data) return null;
@@ -1739,13 +1748,13 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     setInteractiveStrategies(
       (plan?.strategies || []).map((strategy, index) => ({
         ...strategy,
-        id: createItemId("strategy", index, strategy.title),
+        id: createItemId("strategy", index),
       })),
     );
     setInteractiveActions(
       (plan?.actionItems || []).map((item, index) => ({
         ...item,
-        id: createItemId("action", index, item.action),
+        id: createItemId("action", index),
       })),
     );
     setInteractiveWeeklyCheckIn(
@@ -1759,7 +1768,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     setInteractiveExpenses(
       expenses.map((expense, index) => ({
         ...expense,
-        id: createItemId("expense", index, expense.name),
+        id: createItemId("expense", index),
       })),
     );
   }, [expenses, plan]);
@@ -1781,27 +1790,22 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
 
     const findUpdatedItem = () => {
       if (interaction.type === "strategy") {
-        return (
-          interactiveStrategies.find((strategy) => strategy.id === interaction.item.id) ||
-          null
-        );
+        return interactionIndex !== null
+          ? interactiveStrategies[interactionIndex]
+          : null;
       }
       if (interaction.type === "action") {
-        return (
-          interactiveActions.find((action) => action.id === interaction.item.id) ||
-          null
-        );
+        return interactionIndex !== null
+          ? interactiveActions[interactionIndex]
+          : null;
       }
       if (interaction.type === "expense") {
-        return (
-          interactiveExpenses.find((expense) => expense.id === interaction.item.id) ||
-          null
-        );
+        return interactionIndex !== null
+          ? interactiveExpenses[interactionIndex]
+          : null;
       }
       if (interaction.type === "weekly") {
-        return interactiveWeeklyCheckIn?.id === interaction.item.id
-          ? interactiveWeeklyCheckIn
-          : null;
+        return interactiveWeeklyCheckIn;
       }
       return null;
     };
@@ -1812,6 +1816,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     }
   }, [
     interaction,
+    interactionIndex,
     interactiveStrategies,
     interactiveActions,
     interactiveExpenses,
@@ -1923,9 +1928,10 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     100% { box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
   `;
 
-  const openInteraction = (item, type) => {
+  const openInteraction = (item, type, index) => {
     if (!item) return;
     setInteraction({ type, item });
+    setInteractionIndex(index);
   };
 
   const buildInteractionPrompt = (type, item, action) => {
@@ -1963,6 +1969,11 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     if (!prompt) return;
     setInteractionAction(action);
     onUpdate(prompt);
+  };
+
+  const closeInteraction = () => {
+    setInteraction(null);
+    setInteractionIndex(null);
   };
 
   return (
@@ -2299,7 +2310,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
           display="flex"
           alignItems="center"
           justifyContent="center"
-          onClick={() => setInteraction(null)}
+          onClick={closeInteraction}
         >
           <Box
             bg="gray.900"
@@ -2331,7 +2342,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                 <Button
                   size="xs"
                   variant="ghost"
-                  onClick={() => setInteraction(null)}
+                  onClick={closeInteraction}
                 >
                   Close
                 </Button>
