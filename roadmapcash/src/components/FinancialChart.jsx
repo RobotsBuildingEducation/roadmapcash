@@ -79,108 +79,6 @@ const CATEGORY_CONFIG = {
   track: { icon: "📊", color: "purple.400", label: "Track" },
 };
 
-const STRATEGY_CHALLENGES = [
-  "Pick one expense to negotiate and log the result.",
-  "Schedule a 15-minute audit of your top subscription.",
-  "Move one bill to autopay to remove friction.",
-  "Create a 24-hour delay rule for discretionary buys.",
-  "Set a weekly savings sprint timer and log progress.",
-];
-
-const ACTION_CHALLENGES = [
-  "Block 20 minutes to complete this action today.",
-  "Pair this action with a reward when you finish it.",
-  "Invite someone to keep you accountable this week.",
-  "Write down the smallest next step and do it now.",
-  "Add a reminder so this becomes automatic.",
-];
-
-const WEEKLY_CHALLENGES = [
-  "Capture a quick reflection about what improved.",
-  "Pick one metric to track before next week.",
-  "Add a small celebration for each win this week.",
-];
-
-const EXPENSE_CHALLENGES = [
-  (expense) => `Find one way to trim ${expense.name} by 5% this month.`,
-  (expense) => `Compare two alternatives for ${expense.name} this week.`,
-  (expense) => `Set a cap for ${expense.name} and log it for 7 days.`,
-  (expense) => `Ask if ${expense.name} can be bundled or discounted.`,
-  (expense) => `Identify a swap that keeps ${expense.name} enjoyable.`,
-];
-
-const BONUS_STRATEGIES = [
-  {
-    title: "Auto-transfer savings sprint",
-    description: "Schedule a small auto-transfer right after payday.",
-    impact: "Medium",
-    difficulty: "easy",
-  },
-  {
-    title: "Subscription clean sweep",
-    description: "Cancel, pause, or downgrade one recurring expense.",
-    impact: "High",
-    difficulty: "medium",
-  },
-  {
-    title: "Impulse guardrail",
-    description: "Create a 48-hour waiting period for non-essential buys.",
-    impact: "High",
-    difficulty: "hard",
-  },
-];
-
-const BONUS_ACTIONS = [
-  {
-    action: "Create a 10-minute weekly money review ritual.",
-    timeframe: "This week",
-    category: "track",
-  },
-  {
-    action: "Set a target to save one surprise windfall.",
-    timeframe: "Next paycheck",
-    category: "automate",
-  },
-  {
-    action: "Send a negotiation email for one recurring bill.",
-    timeframe: "Next 3 days",
-    category: "cut",
-  },
-];
-
-const BONUS_EXPENSE_MISSIONS = [
-  {
-    title: "Expense spotlight",
-    description: "Pick one category to spotlight and record every purchase.",
-    reward: "Unlock a new savings badge",
-  },
-  {
-    title: "Savings swap",
-    description: "Replace one discretionary purchase with a free alternative.",
-    reward: "Bonus XP for completing",
-  },
-  {
-    title: "Mini negotiation",
-    description: "Ask for a discount or upgrade on a recurring bill.",
-    reward: "Stackable rewards",
-  },
-];
-
-const XP_REWARDS = {
-  strategy: 30,
-  action: 20,
-  expense: 15,
-  weekly: 35,
-};
-
-const XP_PER_LEVEL = 150;
-
-const getRandomItem = (items) =>
-  items[Math.floor(Math.random() * items.length)];
-
-const getExpenseChallenge = (expense) =>
-  getRandomItem(EXPENSE_CHALLENGES)(expense);
-
 const createItemId = (prefix, index, label) => {
   const normalizedLabel =
     typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : "";
@@ -335,7 +233,7 @@ function PlanHeader({ plan, potentialSavings }) {
 }
 
 // Expense Analysis with recommendations
-function ExpenseAnalysis({ expenses, onSelect, completedIds }) {
+function ExpenseAnalysis({ expenses, onSelect }) {
   if (!expenses || expenses.length === 0) return null;
 
   const groupedByPriority = {
@@ -433,16 +331,6 @@ function ExpenseAnalysis({ expenses, onSelect, completedIds }) {
                   >
                     {expense.recommendation}
                   </Text>
-                  {expense.challenge && (
-                    <Text fontSize="2xs" color="blue.200" mt="2">
-                      Quest: {expense.challenge}
-                    </Text>
-                  )}
-                  {completedIds?.includes(expense.id) && (
-                    <Badge colorScheme="green" fontSize="2xs" mt="2">
-                      Completed
-                    </Badge>
-                  )}
                   </Box>
                 ))}
               </VStack>
@@ -454,121 +342,8 @@ function ExpenseAnalysis({ expenses, onSelect, completedIds }) {
   );
 }
 
-function GamificationPanel({ title, xp, level, streak, accent = "blue" }) {
-  const progress = xp % XP_PER_LEVEL;
-  const progressPercent = Math.min(
-    100,
-    Math.round((progress / XP_PER_LEVEL) * 100),
-  );
-
-  return (
-    <Box
-      bg="gray.850"
-      borderRadius="xl"
-      p={{ base: "3", md: "4" }}
-      borderWidth="1px"
-      borderColor="gray.700"
-    >
-      <HStack justify="space-between" flexWrap="wrap" gap="2">
-        <Box>
-          <Text fontSize={{ base: "xs", md: "sm" }} color="gray.400">
-            {title}
-          </Text>
-          <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
-            Level {level} • {xp} XP
-          </Text>
-        </Box>
-        <HStack spacing="3">
-          <Box textAlign="right">
-            <Text fontSize="2xs" color="gray.500">
-              Streak
-            </Text>
-            <Text fontSize="sm" fontWeight="semibold" color={`${accent}.300`}>
-              {streak} week{streak === 1 ? "" : "s"}
-            </Text>
-          </Box>
-        </HStack>
-      </HStack>
-      <Box mt="3">
-        <HStack justify="space-between" mb="1">
-          <Text fontSize="2xs" color="gray.500">
-            XP to level up
-          </Text>
-          <Text fontSize="2xs" color="gray.400">
-            {XP_PER_LEVEL - progress} XP
-          </Text>
-        </HStack>
-        <Box
-          bg="gray.700"
-          borderRadius="full"
-          overflow="hidden"
-          h="2"
-        >
-          <Box
-            bg={`${accent}.400`}
-            h="100%"
-            width={`${progressPercent}%`}
-          />
-        </Box>
-      </Box>
-    </Box>
-  );
-}
-
-function ExpenseMissions({ missions }) {
-  if (!missions || missions.length === 0) return null;
-
-  return (
-    <Box
-      bg="gray.800"
-      borderRadius="xl"
-      p={{ base: "4", md: "5" }}
-      borderWidth="1px"
-      borderColor="gray.700"
-    >
-      <Text
-        fontSize={{ base: "xs", md: "sm" }}
-        fontWeight="semibold"
-        color="gray.400"
-        mb={{ base: "3", md: "4" }}
-        textTransform="uppercase"
-        letterSpacing="wide"
-      >
-        Expense Missions
-      </Text>
-      <VStack align="stretch" spacing="3">
-        {missions.map((mission) => (
-          <Box
-            key={mission.id}
-            p={{ base: "3", md: "4" }}
-            bg="gray.750"
-            borderRadius="lg"
-            borderWidth="1px"
-            borderColor="gray.700"
-          >
-            <HStack justify="space-between" mb="2" flexWrap="wrap" gap="2">
-              <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
-                {mission.title}
-              </Text>
-              <Badge colorScheme="orange" fontSize="2xs">
-                New mission
-              </Badge>
-            </HStack>
-            <Text fontSize={{ base: "xs", md: "sm" }} color="gray.400">
-              {mission.description}
-            </Text>
-            <Text fontSize="2xs" color="orange.300" mt="2">
-              Reward: {mission.reward}
-            </Text>
-          </Box>
-        ))}
-      </VStack>
-    </Box>
-  );
-}
-
 // Savings Strategies
-function SavingsStrategies({ strategies, onSelect, completedIds }) {
+function SavingsStrategies({ strategies, onSelect }) {
   if (!strategies || strategies.length === 0) return null;
 
   return (
@@ -594,8 +369,6 @@ function SavingsStrategies({ strategies, onSelect, completedIds }) {
         {strategies.map((strategy, index) => {
           const difficultyConfig =
             DIFFICULTY_CONFIG[strategy.difficulty] || DIFFICULTY_CONFIG.medium;
-          const isCompleted = completedIds?.includes(strategy.id);
-
           return (
             <Box
               key={strategy.id || index}
@@ -668,17 +441,6 @@ function SavingsStrategies({ strategies, onSelect, completedIds }) {
                 {strategy.description}
               </Text>
 
-              {strategy.challenge && (
-                <Text
-                  fontSize="2xs"
-                  color="cyan.300"
-                  pl={{ base: "8", md: "10" }}
-                  mb="2"
-                >
-                  Quest: {strategy.challenge}
-                </Text>
-              )}
-
               <HStack pl={{ base: "8", md: "10" }}>
                 <Badge
                   colorScheme="green"
@@ -687,11 +449,6 @@ function SavingsStrategies({ strategies, onSelect, completedIds }) {
                 >
                   Impact: {strategy.impact}
                 </Badge>
-                {isCompleted && (
-                  <Badge colorScheme="green" fontSize="2xs">
-                    Completed
-                  </Badge>
-                )}
               </HStack>
             </Box>
           );
@@ -706,7 +463,6 @@ function ActionItems({
   actionItems,
   weeklyCheckIn,
   onSelect,
-  completedIds,
   onSelectWeekly,
 }) {
   const hasItems = actionItems && actionItems.length > 0;
@@ -736,8 +492,6 @@ function ActionItems({
           {actionItems.map((item, index) => {
             const categoryConfig =
               CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
-            const isCompleted = completedIds?.includes(item.id);
-
             return (
               <HStack
                 key={item.id || index}
@@ -788,28 +542,7 @@ function ActionItems({
                     <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
                       {item.timeframe}
                     </Text>
-                    {isCompleted && (
-                      <>
-                        <Text
-                          fontSize={{ base: "2xs", md: "xs" }}
-                          color="gray.500"
-                        >
-                          •
-                        </Text>
-                        <Text
-                          fontSize={{ base: "2xs", md: "xs" }}
-                          color="green.300"
-                        >
-                          Completed
-                        </Text>
-                      </>
-                    )}
                   </HStack>
-                  {item.challenge && (
-                    <Text fontSize="2xs" color="cyan.300">
-                      Quest: {item.challenge}
-                    </Text>
-                  )}
                 </VStack>
               </HStack>
             );
@@ -849,11 +582,6 @@ function ActionItems({
               <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300">
                 {weeklyCheckIn.text}
               </Text>
-              {weeklyCheckIn.challenge && (
-                <Text fontSize="2xs" color="purple.200">
-                  Quest: {weeklyCheckIn.challenge}
-                </Text>
-              )}
             </VStack>
           </HStack>
         </Box>
@@ -1985,15 +1713,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   const [interactiveWeeklyCheckIn, setInteractiveWeeklyCheckIn] =
     useState(null);
   const [interaction, setInteraction] = useState(null);
-  const [completedIds, setCompletedIds] = useState([]);
-  const [xp, setXp] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [bonusIndex, setBonusIndex] = useState({
-    strategy: 0,
-    action: 0,
-    expense: 0,
-  });
-  const [expenseMissions, setExpenseMissions] = useState([]);
+  const [interactionAction, setInteractionAction] = useState("");
 
   if (!data) return null;
 
@@ -2001,7 +1721,6 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const monthlySavings = (data.income || 0) - totalExpenses;
   const plan = data.plan;
-  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
 
   useEffect(() => {
     setDraftIncome(data.income || 0);
@@ -2021,14 +1740,12 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
       (plan?.strategies || []).map((strategy, index) => ({
         ...strategy,
         id: createItemId("strategy", index, strategy.title),
-        challenge: getRandomItem(STRATEGY_CHALLENGES),
       })),
     );
     setInteractiveActions(
       (plan?.actionItems || []).map((item, index) => ({
         ...item,
         id: createItemId("action", index, item.action),
-        challenge: getRandomItem(ACTION_CHALLENGES),
       })),
     );
     setInteractiveWeeklyCheckIn(
@@ -2036,7 +1753,6 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
         ? {
             id: "weekly-checkin",
             text: plan.weeklyCheckIn,
-            challenge: getRandomItem(WEEKLY_CHALLENGES),
           }
         : null,
     );
@@ -2044,16 +1760,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
       expenses.map((expense, index) => ({
         ...expense,
         id: createItemId("expense", index, expense.name),
-        challenge: getExpenseChallenge(expense),
       })),
-    );
-    setExpenseMissions((prev) =>
-      prev.length > 0
-        ? prev
-        : BONUS_EXPENSE_MISSIONS.slice(0, 2).map((mission, index) => ({
-            ...mission,
-            id: createItemId("mission", index, mission.title),
-          })),
     );
   }, [expenses, plan]);
 
@@ -2061,6 +1768,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     if (previousUpdatingRef.current && !isUpdating) {
       setShowUpdateFlash(true);
       const timeout = setTimeout(() => setShowUpdateFlash(false), 1400);
+      setInteractionAction("");
       previousUpdatingRef.current = isUpdating;
       return () => clearTimeout(timeout);
     }
@@ -2178,138 +1886,41 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     setInteraction({ type, item });
   };
 
-  const handleRemix = () => {
-    if (!interaction) return;
-    const { type, item } = interaction;
-
+  const buildInteractionPrompt = (type, item, action) => {
+    if (!item) return "";
     if (type === "strategy") {
-      const nextChallenge = getRandomItem(STRATEGY_CHALLENGES);
-      setInteractiveStrategies((prev) =>
-        prev.map((strategy) =>
-          strategy.id === item.id
-            ? { ...strategy, challenge: nextChallenge }
-            : strategy,
-        ),
-      );
-      setInteraction({ type, item: { ...item, challenge: nextChallenge } });
+      return action === "remix"
+        ? `Replace the savings strategy titled "${item.title}" with a brand new, different strategy. Keep the plan.strategies format with title, description, impact, and difficulty.`
+        : `Add a new savings strategy that builds on completing "${item.title}". Keep the plan.strategies format with title, description, impact, and difficulty.`;
     }
-
     if (type === "action") {
-      const nextChallenge = getRandomItem(ACTION_CHALLENGES);
-      setInteractiveActions((prev) =>
-        prev.map((action) =>
-          action.id === item.id
-            ? { ...action, challenge: nextChallenge }
-            : action,
-        ),
-      );
-      setInteraction({ type, item: { ...item, challenge: nextChallenge } });
+      return action === "remix"
+        ? `Replace the action item "${item.action}" with a new, different action item. Keep the plan.actionItems format with action, timeframe, and category.`
+        : `Add a new action item that follows from completing "${item.action}". Keep the plan.actionItems format with action, timeframe, and category.`;
     }
-
     if (type === "weekly") {
-      const nextChallenge = getRandomItem(WEEKLY_CHALLENGES);
-      setInteractiveWeeklyCheckIn((prev) =>
-        prev ? { ...prev, challenge: nextChallenge } : prev,
-      );
-      setInteraction({ type, item: { ...item, challenge: nextChallenge } });
+      return action === "remix"
+        ? `Replace the weekly check-in with a new prompt that encourages reflection and progress. Keep the plan.weeklyCheckIn as a single sentence.`
+        : `Add a new weekly check-in prompt that builds on completing "${item.text}". Keep the plan.weeklyCheckIn as a single sentence.`;
     }
-
     if (type === "expense") {
-      const nextChallenge = getExpenseChallenge(item);
-      setInteractiveExpenses((prev) =>
-        prev.map((expense) =>
-          expense.id === item.id
-            ? (() => {
-                return {
-                  ...expense,
-                  recommendation: nextChallenge,
-                  challenge: nextChallenge,
-                };
-              })()
-            : expense,
-        ),
-      );
-      setInteraction({
-        type,
-        item: { ...item, challenge: nextChallenge, recommendation: nextChallenge },
-      });
+      return action === "remix"
+        ? `Generate a new recommendation for the expense "${item.name}" that is different from the current one. Keep the expense list the same, but update the recommendation field for "${item.name}".`
+        : `Add a new, distinct optimization recommendation for the expense "${item.name}". Keep the expense list the same, but update the recommendation field for "${item.name}".`;
     }
+    return "";
   };
 
-  const handleComplete = () => {
-    if (!interaction) return;
-    const { type, item } = interaction;
-    if (completedIds.includes(item.id)) return;
-
-    setCompletedIds((prev) => [...prev, item.id]);
-    setXp((prev) => prev + (XP_REWARDS[type] || 10));
-    setStreak((prev) => prev + 1);
-
-    if (type === "strategy") {
-      const nextBonus =
-        BONUS_STRATEGIES[bonusIndex.strategy % BONUS_STRATEGIES.length];
-      setInteractiveStrategies((prev) => [
-        ...prev,
-        {
-          ...nextBonus,
-          id: createItemId(
-            "strategy-bonus",
-            bonusIndex.strategy,
-            nextBonus.title,
-          ),
-          challenge: getRandomItem(STRATEGY_CHALLENGES),
-        },
-      ]);
-      setBonusIndex((prev) => ({
-        ...prev,
-        strategy: prev.strategy + 1,
-      }));
-    }
-
-    if (type === "action" || type === "weekly") {
-      const nextBonus =
-        BONUS_ACTIONS[bonusIndex.action % BONUS_ACTIONS.length];
-      setInteractiveActions((prev) => [
-        ...prev,
-        {
-          ...nextBonus,
-          id: createItemId(
-            "action-bonus",
-            bonusIndex.action,
-            nextBonus.action,
-          ),
-          challenge: getRandomItem(ACTION_CHALLENGES),
-        },
-      ]);
-      setBonusIndex((prev) => ({
-        ...prev,
-        action: prev.action + 1,
-      }));
-    }
-
-    if (type === "expense") {
-      const nextBonus =
-        BONUS_EXPENSE_MISSIONS[
-          bonusIndex.expense % BONUS_EXPENSE_MISSIONS.length
-        ];
-      setExpenseMissions((prev) => [
-        ...prev,
-        {
-          ...nextBonus,
-          id: createItemId(
-            "mission-bonus",
-            bonusIndex.expense,
-            nextBonus.title,
-          ),
-        },
-      ]);
-      setBonusIndex((prev) => ({
-        ...prev,
-        expense: prev.expense + 1,
-      }));
-    }
-
-    setInteraction(null);
+  const handleAiUpdate = (action) => {
+    if (!interaction || !onUpdate) return;
+    const prompt = buildInteractionPrompt(
+      interaction.type,
+      interaction.item,
+      action,
+    );
+    if (!prompt) return;
+    setInteractionAction(action);
+    onUpdate(prompt);
   };
 
   return (
@@ -2597,13 +2208,6 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
             {/* Plan Tab */}
             {activeTab === 1 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                <GamificationPanel
-                  title="Plan Progress"
-                  xp={xp}
-                  level={level}
-                  streak={streak}
-                  accent="cyan"
-                />
                 <Grid
                   templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
                   gap={{ base: "3", md: "5" }}
@@ -2612,7 +2216,6 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                     <SavingsStrategies
                       strategies={interactiveStrategies}
                       onSelect={openInteraction}
-                      completedIds={completedIds}
                     />
                   </GridItem>
                   <GridItem>
@@ -2620,7 +2223,6 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                       actionItems={interactiveActions}
                       weeklyCheckIn={interactiveWeeklyCheckIn}
                       onSelect={openInteraction}
-                      completedIds={completedIds}
                       onSelectWeekly={openInteraction}
                     />
                   </GridItem>
@@ -2633,18 +2235,9 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
             {/* Expenses Tab */}
             {activeTab === 2 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                <GamificationPanel
-                  title="Expense Adventure"
-                  xp={xp}
-                  level={level}
-                  streak={streak}
-                  accent="orange"
-                />
-                <ExpenseMissions missions={expenseMissions} />
                 <ExpenseAnalysis
                   expenses={interactiveExpenses}
                   onSelect={openInteraction}
-                  completedIds={completedIds}
                 />
               </VStack>
             )}
@@ -2739,25 +2332,32 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                 borderColor="gray.700"
               >
                 <Text fontSize="2xs" color="gray.500">
-                  Completion reward
+                  Next steps
                 </Text>
                 <Text fontSize="sm" color="green.300">
-                  +{XP_REWARDS[interaction.type] || 10} XP • New item unlocked
+                  We'll ask AI to generate a fresh item for you.
                 </Text>
               </Box>
 
               <HStack spacing="3" flexWrap="wrap">
-                <Button size="sm" variant="outline" onClick={handleRemix}>
-                  Generate different content
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleAiUpdate("remix")}
+                  isDisabled={!onUpdate || isUpdating}
+                >
+                  {isUpdating && interactionAction === "remix"
+                    ? "Generating..."
+                    : "Generate different content"}
                 </Button>
                 <Button
                   size="sm"
                   colorScheme="blue"
-                  onClick={handleComplete}
-                  isDisabled={completedIds.includes(interaction.item.id)}
+                  onClick={() => handleAiUpdate("complete")}
+                  isDisabled={!onUpdate || isUpdating}
                 >
-                  {completedIds.includes(interaction.item.id)
-                    ? "Completed"
+                  {isUpdating && interactionAction === "complete"
+                    ? "Completing..."
                     : "Complete exercise"}
                 </Button>
               </HStack>
