@@ -135,6 +135,17 @@ const financialModel = getGenerativeModel(ai, {
   },
 });
 
+const fastUpdateModel = getGenerativeModel(ai, {
+  model: "gemini-3-flash-preview",
+  generationConfig: {
+    // Firebase AI Logic doesn't support Gemini 3 thinking_level yet.
+    // For now, keep using thinking budgets (0 ≈ "minimal" behavior you're after).
+    thinkingConfig: { thinkingBudget: 0 },
+    responseMimeType: "application/json",
+    responseSchema: financialDataSchema,
+  },
+});
+
 const SYSTEM_PROMPT = `You are an opinionated financial coach who creates personalized, actionable financial plans. You're direct, specific, and encouraging.
 
 CRITICAL RULE - NO ASSUMPTIONS:
@@ -463,9 +474,58 @@ ${updateRequest}`;
     [finalizeFinancialData],
   );
 
+  const updateFinancialItem = useCallback(
+    async (currentData, updateRequest, additionalContext = "") => {
+      if (!currentData || !updateRequest?.trim()) return null;
+
+      setIsUpdating(true);
+      setUpdateError(null);
+
+      try {
+        let prompt = `${SYSTEM_PROMPT}
+
+You are updating an existing financial plan. Keep anything not mentioned the same.
+
+Current financial data (JSON):
+${JSON.stringify(currentData, null, 2)}
+
+Requested updates:
+${updateRequest}`;
+
+        if (additionalContext.trim()) {
+          prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+        }
+
+        const result = await fastUpdateModel.generateContent(prompt);
+        const response = result.response;
+        const text = response.text();
+        const parsed = JSON.parse(text);
+        const fallback = {
+          income: currentData.income ?? 0,
+          expenses: currentData.expenses || [],
+          savingsGoal: currentData.savingsGoal ?? null,
+          currentSavings: currentData.currentSavings ?? 0,
+          plan: currentData.plan || {},
+        };
+        const finalized = finalizeFinancialData(parsed, fallback);
+
+        setFinancialData(finalized);
+        return finalized;
+      } catch (err) {
+        console.error("Error updating financial data:", err);
+        setUpdateError(err.message || "Failed to update your plan");
+        return null;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [finalizeFinancialData],
+  );
+
   return {
     parseFinancialInput,
     updateFinancialData,
+    updateFinancialItem,
     clearData,
     financialData,
     setFinancialData,

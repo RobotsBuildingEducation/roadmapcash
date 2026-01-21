@@ -79,6 +79,15 @@ const CATEGORY_CONFIG = {
   track: { icon: "📊", color: "purple.400", label: "Track" },
 };
 
+const createItemId = (prefix, index) => `${prefix}-${index}`;
+
+const getIndexFromId = (id) => {
+  if (!id) return null;
+  const parts = id.split("-");
+  const index = Number(parts[1]);
+  return Number.isNaN(index) ? null : index;
+};
+
 // Format currency
 const formatCurrency = (amount) => {
   if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
@@ -227,7 +236,7 @@ function PlanHeader({ plan, potentialSavings }) {
 }
 
 // Expense Analysis with recommendations
-function ExpenseAnalysis({ expenses }) {
+function ExpenseAnalysis({ expenses, onSelect }) {
   if (!expenses || expenses.length === 0) return null;
 
   const groupedByPriority = {
@@ -277,46 +286,61 @@ function ExpenseAnalysis({ expenses }) {
               </HStack>
 
               <VStack align="stretch" spacing="2">
-                {items.map((expense, index) => (
-                  <Box
-                    key={index}
-                    p={{ base: "2", md: "3" }}
-                    bg={config.bg}
-                    borderRadius="lg"
-                    borderWidth="1px"
-                    borderColor={config.border}
-                    borderLeftWidth="3px"
-                  >
-                    <HStack
-                      justify="space-between"
-                      mb="1"
-                      flexWrap="wrap"
-                      gap="1"
+                {items.map((expense, index) => {
+                  const expenseIndex = getIndexFromId(expense.id) ?? index;
+                  return (
+                    <Box
+                      key={expense.id || index}
+                      p={{ base: "2", md: "3" }}
+                      bg={config.bg}
+                      borderRadius="lg"
+                      borderWidth="1px"
+                      borderColor={config.border}
+                      borderLeftWidth="3px"
+                      cursor="pointer"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        onSelect?.(expense, "expense", expenseIndex)
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onSelect?.(expense, "expense", expenseIndex);
+                        }
+                      }}
                     >
-                      <Text
-                        fontSize={{ base: "xs", md: "sm" }}
-                        fontWeight="semibold"
-                        color={config.text}
+                      <HStack
+                        justify="space-between"
+                        mb="1"
+                        flexWrap="wrap"
+                        gap="1"
                       >
-                        {expense.name}
-                      </Text>
+                        <Text
+                          fontSize={{ base: "xs", md: "sm" }}
+                          fontWeight="semibold"
+                          color={config.text}
+                        >
+                          {expense.name}
+                        </Text>
+                        <Text
+                          fontSize={{ base: "xs", md: "sm" }}
+                          fontWeight="bold"
+                          color="white"
+                        >
+                          {formatCurrency(expense.amount)}
+                        </Text>
+                      </HStack>
                       <Text
-                        fontSize={{ base: "xs", md: "sm" }}
-                        fontWeight="bold"
-                        color="white"
+                        fontSize={{ base: "2xs", md: "xs" }}
+                        color="gray.400"
+                        lineHeight="tall"
                       >
-                        {formatCurrency(expense.amount)}
+                        {expense.recommendation}
                       </Text>
-                    </HStack>
-                    <Text
-                      fontSize={{ base: "2xs", md: "xs" }}
-                      color="gray.400"
-                      lineHeight="tall"
-                    >
-                      {expense.recommendation}
-                    </Text>
-                  </Box>
-                ))}
+                    </Box>
+                  );
+                })}
               </VStack>
             </Box>
           );
@@ -327,7 +351,7 @@ function ExpenseAnalysis({ expenses }) {
 }
 
 // Savings Strategies
-function SavingsStrategies({ strategies }) {
+function SavingsStrategies({ strategies, onSelect }) {
   if (!strategies || strategies.length === 0) return null;
 
   return (
@@ -353,10 +377,9 @@ function SavingsStrategies({ strategies }) {
         {strategies.map((strategy, index) => {
           const difficultyConfig =
             DIFFICULTY_CONFIG[strategy.difficulty] || DIFFICULTY_CONFIG.medium;
-
           return (
             <Box
-              key={index}
+              key={strategy.id || index}
               p={{ base: "3", md: "4" }}
               bg="gray.750"
               borderRadius="lg"
@@ -367,6 +390,16 @@ function SavingsStrategies({ strategies }) {
                 transform: "translateY(-1px)",
               }}
               transition="all 0.2s"
+              cursor="pointer"
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelect?.(strategy, "strategy", index)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelect?.(strategy, "strategy", index);
+                }
+              }}
             >
               <HStack justify="space-between" mb="2" flexWrap="wrap" gap="2">
                 <HStack minW="0" flex="1">
@@ -434,8 +467,14 @@ function SavingsStrategies({ strategies }) {
 }
 
 // Action Items Checklist
-function ActionItems({ actionItems, weeklyCheckIn }) {
-  if (!actionItems || actionItems.length === 0) return null;
+function ActionItems({
+  actionItems,
+  weeklyCheckIn,
+  onSelect,
+  onSelectWeekly,
+}) {
+  const hasItems = actionItems && actionItems.length > 0;
+  if (!hasItems && !weeklyCheckIn) return null;
 
   return (
     <Box
@@ -456,57 +495,68 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
         Action Items - Start This Week
       </Text>
 
-      <VStack align="stretch" spacing="2">
-        {actionItems.map((item, index) => {
-          const categoryConfig =
-            CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
-
-          return (
-            <HStack
-              key={index}
-              p={{ base: "2", md: "3" }}
-              bg="gray.750"
-              borderRadius="lg"
-              spacing={{ base: "2", md: "3" }}
-              borderWidth="1px"
-              borderColor="gray.700"
-            >
-              <Box
-                w={{ base: "6", md: "8" }}
-                h={{ base: "6", md: "8" }}
+      {hasItems && (
+        <VStack align="stretch" spacing="2">
+          {actionItems.map((item, index) => {
+            const categoryConfig =
+              CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
+            return (
+              <HStack
+                key={item.id || index}
+                p={{ base: "2", md: "3" }}
+                bg="gray.750"
                 borderRadius="lg"
-                bg="gray.700"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                fontSize={{ base: "sm", md: "md" }}
-                flexShrink="0"
+                spacing={{ base: "2", md: "3" }}
+                borderWidth="1px"
+                borderColor="gray.700"
+                cursor="pointer"
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelect?.(item, "action", index)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelect?.(item, "action", index);
+                  }
+                }}
               >
-                {categoryConfig.icon}
-              </Box>
-              <VStack align="start" spacing="0" flex="1" minW="0">
-                <Text fontSize={{ base: "xs", md: "sm" }} color="gray.200">
-                  {item.action}
-                </Text>
-                <HStack spacing="2" flexWrap="wrap">
-                  <Text
-                    fontSize={{ base: "2xs", md: "xs" }}
-                    color={categoryConfig.color}
-                  >
-                    {categoryConfig.label}
+                <Box
+                  w={{ base: "6", md: "8" }}
+                  h={{ base: "6", md: "8" }}
+                  borderRadius="lg"
+                  bg="gray.700"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  fontSize={{ base: "sm", md: "md" }}
+                  flexShrink="0"
+                >
+                  {categoryConfig.icon}
+                </Box>
+                <VStack align="start" spacing="0" flex="1" minW="0">
+                  <Text fontSize={{ base: "xs", md: "sm" }} color="gray.200">
+                    {item.action}
                   </Text>
-                  <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
-                    •
-                  </Text>
-                  <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
-                    {item.timeframe}
-                  </Text>
-                </HStack>
-              </VStack>
-            </HStack>
-          );
-        })}
-      </VStack>
+                  <HStack spacing="2" flexWrap="wrap">
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color={categoryConfig.color}
+                    >
+                      {categoryConfig.label}
+                    </Text>
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+                      •
+                    </Text>
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+                      {item.timeframe}
+                    </Text>
+                  </HStack>
+                </VStack>
+              </HStack>
+            );
+          })}
+        </VStack>
+      )}
 
       {weeklyCheckIn && (
         <Box
@@ -516,6 +566,16 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
           borderRadius="lg"
           borderWidth="1px"
           borderColor="purple.700"
+          cursor="pointer"
+          role="button"
+          tabIndex={0}
+          onClick={() => onSelectWeekly?.(weeklyCheckIn, "weekly", null)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onSelectWeekly?.(weeklyCheckIn, "weekly", null);
+            }
+          }}
         >
           <HStack spacing="2" align="start">
             <Text fontSize={{ base: "md", md: "lg" }}>📅</Text>
@@ -528,7 +588,7 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
                 WEEKLY CHECK-IN
               </Text>
               <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300">
-                {weeklyCheckIn}
+                {weeklyCheckIn.text}
               </Text>
             </VStack>
           </HStack>
@@ -1646,7 +1706,7 @@ function MetricsSummary({
 }
 
 // Main FinancialChart component
-export function FinancialChart({ data, onUpdate, isUpdating }) {
+export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
   const [activeTab, setActiveTab] = useState(0);
   const [draftIncome, setDraftIncome] = useState(0);
   const [draftSavingsGoal, setDraftSavingsGoal] = useState("");
@@ -1655,6 +1715,14 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   const [updateNotes, setUpdateNotes] = useState("");
   const [showUpdateFlash, setShowUpdateFlash] = useState(false);
   const previousUpdatingRef = useRef(false);
+  const [interactiveStrategies, setInteractiveStrategies] = useState([]);
+  const [interactiveActions, setInteractiveActions] = useState([]);
+  const [interactiveExpenses, setInteractiveExpenses] = useState([]);
+  const [interactiveWeeklyCheckIn, setInteractiveWeeklyCheckIn] =
+    useState(null);
+  const [interaction, setInteraction] = useState(null);
+  const [interactionIndex, setInteractionIndex] = useState(null);
+  const [interactionAction, setInteractionAction] = useState("");
 
   if (!data) return null;
 
@@ -1677,15 +1745,83 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   }, [data.income, data.savingsGoal, data.currentSavings, expenses]);
 
   useEffect(() => {
+    setInteractiveStrategies(
+      (plan?.strategies || []).map((strategy, index) => ({
+        ...strategy,
+        id: createItemId("strategy", index),
+      })),
+    );
+    setInteractiveActions(
+      (plan?.actionItems || []).map((item, index) => ({
+        ...item,
+        id: createItemId("action", index),
+      })),
+    );
+    setInteractiveWeeklyCheckIn(
+      plan?.weeklyCheckIn
+        ? {
+            id: "weekly-checkin",
+            text: plan.weeklyCheckIn,
+          }
+        : null,
+    );
+    setInteractiveExpenses(
+      expenses.map((expense, index) => ({
+        ...expense,
+        id: createItemId("expense", index),
+      })),
+    );
+  }, [expenses, plan]);
+
+  useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
       setShowUpdateFlash(true);
       const timeout = setTimeout(() => setShowUpdateFlash(false), 1400);
+      setInteractionAction("");
       previousUpdatingRef.current = isUpdating;
       return () => clearTimeout(timeout);
     }
     previousUpdatingRef.current = isUpdating;
     return undefined;
   }, [isUpdating]);
+
+  useEffect(() => {
+    if (!interaction) return;
+
+    const findUpdatedItem = () => {
+      if (interaction.type === "strategy") {
+        return interactionIndex !== null
+          ? interactiveStrategies[interactionIndex]
+          : null;
+      }
+      if (interaction.type === "action") {
+        return interactionIndex !== null
+          ? interactiveActions[interactionIndex]
+          : null;
+      }
+      if (interaction.type === "expense") {
+        return interactionIndex !== null
+          ? interactiveExpenses[interactionIndex]
+          : null;
+      }
+      if (interaction.type === "weekly") {
+        return interactiveWeeklyCheckIn;
+      }
+      return null;
+    };
+
+    const updatedItem = findUpdatedItem();
+    if (updatedItem && updatedItem !== interaction.item) {
+      setInteraction((prev) => (prev ? { ...prev, item: updatedItem } : prev));
+    }
+  }, [
+    interaction,
+    interactionIndex,
+    interactiveStrategies,
+    interactiveActions,
+    interactiveExpenses,
+    interactiveWeeklyCheckIn,
+  ]);
 
   const updateExpenseField = (index, field, value) => {
     setDraftExpenses((prev) =>
@@ -1791,6 +1927,54 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     60% { box-shadow: 0 0 12px rgba(59, 130, 246, 0.25); }
     100% { box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
   `;
+
+  const openInteraction = (item, type, index) => {
+    if (!item) return;
+    setInteraction({ type, item });
+    setInteractionIndex(index);
+  };
+
+  const buildInteractionPrompt = (type, item, action) => {
+    if (!item) return "";
+    if (type === "strategy") {
+      return action === "remix"
+        ? `Replace the savings strategy titled "${item.title}" with a brand new, different strategy. Keep the plan.strategies format with title, description, impact, and difficulty.`
+        : `Add a new savings strategy that builds on completing "${item.title}". Keep the plan.strategies format with title, description, impact, and difficulty.`;
+    }
+    if (type === "action") {
+      return action === "remix"
+        ? `Replace the action item "${item.action}" with a new, different action item. Keep the plan.actionItems format with action, timeframe, and category.`
+        : `Add a new action item that follows from completing "${item.action}". Keep the plan.actionItems format with action, timeframe, and category.`;
+    }
+    if (type === "weekly") {
+      return action === "remix"
+        ? `Replace the weekly check-in with a new prompt that encourages reflection and progress. Keep the plan.weeklyCheckIn as a single sentence.`
+        : `Add a new weekly check-in prompt that builds on completing "${item.text}". Keep the plan.weeklyCheckIn as a single sentence.`;
+    }
+    if (type === "expense") {
+      return action === "remix"
+        ? `Generate a new recommendation for the expense "${item.name}" that is different from the current one. Keep the expense list the same, but update the recommendation field for "${item.name}".`
+        : `Add a new, distinct optimization recommendation for the expense "${item.name}". Keep the expense list the same, but update the recommendation field for "${item.name}".`;
+    }
+    return "";
+  };
+
+  const handleAiUpdate = (action) => {
+    if (!interaction || !onItemUpdate) return;
+    const prompt = buildInteractionPrompt(
+      interaction.type,
+      interaction.item,
+      action,
+    );
+    if (!prompt) return;
+    setInteractionAction(action);
+    onItemUpdate(prompt);
+  };
+
+  const closeInteraction = () => {
+    setInteraction(null);
+    setInteractionIndex(null);
+  };
 
   return (
     <Box>
@@ -2082,12 +2266,17 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                   gap={{ base: "3", md: "5" }}
                 >
                   <GridItem>
-                    <SavingsStrategies strategies={plan?.strategies} />
+                    <SavingsStrategies
+                      strategies={interactiveStrategies}
+                      onSelect={openInteraction}
+                    />
                   </GridItem>
                   <GridItem>
                     <ActionItems
-                      actionItems={plan?.actionItems}
-                      weeklyCheckIn={plan?.weeklyCheckIn}
+                      actionItems={interactiveActions}
+                      weeklyCheckIn={interactiveWeeklyCheckIn}
+                      onSelect={openInteraction}
+                      onSelectWeekly={openInteraction}
                     />
                   </GridItem>
                 </Grid>
@@ -2097,10 +2286,138 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
             )}
 
             {/* Expenses Tab */}
-            {activeTab === 2 && <ExpenseAnalysis expenses={expenses} />}
+            {activeTab === 2 && (
+              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                <ExpenseAnalysis
+                  expenses={interactiveExpenses}
+                  onSelect={openInteraction}
+                />
+              </VStack>
+            )}
           </Box>
         </Box>
       </VStack>
+
+      {interaction && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.700"
+          zIndex="modal"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          onClick={closeInteraction}
+        >
+          <Box
+            bg="gray.900"
+            p={{ base: "4", md: "6" }}
+            borderRadius="xl"
+            width={{ base: "92%", sm: "480px" }}
+            maxWidth="480px"
+            borderWidth="1px"
+            borderColor="gray.700"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <VStack align="stretch" spacing="4">
+              <HStack justify="space-between" align="start">
+                <Box>
+                  <Text fontSize="sm" color="gray.400">
+                    {interaction.type === "expense"
+                      ? "Expense Quest"
+                      : interaction.type === "weekly"
+                        ? "Weekly Check-in"
+                        : "Plan Quest"}
+                  </Text>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    {interaction.item.title ||
+                      interaction.item.action ||
+                      interaction.item.name ||
+                      interaction.item.text}
+                  </Text>
+                </Box>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={closeInteraction}
+                >
+                  Close
+                </Button>
+              </HStack>
+
+              {interaction.item.description && (
+                <Text fontSize="sm" color="gray.400">
+                  {interaction.item.description}
+                </Text>
+              )}
+
+              {interaction.item.recommendation && (
+                <Text fontSize="sm" color="gray.300">
+                  {interaction.item.recommendation}
+                </Text>
+              )}
+
+              {interaction.item.challenge && (
+                <Box
+                  bg="gray.800"
+                  borderRadius="lg"
+                  p="3"
+                  borderWidth="1px"
+                  borderColor="gray.700"
+                >
+                  <Text fontSize="2xs" color="gray.500" mb="1">
+                    Challenge
+                  </Text>
+                  <Text fontSize="sm" color="cyan.200">
+                    {interaction.item.challenge}
+                  </Text>
+                </Box>
+              )}
+
+              <Box
+                bg="gray.850"
+                borderRadius="lg"
+                p="3"
+                borderWidth="1px"
+                borderColor="gray.700"
+              >
+                <Text fontSize="2xs" color="gray.500">
+                  Next steps
+                </Text>
+                <Text fontSize="sm" color="green.300">
+                  We'll ask AI to generate a fresh item for you.
+                </Text>
+              </Box>
+
+              <HStack spacing="3" flexWrap="wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleAiUpdate("remix")}
+                  isDisabled={!onItemUpdate || isUpdating}
+                >
+                  {isUpdating && interactionAction === "remix"
+                    ? "Generating..."
+                    : "Generate different content"}
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={() => handleAiUpdate("complete")}
+                  isDisabled={!onItemUpdate || isUpdating}
+                >
+                  {isUpdating && interactionAction === "complete"
+                    ? "Completing..."
+                    : "Complete exercise"}
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }
