@@ -21,6 +21,7 @@ function App() {
   const {
     parseFinancialInput,
     updateFinancialData,
+    updateFinancialItem,
     financialData,
     setFinancialData,
     isLoading: isGenerating,
@@ -65,6 +66,14 @@ function App() {
   const handleUpdate = async (updateInput) => {
     if (!financialData) return;
     const result = await updateFinancialData(financialData, updateInput);
+    if (result) {
+      await saveRoadmap(userInput, result, updateInput);
+    }
+  };
+
+  const handleItemUpdate = async (updateInput) => {
+    if (!financialData) return;
+    const result = await updateFinancialItem(financialData, updateInput);
     if (result) {
       await saveRoadmap(userInput, result, updateInput);
     }
@@ -140,11 +149,12 @@ function App() {
             )}
 
             {financialData && (
-              <FinancialChart
-                data={financialData}
-                onUpdate={handleUpdate}
-                isUpdating={isUpdating}
-              />
+            <FinancialChart
+              data={financialData}
+              onUpdate={handleUpdate}
+              onItemUpdate={handleItemUpdate}
+              isUpdating={isUpdating}
+            />
             )}
           </VStack>
         ) : null}

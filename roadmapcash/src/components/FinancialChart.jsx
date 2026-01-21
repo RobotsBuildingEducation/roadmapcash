@@ -1706,7 +1706,7 @@ function MetricsSummary({
 }
 
 // Main FinancialChart component
-export function FinancialChart({ data, onUpdate, isUpdating }) {
+export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
   const [activeTab, setActiveTab] = useState(0);
   const [draftIncome, setDraftIncome] = useState(0);
   const [draftSavingsGoal, setDraftSavingsGoal] = useState("");
@@ -1960,7 +1960,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   };
 
   const handleAiUpdate = (action) => {
-    if (!interaction || !onUpdate) return;
+    if (!interaction || !onItemUpdate) return;
     const prompt = buildInteractionPrompt(
       interaction.type,
       interaction.item,
@@ -1968,7 +1968,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     );
     if (!prompt) return;
     setInteractionAction(action);
-    onUpdate(prompt);
+    onItemUpdate(prompt);
   };
 
   const closeInteraction = () => {
@@ -2397,7 +2397,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                   size="sm"
                   variant="outline"
                   onClick={() => handleAiUpdate("remix")}
-                  isDisabled={!onUpdate || isUpdating}
+                  isDisabled={!onItemUpdate || isUpdating}
                 >
                   {isUpdating && interactionAction === "remix"
                     ? "Generating..."
@@ -2407,7 +2407,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                   size="sm"
                   colorScheme="blue"
                   onClick={() => handleAiUpdate("complete")}
-                  isDisabled={!onUpdate || isUpdating}
+                  isDisabled={!onItemUpdate || isUpdating}
                 >
                   {isUpdating && interactionAction === "complete"
                     ? "Completing..."
