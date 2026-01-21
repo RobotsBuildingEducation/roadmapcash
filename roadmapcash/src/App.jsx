@@ -149,12 +149,12 @@ function App() {
             )}
 
             {financialData && (
-            <FinancialChart
-              data={financialData}
-              onUpdate={handleUpdate}
-              onItemUpdate={handleItemUpdate}
-              isUpdating={isUpdating}
-            />
+              <FinancialChart
+                data={financialData}
+                onUpdate={handleUpdate}
+                onItemUpdate={handleItemUpdate}
+                isUpdating={isUpdating}
+              />
             )}
           </VStack>
         ) : null}
