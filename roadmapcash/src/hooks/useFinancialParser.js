@@ -130,6 +130,9 @@ const financialDataSchema = Schema.object({
 const financialModel = getGenerativeModel(ai, {
   model: "gemini-3-flash-preview",
   generationConfig: {
+    // Firebase AI Logic doesn't support Gemini 3 thinking_level yet.
+    // For now, keep using thinking budgets (0 ≈ "minimal" behavior you're after).
+    thinkingConfig: { thinkingBudget: 0 },
     responseMimeType: "application/json",
     responseSchema: financialDataSchema,
   },
