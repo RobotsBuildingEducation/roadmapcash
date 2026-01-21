@@ -79,6 +79,114 @@ const CATEGORY_CONFIG = {
   track: { icon: "📊", color: "purple.400", label: "Track" },
 };
 
+const STRATEGY_CHALLENGES = [
+  "Pick one expense to negotiate and log the result.",
+  "Schedule a 15-minute audit of your top subscription.",
+  "Move one bill to autopay to remove friction.",
+  "Create a 24-hour delay rule for discretionary buys.",
+  "Set a weekly savings sprint timer and log progress.",
+];
+
+const ACTION_CHALLENGES = [
+  "Block 20 minutes to complete this action today.",
+  "Pair this action with a reward when you finish it.",
+  "Invite someone to keep you accountable this week.",
+  "Write down the smallest next step and do it now.",
+  "Add a reminder so this becomes automatic.",
+];
+
+const WEEKLY_CHALLENGES = [
+  "Capture a quick reflection about what improved.",
+  "Pick one metric to track before next week.",
+  "Add a small celebration for each win this week.",
+];
+
+const EXPENSE_CHALLENGES = [
+  (expense) => `Find one way to trim ${expense.name} by 5% this month.`,
+  (expense) => `Compare two alternatives for ${expense.name} this week.`,
+  (expense) => `Set a cap for ${expense.name} and log it for 7 days.`,
+  (expense) => `Ask if ${expense.name} can be bundled or discounted.`,
+  (expense) => `Identify a swap that keeps ${expense.name} enjoyable.`,
+];
+
+const BONUS_STRATEGIES = [
+  {
+    title: "Auto-transfer savings sprint",
+    description: "Schedule a small auto-transfer right after payday.",
+    impact: "Medium",
+    difficulty: "easy",
+  },
+  {
+    title: "Subscription clean sweep",
+    description: "Cancel, pause, or downgrade one recurring expense.",
+    impact: "High",
+    difficulty: "medium",
+  },
+  {
+    title: "Impulse guardrail",
+    description: "Create a 48-hour waiting period for non-essential buys.",
+    impact: "High",
+    difficulty: "hard",
+  },
+];
+
+const BONUS_ACTIONS = [
+  {
+    action: "Create a 10-minute weekly money review ritual.",
+    timeframe: "This week",
+    category: "track",
+  },
+  {
+    action: "Set a target to save one surprise windfall.",
+    timeframe: "Next paycheck",
+    category: "automate",
+  },
+  {
+    action: "Send a negotiation email for one recurring bill.",
+    timeframe: "Next 3 days",
+    category: "cut",
+  },
+];
+
+const BONUS_EXPENSE_MISSIONS = [
+  {
+    title: "Expense spotlight",
+    description: "Pick one category to spotlight and record every purchase.",
+    reward: "Unlock a new savings badge",
+  },
+  {
+    title: "Savings swap",
+    description: "Replace one discretionary purchase with a free alternative.",
+    reward: "Bonus XP for completing",
+  },
+  {
+    title: "Mini negotiation",
+    description: "Ask for a discount or upgrade on a recurring bill.",
+    reward: "Stackable rewards",
+  },
+];
+
+const XP_REWARDS = {
+  strategy: 30,
+  action: 20,
+  expense: 15,
+  weekly: 35,
+};
+
+const XP_PER_LEVEL = 150;
+
+const getRandomItem = (items) =>
+  items[Math.floor(Math.random() * items.length)];
+
+const getExpenseChallenge = (expense) =>
+  getRandomItem(EXPENSE_CHALLENGES)(expense);
+
+const createItemId = (prefix, index, label) => {
+  const normalizedLabel =
+    typeof label === "string" ? label.toLowerCase().replace(/\s+/g, "-") : "";
+  return `${prefix}-${index}-${normalizedLabel || index}`;
+};
+
 // Format currency
 const formatCurrency = (amount) => {
   if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
@@ -227,7 +335,7 @@ function PlanHeader({ plan, potentialSavings }) {
 }
 
 // Expense Analysis with recommendations
-function ExpenseAnalysis({ expenses }) {
+function ExpenseAnalysis({ expenses, onSelect, completedIds }) {
   if (!expenses || expenses.length === 0) return null;
 
   const groupedByPriority = {
@@ -279,13 +387,23 @@ function ExpenseAnalysis({ expenses }) {
               <VStack align="stretch" spacing="2">
                 {items.map((expense, index) => (
                   <Box
-                    key={index}
+                    key={expense.id || index}
                     p={{ base: "2", md: "3" }}
                     bg={config.bg}
                     borderRadius="lg"
                     borderWidth="1px"
                     borderColor={config.border}
                     borderLeftWidth="3px"
+                    cursor="pointer"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onSelect?.(expense, "expense")}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onSelect?.(expense, "expense");
+                      }
+                    }}
                   >
                     <HStack
                       justify="space-between"
@@ -297,24 +415,34 @@ function ExpenseAnalysis({ expenses }) {
                         fontSize={{ base: "xs", md: "sm" }}
                         fontWeight="semibold"
                         color={config.text}
-                      >
-                        {expense.name}
-                      </Text>
-                      <Text
-                        fontSize={{ base: "xs", md: "sm" }}
-                        fontWeight="bold"
-                        color="white"
-                      >
-                        {formatCurrency(expense.amount)}
-                      </Text>
-                    </HStack>
-                    <Text
-                      fontSize={{ base: "2xs", md: "xs" }}
-                      color="gray.400"
-                      lineHeight="tall"
                     >
-                      {expense.recommendation}
+                      {expense.name}
                     </Text>
+                    <Text
+                      fontSize={{ base: "xs", md: "sm" }}
+                      fontWeight="bold"
+                      color="white"
+                    >
+                      {formatCurrency(expense.amount)}
+                    </Text>
+                  </HStack>
+                  <Text
+                    fontSize={{ base: "2xs", md: "xs" }}
+                    color="gray.400"
+                    lineHeight="tall"
+                  >
+                    {expense.recommendation}
+                  </Text>
+                  {expense.challenge && (
+                    <Text fontSize="2xs" color="blue.200" mt="2">
+                      Quest: {expense.challenge}
+                    </Text>
+                  )}
+                  {completedIds?.includes(expense.id) && (
+                    <Badge colorScheme="green" fontSize="2xs" mt="2">
+                      Completed
+                    </Badge>
+                  )}
                   </Box>
                 ))}
               </VStack>
@@ -326,8 +454,121 @@ function ExpenseAnalysis({ expenses }) {
   );
 }
 
+function GamificationPanel({ title, xp, level, streak, accent = "blue" }) {
+  const progress = xp % XP_PER_LEVEL;
+  const progressPercent = Math.min(
+    100,
+    Math.round((progress / XP_PER_LEVEL) * 100),
+  );
+
+  return (
+    <Box
+      bg="gray.850"
+      borderRadius="xl"
+      p={{ base: "3", md: "4" }}
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
+      <HStack justify="space-between" flexWrap="wrap" gap="2">
+        <Box>
+          <Text fontSize={{ base: "xs", md: "sm" }} color="gray.400">
+            {title}
+          </Text>
+          <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
+            Level {level} • {xp} XP
+          </Text>
+        </Box>
+        <HStack spacing="3">
+          <Box textAlign="right">
+            <Text fontSize="2xs" color="gray.500">
+              Streak
+            </Text>
+            <Text fontSize="sm" fontWeight="semibold" color={`${accent}.300`}>
+              {streak} week{streak === 1 ? "" : "s"}
+            </Text>
+          </Box>
+        </HStack>
+      </HStack>
+      <Box mt="3">
+        <HStack justify="space-between" mb="1">
+          <Text fontSize="2xs" color="gray.500">
+            XP to level up
+          </Text>
+          <Text fontSize="2xs" color="gray.400">
+            {XP_PER_LEVEL - progress} XP
+          </Text>
+        </HStack>
+        <Box
+          bg="gray.700"
+          borderRadius="full"
+          overflow="hidden"
+          h="2"
+        >
+          <Box
+            bg={`${accent}.400`}
+            h="100%"
+            width={`${progressPercent}%`}
+          />
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+function ExpenseMissions({ missions }) {
+  if (!missions || missions.length === 0) return null;
+
+  return (
+    <Box
+      bg="gray.800"
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor="gray.700"
+    >
+      <Text
+        fontSize={{ base: "xs", md: "sm" }}
+        fontWeight="semibold"
+        color="gray.400"
+        mb={{ base: "3", md: "4" }}
+        textTransform="uppercase"
+        letterSpacing="wide"
+      >
+        Expense Missions
+      </Text>
+      <VStack align="stretch" spacing="3">
+        {missions.map((mission) => (
+          <Box
+            key={mission.id}
+            p={{ base: "3", md: "4" }}
+            bg="gray.750"
+            borderRadius="lg"
+            borderWidth="1px"
+            borderColor="gray.700"
+          >
+            <HStack justify="space-between" mb="2" flexWrap="wrap" gap="2">
+              <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
+                {mission.title}
+              </Text>
+              <Badge colorScheme="orange" fontSize="2xs">
+                New mission
+              </Badge>
+            </HStack>
+            <Text fontSize={{ base: "xs", md: "sm" }} color="gray.400">
+              {mission.description}
+            </Text>
+            <Text fontSize="2xs" color="orange.300" mt="2">
+              Reward: {mission.reward}
+            </Text>
+          </Box>
+        ))}
+      </VStack>
+    </Box>
+  );
+}
+
 // Savings Strategies
-function SavingsStrategies({ strategies }) {
+function SavingsStrategies({ strategies, onSelect, completedIds }) {
   if (!strategies || strategies.length === 0) return null;
 
   return (
@@ -353,10 +594,11 @@ function SavingsStrategies({ strategies }) {
         {strategies.map((strategy, index) => {
           const difficultyConfig =
             DIFFICULTY_CONFIG[strategy.difficulty] || DIFFICULTY_CONFIG.medium;
+          const isCompleted = completedIds?.includes(strategy.id);
 
           return (
             <Box
-              key={index}
+              key={strategy.id || index}
               p={{ base: "3", md: "4" }}
               bg="gray.750"
               borderRadius="lg"
@@ -367,6 +609,16 @@ function SavingsStrategies({ strategies }) {
                 transform: "translateY(-1px)",
               }}
               transition="all 0.2s"
+              cursor="pointer"
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelect?.(strategy, "strategy")}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelect?.(strategy, "strategy");
+                }
+              }}
             >
               <HStack justify="space-between" mb="2" flexWrap="wrap" gap="2">
                 <HStack minW="0" flex="1">
@@ -416,6 +668,17 @@ function SavingsStrategies({ strategies }) {
                 {strategy.description}
               </Text>
 
+              {strategy.challenge && (
+                <Text
+                  fontSize="2xs"
+                  color="cyan.300"
+                  pl={{ base: "8", md: "10" }}
+                  mb="2"
+                >
+                  Quest: {strategy.challenge}
+                </Text>
+              )}
+
               <HStack pl={{ base: "8", md: "10" }}>
                 <Badge
                   colorScheme="green"
@@ -424,6 +687,11 @@ function SavingsStrategies({ strategies }) {
                 >
                   Impact: {strategy.impact}
                 </Badge>
+                {isCompleted && (
+                  <Badge colorScheme="green" fontSize="2xs">
+                    Completed
+                  </Badge>
+                )}
               </HStack>
             </Box>
           );
@@ -434,8 +702,15 @@ function SavingsStrategies({ strategies }) {
 }
 
 // Action Items Checklist
-function ActionItems({ actionItems, weeklyCheckIn }) {
-  if (!actionItems || actionItems.length === 0) return null;
+function ActionItems({
+  actionItems,
+  weeklyCheckIn,
+  onSelect,
+  completedIds,
+  onSelectWeekly,
+}) {
+  const hasItems = actionItems && actionItems.length > 0;
+  if (!hasItems && !weeklyCheckIn) return null;
 
   return (
     <Box
@@ -456,57 +731,91 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
         Action Items - Start This Week
       </Text>
 
-      <VStack align="stretch" spacing="2">
-        {actionItems.map((item, index) => {
-          const categoryConfig =
-            CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
+      {hasItems && (
+        <VStack align="stretch" spacing="2">
+          {actionItems.map((item, index) => {
+            const categoryConfig =
+              CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
+            const isCompleted = completedIds?.includes(item.id);
 
-          return (
-            <HStack
-              key={index}
-              p={{ base: "2", md: "3" }}
-              bg="gray.750"
-              borderRadius="lg"
-              spacing={{ base: "2", md: "3" }}
-              borderWidth="1px"
-              borderColor="gray.700"
-            >
-              <Box
-                w={{ base: "6", md: "8" }}
-                h={{ base: "6", md: "8" }}
+            return (
+              <HStack
+                key={item.id || index}
+                p={{ base: "2", md: "3" }}
+                bg="gray.750"
                 borderRadius="lg"
-                bg="gray.700"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                fontSize={{ base: "sm", md: "md" }}
-                flexShrink="0"
+                spacing={{ base: "2", md: "3" }}
+                borderWidth="1px"
+                borderColor="gray.700"
+                cursor="pointer"
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelect?.(item, "action")}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onSelect?.(item, "action");
+                  }
+                }}
               >
-                {categoryConfig.icon}
-              </Box>
-              <VStack align="start" spacing="0" flex="1" minW="0">
-                <Text fontSize={{ base: "xs", md: "sm" }} color="gray.200">
-                  {item.action}
-                </Text>
-                <HStack spacing="2" flexWrap="wrap">
-                  <Text
-                    fontSize={{ base: "2xs", md: "xs" }}
-                    color={categoryConfig.color}
-                  >
-                    {categoryConfig.label}
+                <Box
+                  w={{ base: "6", md: "8" }}
+                  h={{ base: "6", md: "8" }}
+                  borderRadius="lg"
+                  bg="gray.700"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  fontSize={{ base: "sm", md: "md" }}
+                  flexShrink="0"
+                >
+                  {categoryConfig.icon}
+                </Box>
+                <VStack align="start" spacing="0" flex="1" minW="0">
+                  <Text fontSize={{ base: "xs", md: "sm" }} color="gray.200">
+                    {item.action}
                   </Text>
-                  <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
-                    •
-                  </Text>
-                  <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
-                    {item.timeframe}
-                  </Text>
-                </HStack>
-              </VStack>
-            </HStack>
-          );
-        })}
-      </VStack>
+                  <HStack spacing="2" flexWrap="wrap">
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color={categoryConfig.color}
+                    >
+                      {categoryConfig.label}
+                    </Text>
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+                      •
+                    </Text>
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+                      {item.timeframe}
+                    </Text>
+                    {isCompleted && (
+                      <>
+                        <Text
+                          fontSize={{ base: "2xs", md: "xs" }}
+                          color="gray.500"
+                        >
+                          •
+                        </Text>
+                        <Text
+                          fontSize={{ base: "2xs", md: "xs" }}
+                          color="green.300"
+                        >
+                          Completed
+                        </Text>
+                      </>
+                    )}
+                  </HStack>
+                  {item.challenge && (
+                    <Text fontSize="2xs" color="cyan.300">
+                      Quest: {item.challenge}
+                    </Text>
+                  )}
+                </VStack>
+              </HStack>
+            );
+          })}
+        </VStack>
+      )}
 
       {weeklyCheckIn && (
         <Box
@@ -516,6 +825,16 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
           borderRadius="lg"
           borderWidth="1px"
           borderColor="purple.700"
+          cursor="pointer"
+          role="button"
+          tabIndex={0}
+          onClick={() => onSelectWeekly?.(weeklyCheckIn, "weekly")}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onSelectWeekly?.(weeklyCheckIn, "weekly");
+            }
+          }}
         >
           <HStack spacing="2" align="start">
             <Text fontSize={{ base: "md", md: "lg" }}>📅</Text>
@@ -528,8 +847,13 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
                 WEEKLY CHECK-IN
               </Text>
               <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300">
-                {weeklyCheckIn}
+                {weeklyCheckIn.text}
               </Text>
+              {weeklyCheckIn.challenge && (
+                <Text fontSize="2xs" color="purple.200">
+                  Quest: {weeklyCheckIn.challenge}
+                </Text>
+              )}
             </VStack>
           </HStack>
         </Box>
@@ -1655,6 +1979,21 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   const [updateNotes, setUpdateNotes] = useState("");
   const [showUpdateFlash, setShowUpdateFlash] = useState(false);
   const previousUpdatingRef = useRef(false);
+  const [interactiveStrategies, setInteractiveStrategies] = useState([]);
+  const [interactiveActions, setInteractiveActions] = useState([]);
+  const [interactiveExpenses, setInteractiveExpenses] = useState([]);
+  const [interactiveWeeklyCheckIn, setInteractiveWeeklyCheckIn] =
+    useState(null);
+  const [interaction, setInteraction] = useState(null);
+  const [completedIds, setCompletedIds] = useState([]);
+  const [xp, setXp] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [bonusIndex, setBonusIndex] = useState({
+    strategy: 0,
+    action: 0,
+    expense: 0,
+  });
+  const [expenseMissions, setExpenseMissions] = useState([]);
 
   if (!data) return null;
 
@@ -1662,6 +2001,7 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const monthlySavings = (data.income || 0) - totalExpenses;
   const plan = data.plan;
+  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
 
   useEffect(() => {
     setDraftIncome(data.income || 0);
@@ -1675,6 +2015,47 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
       })),
     );
   }, [data.income, data.savingsGoal, data.currentSavings, expenses]);
+
+  useEffect(() => {
+    setInteractiveStrategies(
+      (plan?.strategies || []).map((strategy, index) => ({
+        ...strategy,
+        id: createItemId("strategy", index, strategy.title),
+        challenge: getRandomItem(STRATEGY_CHALLENGES),
+      })),
+    );
+    setInteractiveActions(
+      (plan?.actionItems || []).map((item, index) => ({
+        ...item,
+        id: createItemId("action", index, item.action),
+        challenge: getRandomItem(ACTION_CHALLENGES),
+      })),
+    );
+    setInteractiveWeeklyCheckIn(
+      plan?.weeklyCheckIn
+        ? {
+            id: "weekly-checkin",
+            text: plan.weeklyCheckIn,
+            challenge: getRandomItem(WEEKLY_CHALLENGES),
+          }
+        : null,
+    );
+    setInteractiveExpenses(
+      expenses.map((expense, index) => ({
+        ...expense,
+        id: createItemId("expense", index, expense.name),
+        challenge: getExpenseChallenge(expense),
+      })),
+    );
+    setExpenseMissions((prev) =>
+      prev.length > 0
+        ? prev
+        : BONUS_EXPENSE_MISSIONS.slice(0, 2).map((mission, index) => ({
+            ...mission,
+            id: createItemId("mission", index, mission.title),
+          })),
+    );
+  }, [expenses, plan]);
 
   useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
@@ -1791,6 +2172,145 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     60% { box-shadow: 0 0 12px rgba(59, 130, 246, 0.25); }
     100% { box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
   `;
+
+  const openInteraction = (item, type) => {
+    if (!item) return;
+    setInteraction({ type, item });
+  };
+
+  const handleRemix = () => {
+    if (!interaction) return;
+    const { type, item } = interaction;
+
+    if (type === "strategy") {
+      const nextChallenge = getRandomItem(STRATEGY_CHALLENGES);
+      setInteractiveStrategies((prev) =>
+        prev.map((strategy) =>
+          strategy.id === item.id
+            ? { ...strategy, challenge: nextChallenge }
+            : strategy,
+        ),
+      );
+      setInteraction({ type, item: { ...item, challenge: nextChallenge } });
+    }
+
+    if (type === "action") {
+      const nextChallenge = getRandomItem(ACTION_CHALLENGES);
+      setInteractiveActions((prev) =>
+        prev.map((action) =>
+          action.id === item.id
+            ? { ...action, challenge: nextChallenge }
+            : action,
+        ),
+      );
+      setInteraction({ type, item: { ...item, challenge: nextChallenge } });
+    }
+
+    if (type === "weekly") {
+      const nextChallenge = getRandomItem(WEEKLY_CHALLENGES);
+      setInteractiveWeeklyCheckIn((prev) =>
+        prev ? { ...prev, challenge: nextChallenge } : prev,
+      );
+      setInteraction({ type, item: { ...item, challenge: nextChallenge } });
+    }
+
+    if (type === "expense") {
+      const nextChallenge = getExpenseChallenge(item);
+      setInteractiveExpenses((prev) =>
+        prev.map((expense) =>
+          expense.id === item.id
+            ? (() => {
+                return {
+                  ...expense,
+                  recommendation: nextChallenge,
+                  challenge: nextChallenge,
+                };
+              })()
+            : expense,
+        ),
+      );
+      setInteraction({
+        type,
+        item: { ...item, challenge: nextChallenge, recommendation: nextChallenge },
+      });
+    }
+  };
+
+  const handleComplete = () => {
+    if (!interaction) return;
+    const { type, item } = interaction;
+    if (completedIds.includes(item.id)) return;
+
+    setCompletedIds((prev) => [...prev, item.id]);
+    setXp((prev) => prev + (XP_REWARDS[type] || 10));
+    setStreak((prev) => prev + 1);
+
+    if (type === "strategy") {
+      const nextBonus =
+        BONUS_STRATEGIES[bonusIndex.strategy % BONUS_STRATEGIES.length];
+      setInteractiveStrategies((prev) => [
+        ...prev,
+        {
+          ...nextBonus,
+          id: createItemId(
+            "strategy-bonus",
+            bonusIndex.strategy,
+            nextBonus.title,
+          ),
+          challenge: getRandomItem(STRATEGY_CHALLENGES),
+        },
+      ]);
+      setBonusIndex((prev) => ({
+        ...prev,
+        strategy: prev.strategy + 1,
+      }));
+    }
+
+    if (type === "action" || type === "weekly") {
+      const nextBonus =
+        BONUS_ACTIONS[bonusIndex.action % BONUS_ACTIONS.length];
+      setInteractiveActions((prev) => [
+        ...prev,
+        {
+          ...nextBonus,
+          id: createItemId(
+            "action-bonus",
+            bonusIndex.action,
+            nextBonus.action,
+          ),
+          challenge: getRandomItem(ACTION_CHALLENGES),
+        },
+      ]);
+      setBonusIndex((prev) => ({
+        ...prev,
+        action: prev.action + 1,
+      }));
+    }
+
+    if (type === "expense") {
+      const nextBonus =
+        BONUS_EXPENSE_MISSIONS[
+          bonusIndex.expense % BONUS_EXPENSE_MISSIONS.length
+        ];
+      setExpenseMissions((prev) => [
+        ...prev,
+        {
+          ...nextBonus,
+          id: createItemId(
+            "mission-bonus",
+            bonusIndex.expense,
+            nextBonus.title,
+          ),
+        },
+      ]);
+      setBonusIndex((prev) => ({
+        ...prev,
+        expense: prev.expense + 1,
+      }));
+    }
+
+    setInteraction(null);
+  };
 
   return (
     <Box>
@@ -2077,17 +2597,31 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
             {/* Plan Tab */}
             {activeTab === 1 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                <GamificationPanel
+                  title="Plan Progress"
+                  xp={xp}
+                  level={level}
+                  streak={streak}
+                  accent="cyan"
+                />
                 <Grid
                   templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
                   gap={{ base: "3", md: "5" }}
                 >
                   <GridItem>
-                    <SavingsStrategies strategies={plan?.strategies} />
+                    <SavingsStrategies
+                      strategies={interactiveStrategies}
+                      onSelect={openInteraction}
+                      completedIds={completedIds}
+                    />
                   </GridItem>
                   <GridItem>
                     <ActionItems
-                      actionItems={plan?.actionItems}
-                      weeklyCheckIn={plan?.weeklyCheckIn}
+                      actionItems={interactiveActions}
+                      weeklyCheckIn={interactiveWeeklyCheckIn}
+                      onSelect={openInteraction}
+                      completedIds={completedIds}
+                      onSelectWeekly={openInteraction}
                     />
                   </GridItem>
                 </Grid>
@@ -2097,10 +2631,140 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
             )}
 
             {/* Expenses Tab */}
-            {activeTab === 2 && <ExpenseAnalysis expenses={expenses} />}
+            {activeTab === 2 && (
+              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                <GamificationPanel
+                  title="Expense Adventure"
+                  xp={xp}
+                  level={level}
+                  streak={streak}
+                  accent="orange"
+                />
+                <ExpenseMissions missions={expenseMissions} />
+                <ExpenseAnalysis
+                  expenses={interactiveExpenses}
+                  onSelect={openInteraction}
+                  completedIds={completedIds}
+                />
+              </VStack>
+            )}
           </Box>
         </Box>
       </VStack>
+
+      {interaction && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.700"
+          zIndex="modal"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          onClick={() => setInteraction(null)}
+        >
+          <Box
+            bg="gray.900"
+            p={{ base: "4", md: "6" }}
+            borderRadius="xl"
+            width={{ base: "92%", sm: "480px" }}
+            maxWidth="480px"
+            borderWidth="1px"
+            borderColor="gray.700"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <VStack align="stretch" spacing="4">
+              <HStack justify="space-between" align="start">
+                <Box>
+                  <Text fontSize="sm" color="gray.400">
+                    {interaction.type === "expense"
+                      ? "Expense Quest"
+                      : interaction.type === "weekly"
+                        ? "Weekly Check-in"
+                        : "Plan Quest"}
+                  </Text>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    {interaction.item.title ||
+                      interaction.item.action ||
+                      interaction.item.name ||
+                      interaction.item.text}
+                  </Text>
+                </Box>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => setInteraction(null)}
+                >
+                  Close
+                </Button>
+              </HStack>
+
+              {interaction.item.description && (
+                <Text fontSize="sm" color="gray.400">
+                  {interaction.item.description}
+                </Text>
+              )}
+
+              {interaction.item.recommendation && (
+                <Text fontSize="sm" color="gray.300">
+                  {interaction.item.recommendation}
+                </Text>
+              )}
+
+              {interaction.item.challenge && (
+                <Box
+                  bg="gray.800"
+                  borderRadius="lg"
+                  p="3"
+                  borderWidth="1px"
+                  borderColor="gray.700"
+                >
+                  <Text fontSize="2xs" color="gray.500" mb="1">
+                    Challenge
+                  </Text>
+                  <Text fontSize="sm" color="cyan.200">
+                    {interaction.item.challenge}
+                  </Text>
+                </Box>
+              )}
+
+              <Box
+                bg="gray.850"
+                borderRadius="lg"
+                p="3"
+                borderWidth="1px"
+                borderColor="gray.700"
+              >
+                <Text fontSize="2xs" color="gray.500">
+                  Completion reward
+                </Text>
+                <Text fontSize="sm" color="green.300">
+                  +{XP_REWARDS[interaction.type] || 10} XP • New item unlocked
+                </Text>
+              </Box>
+
+              <HStack spacing="3" flexWrap="wrap">
+                <Button size="sm" variant="outline" onClick={handleRemix}>
+                  Generate different content
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={handleComplete}
+                  isDisabled={completedIds.includes(interaction.item.id)}
+                >
+                  {completedIds.includes(interaction.item.id)
+                    ? "Completed"
+                    : "Complete exercise"}
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }
