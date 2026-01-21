@@ -1776,6 +1776,48 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
     return undefined;
   }, [isUpdating]);
 
+  useEffect(() => {
+    if (!interaction) return;
+
+    const findUpdatedItem = () => {
+      if (interaction.type === "strategy") {
+        return (
+          interactiveStrategies.find((strategy) => strategy.id === interaction.item.id) ||
+          null
+        );
+      }
+      if (interaction.type === "action") {
+        return (
+          interactiveActions.find((action) => action.id === interaction.item.id) ||
+          null
+        );
+      }
+      if (interaction.type === "expense") {
+        return (
+          interactiveExpenses.find((expense) => expense.id === interaction.item.id) ||
+          null
+        );
+      }
+      if (interaction.type === "weekly") {
+        return interactiveWeeklyCheckIn?.id === interaction.item.id
+          ? interactiveWeeklyCheckIn
+          : null;
+      }
+      return null;
+    };
+
+    const updatedItem = findUpdatedItem();
+    if (updatedItem && updatedItem !== interaction.item) {
+      setInteraction((prev) => (prev ? { ...prev, item: updatedItem } : prev));
+    }
+  }, [
+    interaction,
+    interactiveStrategies,
+    interactiveActions,
+    interactiveExpenses,
+    interactiveWeeklyCheckIn,
+  ]);
+
   const updateExpenseField = (index, field, value) => {
     setDraftExpenses((prev) =>
       prev.map((expense, i) =>
