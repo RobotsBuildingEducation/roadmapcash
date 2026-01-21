@@ -116,7 +116,11 @@ function PlanHeader({ plan, potentialSavings }) {
       <VStack align="start" spacing="3">
         <VStack align="start" w="100%" gap={{ base: "2", md: "0" }}>
           <HStack justify="space-between" w="100%" flexWrap="wrap" gap="2">
-            <Text fontSize={{ base: "xl", md: "2xl" }} fontWeight="bold" color="white">
+            <Text
+              fontSize={{ base: "xl", md: "2xl" }}
+              fontWeight="bold"
+              color="white"
+            >
               {plan.title || "Your Financial Plan"}
             </Text>
             {potentialSavings > 0 && (
@@ -133,7 +137,11 @@ function PlanHeader({ plan, potentialSavings }) {
           </HStack>
         </VStack>
 
-        <Text fontSize={{ base: "sm", md: "md" }} color="gray.300" lineHeight="tall">
+        <Text
+          fontSize={{ base: "sm", md: "md" }}
+          color="gray.300"
+          lineHeight="tall"
+        >
           {plan.overview}
         </Text>
 
@@ -145,27 +153,69 @@ function PlanHeader({ plan, potentialSavings }) {
             pt="2"
             w={{ base: "100%", md: "auto" }}
           >
-            <Box bg="blue.800" px={{ base: "2", md: "4" }} py="2" borderRadius="lg" textAlign={{ base: "center", md: "left" }}>
-              <Text fontSize={{ base: "2xs", md: "xs" }} color="blue.300" fontWeight="medium">
+            <Box
+              bg="blue.800"
+              px={{ base: "2", md: "4" }}
+              py="2"
+              borderRadius="lg"
+              textAlign={{ base: "center", md: "left" }}
+            >
+              <Text
+                fontSize={{ base: "2xs", md: "xs" }}
+                color="blue.300"
+                fontWeight="medium"
+              >
                 NEEDS (50%)
               </Text>
-              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="white">
+              <Text
+                fontSize={{ base: "md", md: "lg" }}
+                fontWeight="bold"
+                color="white"
+              >
                 {formatCurrency(plan.monthlyBudget.needs)}
               </Text>
             </Box>
-            <Box bg="purple.800" px={{ base: "2", md: "4" }} py="2" borderRadius="lg" textAlign={{ base: "center", md: "left" }}>
-              <Text fontSize={{ base: "2xs", md: "xs" }} color="purple.300" fontWeight="medium">
+            <Box
+              bg="purple.800"
+              px={{ base: "2", md: "4" }}
+              py="2"
+              borderRadius="lg"
+              textAlign={{ base: "center", md: "left" }}
+            >
+              <Text
+                fontSize={{ base: "2xs", md: "xs" }}
+                color="purple.300"
+                fontWeight="medium"
+              >
                 WANTS (30%)
               </Text>
-              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="white">
+              <Text
+                fontSize={{ base: "md", md: "lg" }}
+                fontWeight="bold"
+                color="white"
+              >
                 {formatCurrency(plan.monthlyBudget.wants)}
               </Text>
             </Box>
-            <Box bg="green.800" px={{ base: "2", md: "4" }} py="2" borderRadius="lg" textAlign={{ base: "center", md: "left" }}>
-              <Text fontSize={{ base: "2xs", md: "xs" }} color="green.300" fontWeight="medium">
+            <Box
+              bg="green.800"
+              px={{ base: "2", md: "4" }}
+              py="2"
+              borderRadius="lg"
+              textAlign={{ base: "center", md: "left" }}
+            >
+              <Text
+                fontSize={{ base: "2xs", md: "xs" }}
+                color="green.300"
+                fontWeight="medium"
+              >
                 SAVINGS (20%)
               </Text>
-              <Text fontSize={{ base: "md", md: "lg" }} fontWeight="bold" color="white">
+              <Text
+                fontSize={{ base: "md", md: "lg" }}
+                fontWeight="bold"
+                color="white"
+              >
                 {formatCurrency(plan.monthlyBudget.savings)}
               </Text>
             </Box>
@@ -237,7 +287,12 @@ function ExpenseAnalysis({ expenses }) {
                     borderColor={config.border}
                     borderLeftWidth="3px"
                   >
-                    <HStack justify="space-between" mb="1" flexWrap="wrap" gap="1">
+                    <HStack
+                      justify="space-between"
+                      mb="1"
+                      flexWrap="wrap"
+                      gap="1"
+                    >
                       <Text
                         fontSize={{ base: "xs", md: "sm" }}
                         fontWeight="semibold"
@@ -245,11 +300,19 @@ function ExpenseAnalysis({ expenses }) {
                       >
                         {expense.name}
                       </Text>
-                      <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold" color="white">
+                      <Text
+                        fontSize={{ base: "xs", md: "sm" }}
+                        fontWeight="bold"
+                        color="white"
+                      >
                         {formatCurrency(expense.amount)}
                       </Text>
                     </HStack>
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.400" lineHeight="tall">
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color="gray.400"
+                      lineHeight="tall"
+                    >
                       {expense.recommendation}
                     </Text>
                   </Box>
@@ -326,21 +389,39 @@ function SavingsStrategies({ strategies }) {
                           ? "🚀"
                           : "✨"}
                   </Box>
-                  <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="semibold" color="white" isTruncated>
+                  <Text
+                    fontSize={{ base: "xs", md: "sm" }}
+                    fontWeight="semibold"
+                    color="white"
+                    isTruncated
+                  >
                     {strategy.title}
                   </Text>
                 </HStack>
-                <Badge colorScheme={difficultyConfig.color} fontSize={{ base: "2xs", md: "xs" }} flexShrink="0">
+                <Badge
+                  colorScheme={difficultyConfig.color}
+                  fontSize={{ base: "2xs", md: "xs" }}
+                  flexShrink="0"
+                >
                   {difficultyConfig.label}
                 </Badge>
               </HStack>
 
-              <Text fontSize={{ base: "xs", md: "sm" }} color="gray.400" mb="2" pl={{ base: "8", md: "10" }}>
+              <Text
+                fontSize={{ base: "xs", md: "sm" }}
+                color="gray.400"
+                mb="2"
+                pl={{ base: "8", md: "10" }}
+              >
                 {strategy.description}
               </Text>
 
               <HStack pl={{ base: "8", md: "10" }}>
-                <Badge colorScheme="green" variant="subtle" fontSize={{ base: "2xs", md: "xs" }}>
+                <Badge
+                  colorScheme="green"
+                  variant="subtle"
+                  fontSize={{ base: "2xs", md: "xs" }}
+                >
                   Impact: {strategy.impact}
                 </Badge>
               </HStack>
@@ -408,7 +489,10 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
                   {item.action}
                 </Text>
                 <HStack spacing="2" flexWrap="wrap">
-                  <Text fontSize={{ base: "2xs", md: "xs" }} color={categoryConfig.color}>
+                  <Text
+                    fontSize={{ base: "2xs", md: "xs" }}
+                    color={categoryConfig.color}
+                  >
                     {categoryConfig.label}
                   </Text>
                   <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
@@ -436,7 +520,11 @@ function ActionItems({ actionItems, weeklyCheckIn }) {
           <HStack spacing="2" align="start">
             <Text fontSize={{ base: "md", md: "lg" }}>📅</Text>
             <VStack align="start" spacing="0" minW="0">
-              <Text fontSize={{ base: "2xs", md: "xs" }} color="purple.300" fontWeight="medium">
+              <Text
+                fontSize={{ base: "2xs", md: "xs" }}
+                color="purple.300"
+                fontWeight="medium"
+              >
                 WEEKLY CHECK-IN
               </Text>
               <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300">
@@ -465,10 +553,18 @@ function MotivationalNote({ note }) {
       <HStack spacing={{ base: "2", md: "3" }} align="start">
         <Text fontSize={{ base: "xl", md: "2xl" }}>💪</Text>
         <VStack align="start" spacing="1" minW="0">
-          <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="semibold" color="green.300">
+          <Text
+            fontSize={{ base: "xs", md: "sm" }}
+            fontWeight="semibold"
+            color="green.300"
+          >
             Your Coach Says...
           </Text>
-          <Text fontSize={{ base: "sm", md: "md" }} color="white" lineHeight="tall">
+          <Text
+            fontSize={{ base: "sm", md: "md" }}
+            color="white"
+            lineHeight="tall"
+          >
             {note}
           </Text>
         </VStack>
@@ -568,7 +664,12 @@ function OverviewChart({ income, expenses }) {
       </Text>
 
       <VStack spacing={{ base: "4", md: "6" }} align="stretch">
-        <HStack spacing={{ base: "4", md: "6" }} align="center" justify="center" flexWrap={{ base: "wrap", md: "nowrap" }}>
+        <HStack
+          spacing={{ base: "4", md: "6" }}
+          align="center"
+          justify="center"
+          flexWrap={{ base: "wrap", md: "nowrap" }}
+        >
           <Box position="relative" flexShrink="0">
             <svg width="140" height="140" viewBox="0 0 160 160">
               {segments.map((segment, index) => (
@@ -620,8 +721,18 @@ function OverviewChart({ income, expenses }) {
             {segments.slice(0, 5).map((segment, index) => (
               <HStack key={index} justify="space-between" w="100%">
                 <HStack spacing="2" minW="0" flex="1">
-                  <Box w="3" h="3" borderRadius="full" bg={segment.color} flexShrink="0" />
-                  <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300" isTruncated>
+                  <Box
+                    w="3"
+                    h="3"
+                    borderRadius="full"
+                    bg={segment.color}
+                    flexShrink="0"
+                  />
+                  <Text
+                    fontSize={{ base: "xs", md: "sm" }}
+                    color="gray.300"
+                    isTruncated
+                  >
                     {segment.name}
                   </Text>
                 </HStack>
@@ -670,7 +781,8 @@ function ExpenseBarChart({ expenses, income }) {
   };
 
   // Calculate total items including savings bar
-  const totalItems = sortedExpenses.length + (savingsAmount > 0 && income > 0 ? 1 : 0);
+  const totalItems =
+    sortedExpenses.length + (savingsAmount > 0 && income > 0 ? 1 : 0);
   const barHeight = 22;
   const barGap = 6;
   const chartHeight = Math.max(80, totalItems * (barHeight + barGap) + 35);
@@ -687,7 +799,12 @@ function ExpenseBarChart({ expenses, income }) {
       borderWidth="1px"
       borderColor="gray.700"
     >
-      <HStack justify="space-between" mb={{ base: "3", md: "4" }} flexWrap="wrap" gap="2">
+      <HStack
+        justify="space-between"
+        mb={{ base: "3", md: "4" }}
+        flexWrap="wrap"
+        gap="2"
+      >
         <Text
           fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
@@ -700,15 +817,21 @@ function ExpenseBarChart({ expenses, income }) {
         <HStack spacing="3" flexWrap="wrap">
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#3b82f6" />
-            <Text fontSize="2xs" color="gray.500">Essential</Text>
+            <Text fontSize="2xs" color="gray.500">
+              Essential
+            </Text>
           </HStack>
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#8b5cf6" />
-            <Text fontSize="2xs" color="gray.500">Important</Text>
+            <Text fontSize="2xs" color="gray.500">
+              Important
+            </Text>
           </HStack>
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#f97316" />
-            <Text fontSize="2xs" color="gray.500">Discretionary</Text>
+            <Text fontSize="2xs" color="gray.500">
+              Discretionary
+            </Text>
           </HStack>
         </HStack>
       </HStack>
@@ -750,8 +873,9 @@ function ExpenseBarChart({ expenses, income }) {
                   fill="#d1d5db"
                   fontSize="9"
                   fontWeight="500"
+                  style={{ fontSize: "6px" }}
                 >
-                  {expense.name.length > 12
+                  {expense.name.length > 24
                     ? expense.name.substring(0, 12) + "..."
                     : expense.name}
                 </text>
@@ -785,6 +909,7 @@ function ExpenseBarChart({ expenses, income }) {
                   fill="#9ca3af"
                   fontSize="9"
                   fontWeight="600"
+                  style={{ fontSize: "9px" }}
                 >
                   {formatCurrency(expense.amount)}
                 </text>
@@ -797,11 +922,17 @@ function ExpenseBarChart({ expenses, income }) {
             <g>
               <text
                 x={labelWidth - 4}
-                y={20 + sortedExpenses.length * (barHeight + barGap) + barHeight / 2 + 3}
+                y={
+                  20 +
+                  sortedExpenses.length * (barHeight + barGap) +
+                  barHeight / 2 +
+                  3
+                }
                 textAnchor="end"
                 fill="#10b981"
-                fontSize="9"
+                fontSize="9px"
                 fontWeight="600"
+                style={{ fontSize: "6px" }}
               >
                 Savings
               </text>
@@ -827,11 +958,17 @@ function ExpenseBarChart({ expenses, income }) {
 
               <text
                 x={labelWidth + barAreaWidth + 4}
-                y={20 + sortedExpenses.length * (barHeight + barGap) + barHeight / 2 + 3}
+                y={
+                  20 +
+                  sortedExpenses.length * (barHeight + barGap) +
+                  barHeight / 2 +
+                  3
+                }
                 textAnchor="start"
                 fill="#10b981"
                 fontSize="9"
                 fontWeight="600"
+                style={{ fontSize: "9px" }}
               >
                 {formatCurrency(savingsAmount)}
               </text>
@@ -847,6 +984,7 @@ function ExpenseBarChart({ expenses, income }) {
               textAnchor="middle"
               fill="#6b7280"
               fontSize="8"
+              style={{ fontSize: "9px" }}
             >
               {formatCurrency(maxAmount * ratio)}
             </text>
@@ -855,16 +993,28 @@ function ExpenseBarChart({ expenses, income }) {
       </Box>
 
       {/* Summary footer */}
-      <HStack justify="space-between" mt="3" pt="3" borderTopWidth="1px" borderColor="gray.700" flexWrap="wrap" gap="2">
+      <HStack
+        justify="space-between"
+        mt="3"
+        pt="3"
+        borderTopWidth="1px"
+        borderColor="gray.700"
+        flexWrap="wrap"
+        gap="2"
+      >
         <VStack align="start" spacing="0">
-          <Text fontSize="2xs" color="gray.500">Total Expenses</Text>
+          <Text fontSize="2xs" color="gray.500">
+            Total Expenses
+          </Text>
           <Text fontSize="sm" fontWeight="bold" color="red.400">
             {formatCurrency(totalExpenses)}
           </Text>
         </VStack>
         {income > 0 && (
           <VStack align="end" spacing="0">
-            <Text fontSize="2xs" color="gray.500">% of Income</Text>
+            <Text fontSize="2xs" color="gray.500">
+              % of Income
+            </Text>
             <Text
               fontSize="sm"
               fontWeight="bold"
@@ -963,7 +1113,12 @@ function MonthlyChart({
       borderWidth="1px"
       borderColor="gray.700"
     >
-      <HStack justify="space-between" mb={{ base: "2", md: "3" }} flexWrap="wrap" gap="2">
+      <HStack
+        justify="space-between"
+        mb={{ base: "2", md: "3" }}
+        flexWrap="wrap"
+        gap="2"
+      >
         <Text
           fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
@@ -1027,6 +1182,7 @@ function MonthlyChart({
               fill="#f59e0b"
               fontSize="10"
               fontWeight="bold"
+              style={{ fontSize: "9px" }}
             >
               GOAL
             </text>
@@ -1081,6 +1237,7 @@ function MonthlyChart({
               textAnchor="middle"
               fill="#9ca3af"
               fontSize="10"
+              style={{ fontSize: "9px" }}
             >
               {d.label}
             </text>
@@ -1092,7 +1249,11 @@ function MonthlyChart({
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
             Current path
           </Text>
-          <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold" color="cyan.400">
+          <Text
+            fontSize={{ base: "xs", md: "sm" }}
+            fontWeight="bold"
+            color="cyan.400"
+          >
             {formatCurrency(endBalance)} in 2Y
           </Text>
         </VStack>
@@ -1101,7 +1262,11 @@ function MonthlyChart({
             <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
               With plan
             </Text>
-            <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold" color="green.400">
+            <Text
+              fontSize={{ base: "xs", md: "sm" }}
+              fontWeight="bold"
+              color="green.400"
+            >
               {formatCurrency(optimizedEndBalance)} in 2Y
             </Text>
           </VStack>
@@ -1196,7 +1361,12 @@ function BirdsEyeView({
       borderWidth="1px"
       borderColor="gray.700"
     >
-      <HStack justify="space-between" mb={{ base: "3", md: "4" }} flexWrap="wrap" gap="2">
+      <HStack
+        justify="space-between"
+        mb={{ base: "3", md: "4" }}
+        flexWrap="wrap"
+        gap="2"
+      >
         <Text
           fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
@@ -1312,7 +1482,11 @@ function BirdsEyeView({
                   >
                     {milestone.label}
                   </Text>
-                  <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" isTruncated>
+                  <Text
+                    fontSize={{ base: "2xs", md: "xs" }}
+                    color="gray.500"
+                    isTruncated
+                  >
                     {milestone.sublabel || formatCurrency(milestone.amount)}
                   </Text>
                 </VStack>
@@ -1384,7 +1558,11 @@ function MetricsSummary({
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
             Monthly Income
           </Text>
-          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color="green.400">
+          <Text
+            fontSize={{ base: "lg", md: "xl" }}
+            fontWeight="bold"
+            color="green.400"
+          >
             {formatCurrency(income)}
           </Text>
         </Box>
@@ -1401,7 +1579,11 @@ function MetricsSummary({
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
             Expenses
           </Text>
-          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color="red.400">
+          <Text
+            fontSize={{ base: "lg", md: "xl" }}
+            fontWeight="bold"
+            color="red.400"
+          >
             {formatCurrency(totalExpenses)}
           </Text>
         </Box>
@@ -1445,7 +1627,11 @@ function MetricsSummary({
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
             Goal Progress
           </Text>
-          <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color="purple.400">
+          <Text
+            fontSize={{ base: "lg", md: "xl" }}
+            fontWeight="bold"
+            color="purple.400"
+          >
             {savingsGoal ? formatCurrency(currentSavings || 0) : "--"}
           </Text>
           {savingsGoal && (
@@ -1638,7 +1824,9 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
               borderRadius="lg"
               borderWidth="1px"
               borderColor="gray.700"
-              animation={showUpdateFlash ? `${flashAnimation} 1.4s ease-out` : "none"}
+              animation={
+                showUpdateFlash ? `${flashAnimation} 1.4s ease-out` : "none"
+              }
             >
               <HStack justify="space-between" flexWrap="wrap" gap="2">
                 <VStack align="start" spacing="0">
@@ -1657,7 +1845,9 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
                   size={{ base: "xs", md: "sm" }}
                   colorScheme="blue"
                   onClick={handleApplyUpdates}
-                  isDisabled={!onUpdate || updateSummary.length === 0 || isUpdating}
+                  isDisabled={
+                    !onUpdate || updateSummary.length === 0 || isUpdating
+                  }
                   aria-label="Apply updates"
                 >
                   {isUpdating ? <Spinner size="sm" /> : "Apply updates"}
@@ -1665,7 +1855,10 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
               </HStack>
             </Box>
 
-            <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap="3">
+            <Grid
+              templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
+              gap="3"
+            >
               <Box>
                 <Text fontSize="2xs" color="gray.500" mb="1">
                   Monthly income
@@ -1846,7 +2039,10 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
             {/* Overview Tab */}
             {activeTab === 0 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={{ base: "3", md: "5" }}>
+                <Grid
+                  templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
+                  gap={{ base: "3", md: "5" }}
+                >
                   <GridItem>
                     <OverviewChart
                       income={data.income || 0}
@@ -1881,7 +2077,10 @@ export function FinancialChart({ data, onUpdate, isUpdating }) {
             {/* Plan Tab */}
             {activeTab === 1 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap={{ base: "3", md: "5" }}>
+                <Grid
+                  templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
+                  gap={{ base: "3", md: "5" }}
+                >
                   <GridItem>
                     <SavingsStrategies strategies={plan?.strategies} />
                   </GridItem>
