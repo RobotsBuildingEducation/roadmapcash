@@ -161,10 +161,11 @@ export function AnimatedLogo({ showWordmark = true, size = 60 }) {
           fontSize="xl"
           fontWeight="bold"
           bgGradient="to-r"
-          gradientFrom="blue.400"
-          gradientTo="purple.500"
+          gradientFrom="whiteAlpha.700"
+          gradientTo="whiteAlpha.800"
           bgClip="text"
           letterSpacing="tight"
+          ml="-4"
         >
           roadmap.cash
         </Text>
