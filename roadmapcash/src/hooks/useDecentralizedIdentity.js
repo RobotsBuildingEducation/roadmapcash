@@ -264,7 +264,6 @@ export function useDecentralizedIdentity() {
     saveRoadmap,
     getSavedRoadmap,
     decodeNsec,
-    decodeNpub,
   };
 }
 
