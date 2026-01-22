@@ -6,10 +6,7 @@ import { useColorModeValue } from "@/components/ui/color-mode";
 export function AnimatedLogo({ showWordmark = true, size = 60 }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
-  const wordmarkGradient = useColorModeValue(
-    "linear(to-r, gray.800, gray.600)",
-    "linear(to-r, whiteAlpha.700, whiteAlpha.800)",
-  );
+  const wordmarkColor = useColorModeValue("gray.900", "white");
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -165,8 +162,7 @@ export function AnimatedLogo({ showWordmark = true, size = 60 }) {
         <Text
           fontSize="xl"
           fontWeight="bold"
-          bgGradient={wordmarkGradient}
-          bgClip="text"
+          color={wordmarkColor}
           letterSpacing="tight"
           ml="-4"
         >

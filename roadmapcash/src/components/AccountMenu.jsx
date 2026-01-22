@@ -41,6 +41,10 @@ export function AccountMenu({
   const modalBg = useColorModeValue("white", "gray.800");
   const inputBg = useColorModeValue("gray.100", "gray.700");
   const inputBorder = useColorModeValue("gray.300", "gray.600");
+  const switchTrackBg = useColorModeValue("gray.300", "gray.600");
+  const switchTrackBorder = useColorModeValue("gray.400", "gray.500");
+  const switchCheckedBg = useColorModeValue("blue.500", "blue.400");
+  const switchThumbBg = useColorModeValue("white", "gray.100");
 
   const handleSwitchAccount = async () => {
     if (!nsecInput.trim()) {
@@ -203,11 +207,18 @@ export function AccountMenu({
                       onThemeChange?.(event.checked ? "dark" : "light")
                     }
                     aria-label={t("accountMenu.themeToggleLabel")}
-                    colorScheme="blue"
                   >
                     <Switch.HiddenInput />
-                    <Switch.Control>
-                      <Switch.Thumb />
+                    <Switch.Control
+                      bg={switchTrackBg}
+                      borderColor={switchTrackBorder}
+                      borderWidth="1px"
+                      _checked={{
+                        bg: switchCheckedBg,
+                        borderColor: switchCheckedBg,
+                      }}
+                    >
+                      <Switch.Thumb bg={switchThumbBg} />
                     </Switch.Control>
                   </Switch.Root>
                   <Text fontSize="xs" color="gray.400">
