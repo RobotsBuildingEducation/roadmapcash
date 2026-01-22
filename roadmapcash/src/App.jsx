@@ -44,6 +44,7 @@ function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [loaderStep, setLoaderStep] = useState(0);
   const skipLanguageSyncRef = useRef(false);
+  const hasHydratedLanguageRef = useRef(false);
   // Initialize from saved data (called once by callback ref)
   const initializeFromSaved = useCallback(
     (node) => {
@@ -91,10 +92,12 @@ function App() {
 
   useEffect(() => {
     const storedLanguage = userData?.settings?.language;
-    if (storedLanguage && storedLanguage !== language) {
+    if (!storedLanguage || hasHydratedLanguageRef.current) return;
+    if (storedLanguage !== language) {
       skipLanguageSyncRef.current = true;
       setLanguage(storedLanguage);
     }
+    hasHydratedLanguageRef.current = true;
   }, [language, setLanguage, userData]);
 
   useEffect(() => {
