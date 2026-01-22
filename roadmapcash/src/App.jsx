@@ -1,5 +1,12 @@
-import { useState, useCallback } from "react";
-import { Box, HStack, VStack, Text, Spinner } from "@chakra-ui/react";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import {
+  Box,
+  HStack,
+  VStack,
+  Text,
+  Spinner,
+  keyframes,
+} from "@chakra-ui/react";
 import { useDecentralizedIdentity } from "@/hooks/useDecentralizedIdentity";
 import { useFinancialParser } from "@/hooks/useFinancialParser";
 import { AnimatedLogo } from "@/components/AnimatedLogo";
@@ -36,6 +43,7 @@ function App() {
   // Initialize input state - use saved input if available
   const [userInput, setUserInput] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [loaderStep, setLoaderStep] = useState(0);
   // Initialize from saved data (called once by callback ref)
   const initializeFromSaved = useCallback(
     (node) => {
@@ -78,6 +86,37 @@ function App() {
       await saveRoadmap(userInput, result, updateInput);
     }
   };
+
+  const loaderMessages = useMemo(
+    () => [
+      "Reviewing income, expenses, and savings details.",
+      "Estimating savings goals and current progress.",
+      "Calculating a sustainable monthly budget split.",
+      "Drafting savings strategies tailored to your situation.",
+      "Listing near-term action items to move faster.",
+      "Writing your weekly check-in and motivation note.",
+      "Projecting potential savings if you follow the plan.",
+    ],
+    [],
+  );
+
+  useEffect(() => {
+    if (!isGenerating || financialData) {
+      setLoaderStep(0);
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setLoaderStep((prev) => (prev + 1) % loaderMessages.length);
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [financialData, isGenerating, loaderMessages.length]);
+
+  const loaderFade = keyframes`
+    0%, 100% { opacity: 0; }
+    15%, 85% { opacity: 1; }
+  `;
 
   return (
     <Box minH="100vh" bg="gray.950" color="white">
@@ -161,11 +200,15 @@ function App() {
                   <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="semibold">
                     Building your financial plan...
                   </Text>
-                  <VStack spacing="1" color="gray.400" fontSize="sm">
-                    <Text>Analyzing your income, expenses, and goals.</Text>
-                    <Text>Calculating a sustainable monthly budget.</Text>
-                    <Text>Drafting strategies and action steps tailored to you.</Text>
-                  </VStack>
+                  <Text
+                    key={loaderStep}
+                    color="gray.400"
+                    fontSize="sm"
+                    textAlign="center"
+                    animation={`${loaderFade} 2s ease-in-out`}
+                  >
+                    {loaderMessages[loaderStep]}
+                  </Text>
                 </VStack>
               </Box>
             )}
