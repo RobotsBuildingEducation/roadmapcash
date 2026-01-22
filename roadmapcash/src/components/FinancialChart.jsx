@@ -73,7 +73,11 @@ const getDifficultyConfig = (t) => ({
 });
 
 const getCategoryConfig = (t) => ({
-  cut: { icon: "✂️", color: "red.400", label: t("financialChart.category.cut") },
+  cut: {
+    icon: "✂️",
+    color: "red.400",
+    label: t("financialChart.category.cut"),
+  },
   optimize: {
     icon: "⚡",
     color: "yellow.400",
@@ -118,11 +122,11 @@ function PlanHeader({ plan, potentialSavings, t }) {
 
   return (
     <Box
-      bg="linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%)"
+      bg="linear-gradient(135deg, #171c22 0%, #0d0d0f 100%)"
       borderRadius="xl"
       p={{ base: "4", md: "6" }}
       borderWidth="1px"
-      borderColor="blue.800"
+      borderColor="gray.700"
       position="relative"
       overflow="hidden"
     >
@@ -1222,9 +1226,9 @@ function MonthlyChart({
           color="gray.400"
           textTransform="uppercase"
           letterSpacing="wide"
-      >
-        {t("financialChart.growthProjection")}
-      </Text>
+        >
+          {t("financialChart.growthProjection")}
+        </Text>
         <Badge colorScheme={monthlySavings > 0 ? "green" : "red"} fontSize="xs">
           {monthlySavings >= 0 ? "+" : ""}
           {t("financialChart.perMonthSuffix", {
@@ -1477,18 +1481,18 @@ function BirdsEyeView({
           color="gray.400"
           textTransform="uppercase"
           letterSpacing="wide"
-      >
-        {t("financialChart.roadmapTitle")}
-      </Text>
-      {monthsToGoal && monthsToGoal > 0 && (
-        <Badge colorScheme="purple" fontSize="xs">
-          {monthsToGoal < 12
-            ? t("financialChart.monthsToGo", { count: monthsToGoal })
-            : t("financialChart.yearsToGo", {
-                count: (monthsToGoal / 12).toFixed(1),
-              })}
-        </Badge>
-      )}
+        >
+          {t("financialChart.roadmapTitle")}
+        </Text>
+        {monthsToGoal && monthsToGoal > 0 && (
+          <Badge colorScheme="purple" fontSize="xs">
+            {monthsToGoal < 12
+              ? t("financialChart.monthsToGo", { count: monthsToGoal })
+              : t("financialChart.yearsToGo", {
+                  count: (monthsToGoal / 12).toFixed(1),
+                })}
+          </Badge>
+        )}
       </HStack>
 
       <Box mb="5">
@@ -1980,10 +1984,9 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
       return "";
     }
 
-    return [
-      ...updateSummary,
-      t("financialChart.prompts.updateSuffix"),
-    ].join("\n");
+    return [...updateSummary, t("financialChart.prompts.updateSuffix")].join(
+      "\n",
+    );
   };
 
   const handleApplyUpdates = () => {
@@ -2109,7 +2112,11 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   }
                   aria-label={t("financialChart.updateSection.applyUpdates")}
                 >
-                  {isUpdating ? <Spinner size="sm" /> : t("financialChart.updateSection.applyUpdates")}
+                  {isUpdating ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    t("financialChart.updateSection.applyUpdates")
+                  )}
                 </Button>
               </HStack>
             </Box>
@@ -2432,11 +2439,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                       interaction.item.text}
                   </Text>
                 </Box>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  onClick={closeInteraction}
-                >
+                <Button size="xs" variant="ghost" onClick={closeInteraction}>
                   {t("financialChart.interaction.close")}
                 </Button>
               </HStack>
