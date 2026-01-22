@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { Box, HStack, VStack, Text, Spinner } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { useDecentralizedIdentity } from "@/hooks/useDecentralizedIdentity";
@@ -43,6 +43,7 @@ function App() {
   const [userInput, setUserInput] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
   const [loaderStep, setLoaderStep] = useState(0);
+  const skipLanguageSyncRef = useRef(false);
   // Initialize from saved data (called once by callback ref)
   const initializeFromSaved = useCallback(
     (node) => {
@@ -91,12 +92,17 @@ function App() {
   useEffect(() => {
     const storedLanguage = userData?.settings?.language;
     if (storedLanguage && storedLanguage !== language) {
+      skipLanguageSyncRef.current = true;
       setLanguage(storedLanguage);
     }
   }, [language, setLanguage, userData]);
 
   useEffect(() => {
     if (!identity?.npub || !userData) return;
+    if (skipLanguageSyncRef.current) {
+      skipLanguageSyncRef.current = false;
+      return;
+    }
     const storedLanguage = userData.settings?.language;
     if (language && storedLanguage !== language) {
       updateUserData({
