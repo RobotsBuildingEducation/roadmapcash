@@ -7,6 +7,7 @@ import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { AccountMenu } from "@/components/AccountMenu";
 import { FinancialInput } from "@/components/FinancialInput";
 import { FinancialChart } from "@/components/FinancialChart";
+import { Toaster } from "@/components/ui/toaster";
 import "./App.css";
 
 function App() {
@@ -114,6 +115,7 @@ function App() {
 
   return (
     <Box minH="100vh" bg="gray.950" color="white">
+      <Toaster />
       <HStack
         as="header"
         justify="space-between"
