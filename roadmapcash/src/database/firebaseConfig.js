@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { getAnalytics, isSupported, logEvent } from "firebase/analytics";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { getGenerativeModel, getVertexAI, Schema } from "@firebase/vertexai";
 
@@ -22,4 +23,32 @@ const simplemodel = getGenerativeModel(vertexAI, {
   model: "gemini-3-flash-preview",
 });
 
-export { database, doc, getDoc, setDoc, simplemodel };
+let analyticsPromise;
+
+const getAnalyticsInstance = () => {
+  if (analyticsPromise) {
+    return analyticsPromise;
+  }
+
+  if (typeof window === "undefined") {
+    analyticsPromise = Promise.resolve(null);
+    return analyticsPromise;
+  }
+
+  analyticsPromise = isSupported().then((supported) =>
+    supported ? getAnalytics(app) : null,
+  );
+
+  return analyticsPromise;
+};
+
+const logAnalyticsEvent = async (name, params) => {
+  const analytics = await getAnalyticsInstance();
+  if (!analytics) {
+    return;
+  }
+
+  logEvent(analytics, name, params);
+};
+
+export { database, doc, getDoc, setDoc, simplemodel, logAnalyticsEvent };
