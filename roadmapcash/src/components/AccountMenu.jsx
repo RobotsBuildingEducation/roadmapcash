@@ -13,6 +13,7 @@ import { IoIosMore } from "react-icons/io";
 import { MdOutlineFileUpload } from "react-icons/md";
 import { CiSquarePlus } from "react-icons/ci";
 import { LuBadgeCheck, LuKeyRound } from "react-icons/lu";
+import { toaster } from "@/components/ui/toaster";
 
 export function AccountMenu({
   identity,
@@ -51,17 +52,28 @@ export function AccountMenu({
     }
   };
 
-  const truncateKey = (key, chars = 8) => {
-    if (!key) return "";
-    return `${key.slice(0, chars)}...${key.slice(-chars)}`;
-  };
-
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
+  };
+
+  const copyWithToast = async (text, title) => {
+    if (!text) {
+      toaster.create({
+        title: "Nothing to copy",
+        type: "warning",
+      });
+      return;
+    }
+
+    await copyToClipboard(text);
+    toaster.create({
+      title,
+      type: "success",
+    });
   };
 
   const installSteps = useMemo(
@@ -98,7 +110,9 @@ export function AccountMenu({
             padding={4}
             leftIcon={<LuKeyRound size={14} />}
             colorScheme="orange"
-            onClick={() => copyToClipboard(currentSecret)}
+            onClick={() =>
+              copyWithToast(currentSecret, "Secret key copied")
+            }
             isDisabled={!currentSecret}
           >
             Copy Secret Key
@@ -161,61 +175,29 @@ export function AccountMenu({
                 <Text color="gray.400">Loading...</Text>
               ) : identity ? (
                 <VStack align="stretch" gap="3">
-                  <Box
-                    p="3"
-                    bg="gray.800"
-                    borderRadius="md"
-                    borderWidth="1px"
-                    borderColor="gray.700"
+                  <Button
+                    onClick={() =>
+                      copyWithToast(identity.npub, "User ID copied")
+                    }
+                    colorScheme="blue"
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<HiUserCircle />}
                   >
-                    <HStack gap="2" mb="2">
-                      <HiUserCircle size={20} />
-                      <Text fontSize="sm" fontWeight="medium">
-                        Public Key (npub)
-                      </Text>
-                    </HStack>
-                    <Text
-                      fontSize="xs"
-                      fontFamily="mono"
-                      color="blue.300"
-                      cursor="pointer"
-                      onClick={() => copyToClipboard(identity.npub)}
-                      _hover={{ color: "blue.200" }}
-                    >
-                      {truncateKey(identity.npub, 12)}
-                    </Text>
-                    <Text fontSize="xs" color="gray.500" mt="1">
-                      Click to copy
-                    </Text>
-                  </Box>
+                    Copy User ID
+                  </Button>
 
-                  <Box
-                    p="3"
-                    bg="gray.800"
-                    borderRadius="md"
-                    borderWidth="1px"
-                    borderColor="gray.700"
+                  <Button
+                    onClick={() =>
+                      copyWithToast(identity.nsec, "Secret key copied")
+                    }
+                    colorScheme="purple"
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<HiKey />}
                   >
-                    <HStack gap="2" mb="2">
-                      <HiKey size={20} />
-                      <Text fontSize="sm" fontWeight="medium">
-                        Secret Key (nsec)
-                      </Text>
-                    </HStack>
-                    <Text
-                      fontSize="xs"
-                      fontFamily="mono"
-                      color="purple.300"
-                      cursor="pointer"
-                      onClick={() => copyToClipboard(identity.nsec)}
-                      _hover={{ color: "purple.200" }}
-                    >
-                      {truncateKey(identity.nsec, 12)}
-                    </Text>
-                    <Text fontSize="xs" color="gray.500" mt="1">
-                      Click to copy - Keep this secret!
-                    </Text>
-                  </Box>
+                    Copy Secret Key
+                  </Button>
 
                   <Button
                     onClick={() => setShowSwitchModal(true)}
