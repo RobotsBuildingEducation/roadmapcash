@@ -130,6 +130,11 @@ const useChartTheme = () => ({
   highlightText: useColorModeValue("gray.700", "gray.200"),
   hoverBorder: useColorModeValue("gray.300", "gray.600"),
   iconBg: useColorModeValue("gray.100", "gray.700"),
+  successBg: useColorModeValue("green.50", "green.900"),
+  successBorder: useColorModeValue("green.200", "green.700"),
+  successIconBg: useColorModeValue("green.100", "green.600"),
+  milestoneIconBg: useColorModeValue("gray.200", "gray.600"),
+  finalIconBg: useColorModeValue("purple.100", "purple.600"),
   headerBg: useColorModeValue(
     "linear-gradient(135deg, #ffffff 0%, #f3f1ea 100%)",
     "linear-gradient(135deg, #171c22 0%, #0d0d0f 100%)",
@@ -294,6 +299,29 @@ function PlanHeader({ plan, potentialSavings, t }) {
 function ExpenseAnalysis({ expenses, onSelect, t }) {
   if (!expenses || expenses.length === 0) return null;
   const theme = useChartTheme();
+  const priorityConfig = useColorModeValue(
+    {
+      essential: {
+        bg: "blue.50",
+        border: "blue.200",
+        text: "blue.800",
+        badge: "blue",
+      },
+      important: {
+        bg: "purple.50",
+        border: "purple.200",
+        text: "purple.800",
+        badge: "purple",
+      },
+      discretionary: {
+        bg: "orange.50",
+        border: "orange.200",
+        text: "orange.800",
+        badge: "orange",
+      },
+    },
+    PRIORITY_COLORS,
+  );
 
   const groupedByPriority = {
     essential: expenses.filter((e) => e.priority === "essential"),
@@ -323,7 +351,7 @@ function ExpenseAnalysis({ expenses, onSelect, t }) {
       <VStack align="stretch" spacing={{ base: "3", md: "4" }}>
         {Object.entries(groupedByPriority).map(([priority, items]) => {
           if (items.length === 0) return null;
-          const config = PRIORITY_COLORS[priority];
+          const config = priorityConfig[priority];
           const total = items.reduce((sum, e) => sum + e.amount, 0);
 
           return (
@@ -1587,14 +1615,14 @@ function BirdsEyeView({
               <HStack
                 key={index}
                 p={{ base: "2", md: "3" }}
-                bg={isReached ? "green.900" : theme.insetBg}
+                bg={isReached ? theme.successBg : theme.insetBg}
                 borderRadius="lg"
                 borderWidth="1px"
                 borderColor={
                   isReached
-                    ? "green.700"
+                    ? theme.successBorder
                     : milestone.isFinal
-                      ? "purple.700"
+                      ? "purple.400"
                       : theme.insetBorder
                 }
                 opacity={isReached ? 0.7 : 1}
@@ -1605,10 +1633,10 @@ function BirdsEyeView({
                   borderRadius="lg"
                   bg={
                     isReached
-                      ? "green.600"
+                      ? theme.successIconBg
                       : milestone.isFinal
-                        ? "purple.600"
-                        : "gray.600"
+                        ? theme.finalIconBg
+                        : theme.milestoneIconBg
                   }
                   display="flex"
                   alignItems="center"
