@@ -118,8 +118,7 @@ export function AccountMenu({
         id: "step5",
         icon: <LuKeyRound size={24} />,
         text: t("accountMenu.installSecretTitle"),
-        subText:
-          t("accountMenu.installSecretBody"),
+        subText: t("accountMenu.installSecretBody"),
         action: (
           <Button
             size="xs"
@@ -127,7 +126,10 @@ export function AccountMenu({
             leftIcon={<LuKeyRound size={14} />}
             colorScheme="orange"
             onClick={() =>
-              copyWithToast(currentSecret, t("accountMenu.toasts.secretKeyCopied"))
+              copyWithToast(
+                currentSecret,
+                t("accountMenu.toasts.secretKeyCopied"),
+              )
             }
             isDisabled={!currentSecret}
           >
@@ -136,7 +138,7 @@ export function AccountMenu({
         ),
       },
     ],
-    [currentSecret, t]
+    [currentSecret, t],
   );
 
   return (
@@ -198,7 +200,10 @@ export function AccountMenu({
                   {t("accountMenu.themeLabel")}
                 </Text>
                 <HStack spacing="2">
-                  <Text fontSize="xs" color="gray.400">
+                  <Text
+                    fontSize="xs"
+                    color={theme === "dark" ? "gray.400" : "gray.600"}
+                  >
                     {t("accountMenu.themeLight")}
                   </Text>
                   <Switch.Root
@@ -212,7 +217,6 @@ export function AccountMenu({
                     <Switch.Control
                       bg={switchTrackBg}
                       borderColor={switchTrackBorder}
-                      borderWidth="1px"
                       _checked={{
                         bg: switchCheckedBg,
                         borderColor: switchCheckedBg,
@@ -221,7 +225,10 @@ export function AccountMenu({
                       <Switch.Thumb bg={switchThumbBg} />
                     </Switch.Control>
                   </Switch.Root>
-                  <Text fontSize="xs" color="gray.400">
+                  <Text
+                    fontSize="xs"
+                    color={theme === "dark" ? "gray.400" : "gray.600"}
+                  >
                     {t("accountMenu.themeDark")}
                   </Text>
                 </HStack>
@@ -233,7 +240,10 @@ export function AccountMenu({
                 <VStack align="stretch" gap="3">
                   <Button
                     onClick={() =>
-                      copyWithToast(identity.npub, t("accountMenu.toasts.userIdCopied"))
+                      copyWithToast(
+                        identity.npub,
+                        t("accountMenu.toasts.userIdCopied"),
+                      )
                     }
                     colorScheme="blue"
                     variant="outline"
@@ -245,7 +255,10 @@ export function AccountMenu({
 
                   <Button
                     onClick={() =>
-                      copyWithToast(identity.nsec, t("accountMenu.toasts.secretKeyCopied"))
+                      copyWithToast(
+                        identity.nsec,
+                        t("accountMenu.toasts.secretKeyCopied"),
+                      )
                     }
                     colorScheme="purple"
                     variant="outline"
@@ -455,9 +468,7 @@ export function AccountMenu({
                             {step.subText}
                           </Text>
                         )}
-                        {step.action && (
-                          <Box mt="1">{step.action}</Box>
-                        )}
+                        {step.action && <Box mt="1">{step.action}</Box>}
                       </VStack>
                     </HStack>
                   </Box>
