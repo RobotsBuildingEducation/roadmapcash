@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { getGenerativeModel, Schema } from "@firebase/vertexai";
 import { ai } from "@/database/firebaseConfig";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const financialDataSchema = Schema.object({
   properties: {
@@ -146,44 +147,6 @@ const fastUpdateModel = getGenerativeModel(ai, {
   },
 });
 
-const SYSTEM_PROMPT = `You are an opinionated financial coach who creates personalized, actionable financial plans. You're direct, specific, and encouraging.
-
-CRITICAL RULE - NO ASSUMPTIONS:
-- ONLY use data explicitly provided by the user
-- DO NOT invent, assume, or add expense categories that were not mentioned
-- DO NOT make up amounts or estimate expenses
-- If the user only provides income and total expenses, work with just those numbers
-- If specific expense categories are not listed, do NOT create them
-- Only include expenses that the user explicitly states with specific amounts
-- If information is missing, work with what you have - do NOT fill in gaps with assumptions
-
-Guidelines for parsing:
-- Extract monthly income ONLY if explicitly mentioned
-- Include ONLY expense categories and amounts that the user explicitly provides
-- Look for savings goals ONLY if explicitly mentioned
-- If current savings are mentioned, include them; otherwise use 0
-- If amounts are given weekly, multiply by 4.33 for monthly
-- If amounts are given yearly, divide by 12 for monthly
-- Round all amounts to whole numbers
-
-Guidelines for recommendations (BE OPINIONATED but ONLY about provided data):
-- For each expense THE USER PROVIDED, give a SPECIFIC recommendation
-- Classify provided expenses as essential, important, or discretionary
-- If a provided expense seems high for its category, say so and suggest a specific target
-- If they're overspending on discretionary items they listed, be direct about cutting back
-- Suggest specific alternatives for expenses they actually mentioned
-
-For the plan:
-- Create a motivating, personalized title based on their stated goal
-- Use the 50/30/20 rule as a baseline but adjust based on their situation
-- Strategies should be SPECIFIC to the expenses they provided, not generic advice
-- Action items should be things they can do THIS WEEK based on their actual data
-- Be encouraging but realistic about the timeline
-- Calculate potential savings ONLY by looking at expenses the user actually provided
-- If they didn't provide detailed expenses, focus strategies on tracking and understanding their spending
-
-Additional context about the user (if provided) should heavily influence your recommendations.`;
-
 const MONTHLY_MULTIPLIERS = {
   week: 4.33,
   weekly: 4.33,
@@ -296,6 +259,7 @@ const extractLooseData = (text) => {
 };
 
 export function useFinancialParser() {
+  const { t } = useI18n();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [financialData, setFinancialData] = useState(null);
@@ -303,6 +267,7 @@ export function useFinancialParser() {
   const [updateError, setUpdateError] = useState(null);
 
   const finalizeFinancialData = useCallback((parsed, fallback) => {
+    const reviewFallback = t("ai.reviewExpenseFallback");
     const result = { ...parsed };
 
     if (!result.expenses) {
@@ -312,7 +277,7 @@ export function useFinancialParser() {
     if (result.expenses.length === 0 && fallback.expenses?.length > 0) {
       result.expenses = fallback.expenses.map((expense) => ({
         ...expense,
-        recommendation: expense.recommendation || "Review this expense",
+        recommendation: expense.recommendation || reviewFallback,
         priority: expense.priority || "important",
       }));
     }
@@ -327,7 +292,7 @@ export function useFinancialParser() {
       )
       .map((expense) => ({
         ...expense,
-        recommendation: expense.recommendation || "Review this expense",
+        recommendation: expense.recommendation || reviewFallback,
         priority: expense.priority || "important",
       }));
 
@@ -363,18 +328,19 @@ export function useFinancialParser() {
       };
 
     result.plan = {
-      title: plan.title || basePlan.title || "Your Financial Roadmap",
+      title:
+        plan.title || basePlan.title || t("ai.planTitleFallback"),
       overview:
         plan.overview ||
         basePlan.overview ||
-        "Let's analyze your finances and create a plan to reach your goals.",
+        t("ai.overviewFallback"),
       monthlyBudget,
       strategies: plan.strategies || basePlan.strategies || [],
       actionItems: plan.actionItems || basePlan.actionItems || [],
       weeklyCheckIn:
         plan.weeklyCheckIn ||
         basePlan.weeklyCheckIn ||
-        "Review your spending and track progress toward your goal.",
+        t("ai.weeklyCheckInFallback"),
       potentialSavings:
         plan.potentialSavings ||
         basePlan.potentialSavings ||
@@ -382,11 +348,11 @@ export function useFinancialParser() {
       motivationalNote:
         plan.motivationalNote ||
         basePlan.motivationalNote ||
-        "You've taken the first step by creating a plan. Stay consistent!",
+        t("ai.motivationalNoteFallback"),
     };
 
     return result;
-  }, []);
+  }, [t]);
 
   const parseFinancialInput = useCallback(
     async (userInput, additionalContext = "") => {
@@ -394,10 +360,10 @@ export function useFinancialParser() {
       setError(null);
 
       try {
-        let prompt = `${SYSTEM_PROMPT}\n\nUser's financial information:\n${userInput}`;
+        let prompt = `${t("ai.systemPrompt")}\n\n${t("ai.userInfoLabel")}\n${userInput}`;
 
         if (additionalContext.trim()) {
-          prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+          prompt += `\n\n${t("ai.additionalContextLabel")}\n${additionalContext}`;
         }
 
         const result = await financialModel.generateContent(prompt);
@@ -412,13 +378,13 @@ export function useFinancialParser() {
         return finalized;
       } catch (err) {
         console.error("Error parsing financial data:", err);
-        setError(err.message || "Failed to analyze financial data");
+        setError(err.message || t("ai.analyzeError"));
         return null;
       } finally {
         setIsLoading(false);
       }
     },
-    [finalizeFinancialData],
+    [finalizeFinancialData, t],
   );
 
   const clearData = useCallback(() => {
@@ -434,18 +400,18 @@ export function useFinancialParser() {
       setUpdateError(null);
 
       try {
-        let prompt = `${SYSTEM_PROMPT}
+        let prompt = `${t("ai.systemPrompt")}
 
-You are updating an existing financial plan. Keep anything not mentioned the same.
+${t("ai.updateIntro")}
 
-Current financial data (JSON):
+${t("ai.currentDataLabel")}
 ${JSON.stringify(currentData, null, 2)}
 
-Requested updates:
+${t("ai.requestedUpdatesLabel")}
 ${updateRequest}`;
 
         if (additionalContext.trim()) {
-          prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+          prompt += `\n\n${t("ai.additionalContextLabel")}\n${additionalContext}`;
         }
 
         const result = await financialModel.generateContent(prompt);
@@ -465,13 +431,13 @@ ${updateRequest}`;
         return finalized;
       } catch (err) {
         console.error("Error updating financial data:", err);
-        setUpdateError(err.message || "Failed to update your plan");
+        setUpdateError(err.message || t("ai.updateError"));
         return null;
       } finally {
         setIsUpdating(false);
       }
     },
-    [finalizeFinancialData],
+    [finalizeFinancialData, t],
   );
 
   const updateFinancialItem = useCallback(
@@ -482,18 +448,18 @@ ${updateRequest}`;
       setUpdateError(null);
 
       try {
-        let prompt = `${SYSTEM_PROMPT}
+        let prompt = `${t("ai.systemPrompt")}
 
-You are updating an existing financial plan. Keep anything not mentioned the same.
+${t("ai.updateIntro")}
 
-Current financial data (JSON):
+${t("ai.currentDataLabel")}
 ${JSON.stringify(currentData, null, 2)}
 
-Requested updates:
+${t("ai.requestedUpdatesLabel")}
 ${updateRequest}`;
 
         if (additionalContext.trim()) {
-          prompt += `\n\nAdditional context about the user's situation, preferences, or constraints:\n${additionalContext}`;
+          prompt += `\n\n${t("ai.additionalContextLabel")}\n${additionalContext}`;
         }
 
         const result = await fastUpdateModel.generateContent(prompt);
@@ -513,13 +479,13 @@ ${updateRequest}`;
         return finalized;
       } catch (err) {
         console.error("Error updating financial data:", err);
-        setUpdateError(err.message || "Failed to update your plan");
+        setUpdateError(err.message || t("ai.updateError"));
         return null;
       } finally {
         setIsUpdating(false);
       }
     },
-    [finalizeFinancialData],
+    [finalizeFinancialData, t],
   );
 
   return {

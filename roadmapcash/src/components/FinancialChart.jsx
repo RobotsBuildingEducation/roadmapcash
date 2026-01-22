@@ -14,6 +14,7 @@ import {
   Textarea,
   Spinner,
 } from "@chakra-ui/react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 // Color palette for consistent theming
 const COLORS = {
@@ -65,19 +66,35 @@ const PRIORITY_COLORS = {
   },
 };
 
-const DIFFICULTY_CONFIG = {
-  easy: { color: "green", label: "Easy win" },
-  medium: { color: "yellow", label: "Some effort" },
-  hard: { color: "red", label: "Challenging" },
-};
+const getDifficultyConfig = (t) => ({
+  easy: { color: "green", label: t("financialChart.difficulty.easy") },
+  medium: { color: "yellow", label: t("financialChart.difficulty.medium") },
+  hard: { color: "red", label: t("financialChart.difficulty.hard") },
+});
 
-const CATEGORY_CONFIG = {
-  cut: { icon: "✂️", color: "red.400", label: "Cut" },
-  optimize: { icon: "⚡", color: "yellow.400", label: "Optimize" },
-  earn: { icon: "💰", color: "green.400", label: "Earn More" },
-  automate: { icon: "🤖", color: "blue.400", label: "Automate" },
-  track: { icon: "📊", color: "purple.400", label: "Track" },
-};
+const getCategoryConfig = (t) => ({
+  cut: { icon: "✂️", color: "red.400", label: t("financialChart.category.cut") },
+  optimize: {
+    icon: "⚡",
+    color: "yellow.400",
+    label: t("financialChart.category.optimize"),
+  },
+  earn: {
+    icon: "💰",
+    color: "green.400",
+    label: t("financialChart.category.earn"),
+  },
+  automate: {
+    icon: "🤖",
+    color: "blue.400",
+    label: t("financialChart.category.automate"),
+  },
+  track: {
+    icon: "📊",
+    color: "purple.400",
+    label: t("financialChart.category.track"),
+  },
+});
 
 const createItemId = (prefix, index) => `${prefix}-${index}`;
 
@@ -96,7 +113,7 @@ const formatCurrency = (amount) => {
 };
 
 // Plan Header with title and overview
-function PlanHeader({ plan, potentialSavings }) {
+function PlanHeader({ plan, potentialSavings, t }) {
   if (!plan) return null;
 
   return (
@@ -130,7 +147,7 @@ function PlanHeader({ plan, potentialSavings }) {
               fontWeight="bold"
               color="white"
             >
-              {plan.title || "Your Financial Plan"}
+              {plan.title || t("financialChart.planFallbackTitle")}
             </Text>
             {potentialSavings > 0 && (
               <Badge
@@ -140,7 +157,9 @@ function PlanHeader({ plan, potentialSavings }) {
                 py="1"
                 borderRadius="full"
               >
-                +{formatCurrency(potentialSavings)}/mo potential
+                {t("financialChart.potentialSuffix", {
+                  amount: formatCurrency(potentialSavings),
+                })}
               </Badge>
             )}
           </HStack>
@@ -174,7 +193,7 @@ function PlanHeader({ plan, potentialSavings }) {
                 color="blue.300"
                 fontWeight="medium"
               >
-                NEEDS (50%)
+                {t("financialChart.needsLabel")}
               </Text>
               <Text
                 fontSize={{ base: "md", md: "lg" }}
@@ -196,7 +215,7 @@ function PlanHeader({ plan, potentialSavings }) {
                 color="purple.300"
                 fontWeight="medium"
               >
-                WANTS (30%)
+                {t("financialChart.wantsLabel")}
               </Text>
               <Text
                 fontSize={{ base: "md", md: "lg" }}
@@ -218,7 +237,7 @@ function PlanHeader({ plan, potentialSavings }) {
                 color="green.300"
                 fontWeight="medium"
               >
-                SAVINGS (20%)
+                {t("financialChart.savingsLabel")}
               </Text>
               <Text
                 fontSize={{ base: "md", md: "lg" }}
@@ -236,7 +255,7 @@ function PlanHeader({ plan, potentialSavings }) {
 }
 
 // Expense Analysis with recommendations
-function ExpenseAnalysis({ expenses, onSelect }) {
+function ExpenseAnalysis({ expenses, onSelect, t }) {
   if (!expenses || expenses.length === 0) return null;
 
   const groupedByPriority = {
@@ -261,7 +280,7 @@ function ExpenseAnalysis({ expenses, onSelect }) {
         textTransform="uppercase"
         letterSpacing="wide"
       >
-        Expense Analysis & Recommendations
+        {t("financialChart.expenseAnalysisTitle")}
       </Text>
 
       <VStack align="stretch" spacing={{ base: "3", md: "4" }}>
@@ -278,10 +297,13 @@ function ExpenseAnalysis({ expenses, onSelect }) {
                   fontSize={{ base: "2xs", md: "xs" }}
                   textTransform="capitalize"
                 >
-                  {priority}
+                  {t(`financialChart.priorityLabels.${priority}`)}
                 </Badge>
                 <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
-                  {items.length} items - {formatCurrency(total)}/mo
+                  {t("financialChart.itemsCount", {
+                    count: items.length,
+                    amount: formatCurrency(total),
+                  })}
                 </Text>
               </HStack>
 
@@ -351,8 +373,10 @@ function ExpenseAnalysis({ expenses, onSelect }) {
 }
 
 // Savings Strategies
-function SavingsStrategies({ strategies, onSelect }) {
+function SavingsStrategies({ strategies, onSelect, t }) {
   if (!strategies || strategies.length === 0) return null;
+
+  const difficultyConfigMap = getDifficultyConfig(t);
 
   return (
     <Box
@@ -370,13 +394,14 @@ function SavingsStrategies({ strategies, onSelect }) {
         textTransform="uppercase"
         letterSpacing="wide"
       >
-        Your Savings Strategies
+        {t("financialChart.savingsStrategiesTitle")}
       </Text>
 
       <VStack align="stretch" spacing={{ base: "2", md: "3" }}>
         {strategies.map((strategy, index) => {
           const difficultyConfig =
-            DIFFICULTY_CONFIG[strategy.difficulty] || DIFFICULTY_CONFIG.medium;
+            difficultyConfigMap[strategy.difficulty] ||
+            difficultyConfigMap.medium;
           return (
             <Box
               key={strategy.id || index}
@@ -455,7 +480,7 @@ function SavingsStrategies({ strategies, onSelect }) {
                   variant="subtle"
                   fontSize={{ base: "2xs", md: "xs" }}
                 >
-                  Impact: {strategy.impact}
+                  {t("financialChart.impactLabel", { impact: strategy.impact })}
                 </Badge>
               </HStack>
             </Box>
@@ -472,9 +497,12 @@ function ActionItems({
   weeklyCheckIn,
   onSelect,
   onSelectWeekly,
+  t,
 }) {
   const hasItems = actionItems && actionItems.length > 0;
   if (!hasItems && !weeklyCheckIn) return null;
+
+  const categoryConfigMap = getCategoryConfig(t);
 
   return (
     <Box
@@ -492,14 +520,14 @@ function ActionItems({
         textTransform="uppercase"
         letterSpacing="wide"
       >
-        Action Items - Start This Week
+        {t("financialChart.actionItemsTitle")}
       </Text>
 
       {hasItems && (
         <VStack align="stretch" spacing="2">
           {actionItems.map((item, index) => {
             const categoryConfig =
-              CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.track;
+              categoryConfigMap[item.category] || categoryConfigMap.track;
             return (
               <HStack
                 key={item.id || index}
@@ -585,7 +613,7 @@ function ActionItems({
                 color="purple.300"
                 fontWeight="medium"
               >
-                WEEKLY CHECK-IN
+                {t("financialChart.weeklyCheckInLabel")}
               </Text>
               <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300">
                 {weeklyCheckIn.text}
@@ -599,7 +627,7 @@ function ActionItems({
 }
 
 // Motivational Note
-function MotivationalNote({ note }) {
+function MotivationalNote({ note, t }) {
   if (!note) return null;
 
   return (
@@ -618,7 +646,7 @@ function MotivationalNote({ note }) {
             fontWeight="semibold"
             color="green.300"
           >
-            Your Coach Says...
+            {t("financialChart.coachSays")}
           </Text>
           <Text
             fontSize={{ base: "sm", md: "md" }}
@@ -634,7 +662,7 @@ function MotivationalNote({ note }) {
 }
 
 // Overview Chart - Donut showing income allocation
-function OverviewChart({ income, expenses }) {
+function OverviewChart({ income, expenses, t }) {
   const total = income || 1;
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const savingsAmount = Math.max(0, income - totalExpenses);
@@ -661,7 +689,7 @@ function OverviewChart({ income, expenses }) {
       const percentage = (savingsAmount / total) * 100;
       const angle = (percentage / 100) * 360;
       result.push({
-        name: "Savings",
+        name: t("financialChart.savingsLabelShort"),
         amount: savingsAmount,
         percentage,
         startAngle: currentAngle,
@@ -720,7 +748,7 @@ function OverviewChart({ income, expenses }) {
         textTransform="uppercase"
         letterSpacing="wide"
       >
-        Income Allocation
+        {t("financialChart.incomeAllocation")}
       </Text>
 
       <VStack spacing={{ base: "4", md: "6" }} align="stretch">
@@ -772,7 +800,7 @@ function OverviewChart({ income, expenses }) {
                 fill="#9ca3af"
                 fontSize="11"
               >
-                saved
+                {t("financialChart.savedLabel")}
               </text>
             </svg>
           </Box>
@@ -808,7 +836,9 @@ function OverviewChart({ income, expenses }) {
             ))}
             {segments.length > 5 && (
               <Text fontSize="xs" color="gray.500">
-                +{segments.length - 5} more
+                {t("financialChart.moreSegments", {
+                  count: segments.length - 5,
+                })}
               </Text>
             )}
           </VStack>
@@ -819,7 +849,7 @@ function OverviewChart({ income, expenses }) {
 }
 
 // Expense Bar Chart - Horizontal bars comparing expenses
-function ExpenseBarChart({ expenses, income }) {
+function ExpenseBarChart({ expenses, income, t }) {
   if (!expenses || expenses.length === 0) return null;
 
   const maxAmount = Math.max(...expenses.map((e) => e.amount), 1);
@@ -872,25 +902,25 @@ function ExpenseBarChart({ expenses, income }) {
           textTransform="uppercase"
           letterSpacing="wide"
         >
-          Expense Breakdown
+          {t("financialChart.expenseBreakdown")}
         </Text>
         <HStack spacing="3" flexWrap="wrap">
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#3b82f6" />
             <Text fontSize="2xs" color="gray.500">
-              Essential
+              {t("financialChart.priorityLabels.essential")}
             </Text>
           </HStack>
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#8b5cf6" />
             <Text fontSize="2xs" color="gray.500">
-              Important
+              {t("financialChart.priorityLabels.important")}
             </Text>
           </HStack>
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#f97316" />
             <Text fontSize="2xs" color="gray.500">
-              Discretionary
+              {t("financialChart.priorityLabels.discretionary")}
             </Text>
           </HStack>
         </HStack>
@@ -994,7 +1024,7 @@ function ExpenseBarChart({ expenses, income }) {
                 fontWeight="600"
                 style={{ fontSize: "6px" }}
               >
-                Savings
+                {t("financialChart.savingsLabelShort")}
               </text>
 
               <rect
@@ -1064,7 +1094,7 @@ function ExpenseBarChart({ expenses, income }) {
       >
         <VStack align="start" spacing="0">
           <Text fontSize="2xs" color="gray.500">
-            Total Expenses
+            {t("financialChart.totalExpenses")}
           </Text>
           <Text fontSize="sm" fontWeight="bold" color="red.400">
             {formatCurrency(totalExpenses)}
@@ -1073,7 +1103,7 @@ function ExpenseBarChart({ expenses, income }) {
         {income > 0 && (
           <VStack align="end" spacing="0">
             <Text fontSize="2xs" color="gray.500">
-              % of Income
+              {t("financialChart.percentOfIncome")}
             </Text>
             <Text
               fontSize="sm"
@@ -1095,6 +1125,7 @@ function MonthlyChart({
   currentSavings,
   savingsGoal,
   potentialSavings,
+  t,
 }) {
   const projectionMonths = 24;
 
@@ -1111,7 +1142,13 @@ function MonthlyChart({
         balance,
         optimizedBalance,
         label:
-          month === 0 ? "Now" : month === 12 ? "1Y" : month === 24 ? "2Y" : "",
+          month === 0
+            ? t("financialChart.timeline.now")
+            : month === 12
+              ? t("financialChart.timeline.yearOne")
+              : month === 24
+                ? t("financialChart.timeline.yearTwo")
+                : "",
       });
       balance += Math.max(0, monthlySavings);
       optimizedBalance += Math.max(0, optimizedMonthlySavings);
@@ -1185,12 +1222,14 @@ function MonthlyChart({
           color="gray.400"
           textTransform="uppercase"
           letterSpacing="wide"
-        >
-          Growth Projection
-        </Text>
+      >
+        {t("financialChart.growthProjection")}
+      </Text>
         <Badge colorScheme={monthlySavings > 0 ? "green" : "red"} fontSize="xs">
           {monthlySavings >= 0 ? "+" : ""}
-          {formatCurrency(monthlySavings)}/mo
+          {t("financialChart.perMonthSuffix", {
+            amount: formatCurrency(monthlySavings),
+          })}
         </Badge>
       </HStack>
 
@@ -1244,7 +1283,7 @@ function MonthlyChart({
               fontWeight="bold"
               style={{ fontSize: "9px" }}
             >
-              GOAL
+              {t("financialChart.goalLabel")}
             </text>
           </>
         )}
@@ -1307,27 +1346,31 @@ function MonthlyChart({
       <HStack justify="space-between" mt="2" flexWrap="wrap" gap="2">
         <VStack align="start" spacing="0">
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
-            Current path
+            {t("financialChart.currentPath")}
           </Text>
           <Text
             fontSize={{ base: "xs", md: "sm" }}
             fontWeight="bold"
             color="cyan.400"
           >
-            {formatCurrency(endBalance)} in 2Y
+            {t("financialChart.yearsLabel", {
+              amount: formatCurrency(endBalance),
+            })}
           </Text>
         </VStack>
         {potentialSavings > 0 && (
           <VStack align="end" spacing="0">
             <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
-              With plan
+              {t("financialChart.withPlan")}
             </Text>
             <Text
               fontSize={{ base: "xs", md: "sm" }}
               fontWeight="bold"
               color="green.400"
             >
-              {formatCurrency(optimizedEndBalance)} in 2Y
+              {t("financialChart.yearsLabel", {
+                amount: formatCurrency(optimizedEndBalance),
+              })}
             </Text>
           </VStack>
         )}
@@ -1342,6 +1385,7 @@ function BirdsEyeView({
   savingsGoal,
   monthlySavings,
   expenses,
+  t,
 }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -1359,8 +1403,8 @@ function BirdsEyeView({
         (emergencyFund - (currentSavings || 0)) / monthlySavings,
       );
       milestonePoints.push({
-        label: "Emergency Fund",
-        sublabel: "3 months expenses",
+        label: t("financialChart.milestone.emergencyFund"),
+        sublabel: t("financialChart.milestone.emergencyFundSub"),
         amount: emergencyFund,
         months: monthsToEmergency,
         icon: "shield",
@@ -1373,7 +1417,7 @@ function BirdsEyeView({
         (quarter - (currentSavings || 0)) / monthlySavings,
       );
       milestonePoints.push({
-        label: "25% Progress",
+        label: t("financialChart.milestone.progress25"),
         amount: quarter,
         months: monthsTo25,
         icon: "flag",
@@ -1386,7 +1430,7 @@ function BirdsEyeView({
         (half - (currentSavings || 0)) / monthlySavings,
       );
       milestonePoints.push({
-        label: "Halfway",
+        label: t("financialChart.milestone.halfway"),
         amount: half,
         months: monthsTo50,
         icon: "star",
@@ -1394,7 +1438,7 @@ function BirdsEyeView({
     }
 
     milestonePoints.push({
-      label: "Goal Reached",
+      label: t("financialChart.milestone.goalReached"),
       amount: savingsGoal,
       months: monthsToGoal,
       icon: "trophy",
@@ -1433,22 +1477,24 @@ function BirdsEyeView({
           color="gray.400"
           textTransform="uppercase"
           letterSpacing="wide"
-        >
-          Your Roadmap
-        </Text>
-        {monthsToGoal && monthsToGoal > 0 && (
-          <Badge colorScheme="purple" fontSize="xs">
-            {monthsToGoal < 12
-              ? `${monthsToGoal} months to go`
-              : `${(monthsToGoal / 12).toFixed(1)} years to go`}
-          </Badge>
-        )}
+      >
+        {t("financialChart.roadmapTitle")}
+      </Text>
+      {monthsToGoal && monthsToGoal > 0 && (
+        <Badge colorScheme="purple" fontSize="xs">
+          {monthsToGoal < 12
+            ? t("financialChart.monthsToGo", { count: monthsToGoal })
+            : t("financialChart.yearsToGo", {
+                count: (monthsToGoal / 12).toFixed(1),
+              })}
+        </Badge>
+      )}
       </HStack>
 
       <Box mb="5">
         <HStack justify="space-between" mb="2">
           <Text fontSize="xs" color="gray.500">
-            Current Progress
+            {t("financialChart.currentProgress")}
           </Text>
           <Text fontSize="xs" color="green.400" fontWeight="bold">
             {progressPercent.toFixed(1)}%
@@ -1562,7 +1608,11 @@ function BirdsEyeView({
                           : "gray.400"
                     }
                   >
-                    {isReached ? "Done" : `${milestone.months} mo`}
+                    {isReached
+                      ? t("financialChart.doneLabel")
+                      : t("financialChart.monthsShort", {
+                          count: milestone.months,
+                        })}
                   </Text>
                   {!isReached && (
                     <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
@@ -1580,8 +1630,8 @@ function BirdsEyeView({
         <Box p="4" bg="gray.750" borderRadius="lg" textAlign="center">
           <Text fontSize="sm" color="gray.400">
             {!savingsGoal
-              ? "Set a savings goal to see your roadmap"
-              : "Increase your savings rate to start building your roadmap"}
+              ? t("financialChart.noGoalMessage")
+              : t("financialChart.increaseSavingsMessage")}
           </Text>
         </Box>
       )}
@@ -1596,6 +1646,7 @@ function MetricsSummary({
   monthlySavings,
   savingsGoal,
   currentSavings,
+  t,
 }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const savingsRate =
@@ -1616,7 +1667,7 @@ function MetricsSummary({
           textAlign="center"
         >
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
-            Monthly Income
+            {t("financialChart.metrics.monthlyIncome")}
           </Text>
           <Text
             fontSize={{ base: "lg", md: "xl" }}
@@ -1637,7 +1688,7 @@ function MetricsSummary({
           textAlign="center"
         >
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
-            Expenses
+            {t("financialChart.metrics.expenses")}
           </Text>
           <Text
             fontSize={{ base: "lg", md: "xl" }}
@@ -1658,7 +1709,7 @@ function MetricsSummary({
           textAlign="center"
         >
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
-            You Save
+            {t("financialChart.metrics.youSave")}
           </Text>
           <Text
             fontSize={{ base: "lg", md: "xl" }}
@@ -1671,7 +1722,7 @@ function MetricsSummary({
             fontSize={{ base: "2xs", md: "xs" }}
             color={monthlySavings >= 0 ? "cyan.600" : "red.600"}
           >
-            {savingsRate}% rate
+            {t("financialChart.metrics.rateLabel", { rate: savingsRate })}
           </Text>
         </Box>
       </GridItem>
@@ -1685,7 +1736,7 @@ function MetricsSummary({
           textAlign="center"
         >
           <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
-            Goal Progress
+            {t("financialChart.metrics.goalProgress")}
           </Text>
           <Text
             fontSize={{ base: "lg", md: "xl" }}
@@ -1696,7 +1747,9 @@ function MetricsSummary({
           </Text>
           {savingsGoal && (
             <Text fontSize={{ base: "2xs", md: "xs" }} color="purple.600">
-              of {formatCurrency(savingsGoal)}
+              {t("financialChart.metrics.ofGoal", {
+                amount: formatCurrency(savingsGoal),
+              })}
             </Text>
           )}
         </Box>
@@ -1707,6 +1760,7 @@ function MetricsSummary({
 
 // Main FinancialChart component
 export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState(0);
   const [draftIncome, setDraftIncome] = useState(0);
   const [draftSavingsGoal, setDraftSavingsGoal] = useState("");
@@ -1855,17 +1909,25 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
         : Number(draftCurrentSavings);
 
     if (!Number.isNaN(incomeValue) && incomeValue !== (data.income || 0)) {
-      lines.push(`Update monthly income to $${incomeValue}.`);
+      lines.push(
+        t("financialChart.prompts.updateIncome", { amount: incomeValue }),
+      );
     }
     if (goalValue !== data.savingsGoal) {
       lines.push(
         goalValue === null
-          ? "Remove the savings goal for now."
-          : `Update savings goal to $${goalValue}.`,
+          ? t("financialChart.prompts.removeSavingsGoal")
+          : t("financialChart.prompts.updateSavingsGoal", {
+              amount: goalValue,
+            }),
       );
     }
     if (currentValue !== data.currentSavings) {
-      lines.push(`Update current savings to $${currentValue || 0}.`);
+      lines.push(
+        t("financialChart.prompts.updateCurrentSavings", {
+          amount: currentValue || 0,
+        }),
+      );
     }
 
     const cleanedExpenses = draftExpenses
@@ -1877,18 +1939,26 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
       }));
 
     if (cleanedExpenses.length > 0) {
-      lines.push("Replace my expense list with:");
+      lines.push(t("financialChart.prompts.replaceExpensesList"));
       cleanedExpenses.forEach((expense) => {
         lines.push(
-          `- ${expense.name}: $${expense.amount} (${expense.priority})`,
+          t("financialChart.prompts.expenseLine", {
+            name: expense.name,
+            amount: expense.amount,
+            priority: expense.priority,
+          }),
         );
       });
     } else if (draftExpenses.length === 0 && expenses.length > 0) {
-      lines.push("Clear my expense list for now.");
+      lines.push(t("financialChart.prompts.clearExpensesList"));
     }
 
     if (updateNotes.trim()) {
-      lines.push(`Notes: ${updateNotes.trim()}`);
+      lines.push(
+        t("financialChart.prompts.notesPrefix", {
+          notes: updateNotes.trim(),
+        }),
+      );
     }
 
     return lines;
@@ -1902,6 +1972,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     data.savingsGoal,
     data.currentSavings,
     expenses.length,
+    t,
   ]);
 
   const buildUpdatePrompt = () => {
@@ -1911,7 +1982,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
 
     return [
       ...updateSummary,
-      "Recalculate recommendations, monthly budget, potential savings, and update the plan accordingly.",
+      t("financialChart.prompts.updateSuffix"),
     ].join("\n");
   };
 
@@ -1938,23 +2009,23 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     if (!item) return "";
     if (type === "strategy") {
       return action === "remix"
-        ? `Replace the savings strategy titled "${item.title}" with a brand new, different strategy. Keep the plan.strategies format with title, description, impact, and difficulty.`
-        : `Add a new savings strategy that builds on completing "${item.title}". Keep the plan.strategies format with title, description, impact, and difficulty.`;
+        ? t("financialChart.prompts.strategyRemix", { title: item.title })
+        : t("financialChart.prompts.strategyComplete", { title: item.title });
     }
     if (type === "action") {
       return action === "remix"
-        ? `Replace the action item "${item.action}" with a new, different action item. Keep the plan.actionItems format with action, timeframe, and category.`
-        : `Add a new action item that follows from completing "${item.action}". Keep the plan.actionItems format with action, timeframe, and category.`;
+        ? t("financialChart.prompts.actionRemix", { action: item.action })
+        : t("financialChart.prompts.actionComplete", { action: item.action });
     }
     if (type === "weekly") {
       return action === "remix"
-        ? `Replace the weekly check-in with a new prompt that encourages reflection and progress. Keep the plan.weeklyCheckIn as a single sentence.`
-        : `Add a new weekly check-in prompt that builds on completing "${item.text}". Keep the plan.weeklyCheckIn as a single sentence.`;
+        ? t("financialChart.prompts.weeklyRemix")
+        : t("financialChart.prompts.weeklyComplete", { text: item.text });
     }
     if (type === "expense") {
       return action === "remix"
-        ? `Generate a new recommendation for the expense "${item.name}" that is different from the current one. Keep the expense list the same, but update the recommendation field for "${item.name}".`
-        : `Add a new, distinct optimization recommendation for the expense "${item.name}". Keep the expense list the same, but update the recommendation field for "${item.name}".`;
+        ? t("financialChart.prompts.expenseRemix", { name: item.name })
+        : t("financialChart.prompts.expenseComplete", { name: item.name });
     }
     return "";
   };
@@ -1980,7 +2051,11 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     <Box>
       <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
         {/* Plan Header */}
-        <PlanHeader plan={plan} potentialSavings={plan?.potentialSavings} />
+        <PlanHeader
+          plan={plan}
+          potentialSavings={plan?.potentialSavings}
+          t={t}
+        />
 
         {/* Interactive Updates */}
         <Box
@@ -1994,10 +2069,10 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
             <HStack justify="space-between" flexWrap="wrap" gap="2">
               <Box>
                 <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
-                  Update Your Data
+                  {t("financialChart.updateSection.title")}
                 </Text>
                 <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.400">
-                  Adjust numbers directly and let AI refresh your plan.
+                  {t("financialChart.updateSection.subtitle")}
                 </Text>
               </Box>
             </HStack>
@@ -2015,14 +2090,14 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               <HStack justify="space-between" flexWrap="wrap" gap="2">
                 <VStack align="start" spacing="0">
                   <Text fontSize="xs" color="gray.400" fontWeight="semibold">
-                    Update status
+                    {t("financialChart.updateSection.statusLabel")}
                   </Text>
                   <Text fontSize="xs" color="gray.300">
                     {isUpdating
-                      ? "Applying updates to your plan..."
+                      ? t("financialChart.updateSection.statusApplying")
                       : updateSummary.length === 0
-                        ? "Make a change below to enable updates."
-                        : "Ready to refresh your plan."}
+                        ? t("financialChart.updateSection.statusEmpty")
+                        : t("financialChart.updateSection.statusReady")}
                   </Text>
                 </VStack>
                 <Button
@@ -2032,9 +2107,9 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   isDisabled={
                     !onUpdate || updateSummary.length === 0 || isUpdating
                   }
-                  aria-label="Apply updates"
+                  aria-label={t("financialChart.updateSection.applyUpdates")}
                 >
-                  {isUpdating ? <Spinner size="sm" /> : "Apply updates"}
+                  {isUpdating ? <Spinner size="sm" /> : t("financialChart.updateSection.applyUpdates")}
                 </Button>
               </HStack>
             </Box>
@@ -2045,7 +2120,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
             >
               <Box>
                 <Text fontSize="2xs" color="gray.500" mb="1">
-                  Monthly income
+                  {t("financialChart.updateSection.monthlyIncome")}
                 </Text>
                 <Input
                   value={draftIncome}
@@ -2058,7 +2133,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               </Box>
               <Box>
                 <Text fontSize="2xs" color="gray.500" mb="1">
-                  Current savings
+                  {t("financialChart.updateSection.currentSavings")}
                 </Text>
                 <Input
                   value={draftCurrentSavings}
@@ -2071,7 +2146,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               </Box>
               <Box>
                 <Text fontSize="2xs" color="gray.500" mb="1">
-                  Savings goal
+                  {t("financialChart.updateSection.savingsGoal")}
                 </Text>
                 <Input
                   value={draftSavingsGoal}
@@ -2087,7 +2162,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
             <VStack align="stretch" spacing="2">
               <HStack justify="space-between">
                 <Text fontSize="2xs" color="gray.500">
-                  Expenses
+                  {t("financialChart.updateSection.expenses")}
                 </Text>
                 <Button
                   size="xs"
@@ -2095,7 +2170,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   colorScheme="blue"
                   onClick={handleAddExpense}
                 >
-                  Add expense
+                  {t("financialChart.updateSection.addExpense")}
                 </Button>
               </HStack>
               {draftExpenses.map((expense, index) => (
@@ -2110,7 +2185,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                     onChange={(e) =>
                       updateExpenseField(index, "name", e.target.value)
                     }
-                    placeholder="Expense name"
+                    placeholder={t("financialChart.updateSection.expenseName")}
                     bg="gray.800"
                     borderColor="gray.700"
                     fontSize="sm"
@@ -2121,7 +2196,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                       updateExpenseField(index, "amount", e.target.value)
                     }
                     type="number"
-                    placeholder="Amount"
+                    placeholder={t("financialChart.updateSection.amount")}
                     bg="gray.800"
                     borderColor="gray.700"
                     fontSize="sm"
@@ -2136,9 +2211,15 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                       borderColor="gray.700"
                       fontSize="sm"
                     >
-                      <option value="essential">Essential</option>
-                      <option value="important">Important</option>
-                      <option value="discretionary">Discretionary</option>
+                      <option value="essential">
+                        {t("financialChart.priorityLabels.essential")}
+                      </option>
+                      <option value="important">
+                        {t("financialChart.priorityLabels.important")}
+                      </option>
+                      <option value="discretionary">
+                        {t("financialChart.priorityLabels.discretionary")}
+                      </option>
                     </NativeSelect.Field>
                   </NativeSelect.Root>
                   <Button
@@ -2147,7 +2228,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                     colorScheme="red"
                     onClick={() => handleRemoveExpense(index)}
                   >
-                    Remove
+                    {t("financialChart.updateSection.remove")}
                   </Button>
                 </Grid>
               ))}
@@ -2155,12 +2236,12 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
 
             <Box>
               <Text fontSize="2xs" color="gray.500" mb="1">
-                Notes for AI (optional)
+                {t("financialChart.updateSection.notesLabel")}
               </Text>
               <Textarea
                 value={updateNotes}
                 onChange={(e) => setUpdateNotes(e.target.value)}
-                placeholder="Add context: new job, moving, debt payoff, etc."
+                placeholder={t("financialChart.updateSection.notesPlaceholder")}
                 bg="gray.800"
                 borderColor="gray.700"
                 fontSize="sm"
@@ -2177,6 +2258,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
           monthlySavings={monthlySavings}
           savingsGoal={data.savingsGoal}
           currentSavings={data.currentSavings}
+          t={t}
         />
 
         {/* Tabbed Content */}
@@ -2200,7 +2282,11 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               scrollbarWidth: "none",
             }}
           >
-            {["Overview", "Your Plan", "Expenses"].map((tab, index) => (
+            {[
+              t("financialChart.tabs.overview"),
+              t("financialChart.tabs.plan"),
+              t("financialChart.tabs.expenses"),
+            ].map((tab, index) => (
               <Button
                 key={tab}
                 size={{ base: "xs", md: "sm" }}
@@ -2231,6 +2317,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                     <OverviewChart
                       income={data.income || 0}
                       expenses={expenses}
+                      t={t}
                     />
                   </GridItem>
                   <GridItem>
@@ -2239,6 +2326,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                       currentSavings={data.currentSavings || 0}
                       savingsGoal={data.savingsGoal}
                       potentialSavings={plan?.potentialSavings}
+                      t={t}
                     />
                   </GridItem>
                 </Grid>
@@ -2247,6 +2335,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                 <ExpenseBarChart
                   expenses={expenses}
                   income={data.income || 0}
+                  t={t}
                 />
 
                 <BirdsEyeView
@@ -2254,6 +2343,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   savingsGoal={data.savingsGoal}
                   monthlySavings={monthlySavings}
                   expenses={expenses}
+                  t={t}
                 />
               </VStack>
             )}
@@ -2269,6 +2359,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                     <SavingsStrategies
                       strategies={interactiveStrategies}
                       onSelect={openInteraction}
+                      t={t}
                     />
                   </GridItem>
                   <GridItem>
@@ -2277,11 +2368,12 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                       weeklyCheckIn={interactiveWeeklyCheckIn}
                       onSelect={openInteraction}
                       onSelectWeekly={openInteraction}
+                      t={t}
                     />
                   </GridItem>
                 </Grid>
 
-                <MotivationalNote note={plan?.motivationalNote} />
+                <MotivationalNote note={plan?.motivationalNote} t={t} />
               </VStack>
             )}
 
@@ -2291,6 +2383,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                 <ExpenseAnalysis
                   expenses={interactiveExpenses}
                   onSelect={openInteraction}
+                  t={t}
                 />
               </VStack>
             )}
@@ -2327,10 +2420,10 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                 <Box>
                   <Text fontSize="sm" color="gray.400">
                     {interaction.type === "expense"
-                      ? "Expense Quest"
+                      ? t("financialChart.interaction.expenseQuest")
                       : interaction.type === "weekly"
-                        ? "Weekly Check-in"
-                        : "Plan Quest"}
+                        ? t("financialChart.interaction.weeklyCheckIn")
+                        : t("financialChart.interaction.planQuest")}
                   </Text>
                   <Text fontSize="lg" fontWeight="semibold">
                     {interaction.item.title ||
@@ -2344,7 +2437,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   variant="ghost"
                   onClick={closeInteraction}
                 >
-                  Close
+                  {t("financialChart.interaction.close")}
                 </Button>
               </HStack>
 
@@ -2369,7 +2462,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   borderColor="gray.700"
                 >
                   <Text fontSize="2xs" color="gray.500" mb="1">
-                    Challenge
+                    {t("financialChart.interaction.challenge")}
                   </Text>
                   <Text fontSize="sm" color="cyan.200">
                     {interaction.item.challenge}
@@ -2385,10 +2478,10 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                 borderColor="gray.700"
               >
                 <Text fontSize="2xs" color="gray.500">
-                  Next steps
+                  {t("financialChart.interaction.nextSteps")}
                 </Text>
                 <Text fontSize="sm" color="green.300">
-                  We'll ask AI to generate a fresh item for you.
+                  {t("financialChart.interaction.nextStepsDetail")}
                 </Text>
               </Box>
 
@@ -2400,8 +2493,8 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   isDisabled={!onItemUpdate || isUpdating}
                 >
                   {isUpdating && interactionAction === "remix"
-                    ? "Generating..."
-                    : "Generate different content"}
+                    ? t("financialChart.interaction.generating")
+                    : t("financialChart.interaction.generateDifferent")}
                 </Button>
                 <Button
                   size="sm"
@@ -2410,8 +2503,8 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   isDisabled={!onItemUpdate || isUpdating}
                 >
                   {isUpdating && interactionAction === "complete"
-                    ? "Completing..."
-                    : "Complete exercise"}
+                    ? t("financialChart.interaction.completing")
+                    : t("financialChart.interaction.completeExercise")}
                 </Button>
               </HStack>
             </VStack>

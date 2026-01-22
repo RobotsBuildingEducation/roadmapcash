@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { database, doc, getDoc, setDoc } from "@/database/firebaseConfig";
 import { bech32 } from "bech32";
 import { Buffer } from "buffer";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const STORAGE_KEY = "roadmapcash_identity";
 
@@ -42,33 +43,8 @@ function encodeNpub(publicKeyHex) {
   return bech32.encode("npub", words, 1000);
 }
 
-function decodeNsec(nsec) {
-  try {
-    const { prefix, words } = bech32.decode(nsec, 1000);
-    if (prefix !== "nsec") {
-      throw new Error("Invalid nsec prefix");
-    }
-    const bytes = Buffer.from(bech32.fromWords(words));
-    return bytesToHex(bytes);
-  } catch (error) {
-    throw new Error("Invalid nsec format");
-  }
-}
-
-function decodeNpub(npub) {
-  try {
-    const { prefix, words } = bech32.decode(npub, 1000);
-    if (prefix !== "npub") {
-      throw new Error("Invalid npub prefix");
-    }
-    const bytes = Buffer.from(bech32.fromWords(words));
-    return bytesToHex(bytes);
-  } catch (error) {
-    throw new Error("Invalid npub format");
-  }
-}
-
 export function useDecentralizedIdentity() {
+  const { t } = useI18n();
   const [identity, setIdentity] = useState(null);
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,6 +106,23 @@ export function useDecentralizedIdentity() {
     }
     return null;
   }, []);
+
+  const decodeNsec = useCallback(
+    (nsec) => {
+      try {
+        const { prefix, words } = bech32.decode(nsec, 1000);
+        if (prefix !== "nsec") {
+          throw new Error(t("identity.errors.invalidNsecPrefix"));
+        }
+        const bytes = Buffer.from(bech32.fromWords(words));
+        return bytesToHex(bytes);
+      } catch (error) {
+        throw new Error(t("identity.errors.invalidNsecFormat"));
+      }
+    },
+    [t],
+  );
+
 
   const initializeIdentity = useCallback(async () => {
     setIsLoading(true);
@@ -194,7 +187,7 @@ export function useDecentralizedIdentity() {
         setIsLoading(false);
       }
     },
-    [createIdentityFromPrivateKey, fetchOrCreateUser, saveToLocalStorage]
+    [createIdentityFromPrivateKey, fetchOrCreateUser, saveToLocalStorage, decodeNsec]
   );
 
   const logout = useCallback(() => {

@@ -14,6 +14,7 @@ import { MdOutlineFileUpload } from "react-icons/md";
 import { CiSquarePlus } from "react-icons/ci";
 import { LuBadgeCheck, LuKeyRound } from "react-icons/lu";
 import { toaster } from "@/components/ui/toaster";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export function AccountMenu({
   identity,
@@ -22,6 +23,7 @@ export function AccountMenu({
   onSwitchAccount,
   onLogout,
 }) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
@@ -32,12 +34,12 @@ export function AccountMenu({
 
   const handleSwitchAccount = async () => {
     if (!nsecInput.trim()) {
-      setSwitchError("Please enter an nsec");
+      setSwitchError(t("accountMenu.errors.enterNsec"));
       return;
     }
 
     if (!nsecInput.trim().startsWith("nsec")) {
-      setSwitchError("Invalid nsec format. Must start with 'nsec'");
+      setSwitchError(t("accountMenu.errors.invalidNsec"));
       return;
     }
 
@@ -47,7 +49,7 @@ export function AccountMenu({
     try {
       await onSwitchAccount(nsecInput);
     } catch (err) {
-      setSwitchError(err.message || "Failed to switch account");
+      setSwitchError(err.message || t("accountMenu.errors.failedSwitch"));
       setIsSwitching(false);
     }
   };
@@ -63,7 +65,7 @@ export function AccountMenu({
   const copyWithToast = async (text, title) => {
     if (!text) {
       toaster.create({
-        title: "Nothing to copy",
+        title: t("accountMenu.toasts.nothingToCopy"),
         type: "warning",
       });
       return;
@@ -81,29 +83,29 @@ export function AccountMenu({
       {
         id: "step1",
         icon: <IoIosMore size={28} />,
-        text: "Open the browser menu.",
+        text: t("accountMenu.installSteps.0"),
       },
       {
         id: "step2",
         icon: <MdOutlineFileUpload size={28} />,
-        text: "Choose 'Share' or 'Install'.",
+        text: t("accountMenu.installSteps.1"),
       },
       {
         id: "step3",
         icon: <CiSquarePlus size={28} />,
-        text: "Add to Home Screen.",
+        text: t("accountMenu.installSteps.2"),
       },
       {
         id: "step4",
         icon: <LuBadgeCheck size={28} />,
-        text: "Launch from your Home Screen.",
+        text: t("accountMenu.installSteps.3"),
       },
       {
         id: "step5",
         icon: <LuKeyRound size={24} />,
-        text: "Copy your secret key to sign into your account",
+        text: t("accountMenu.installSecretTitle"),
         subText:
-          "This key is the only way to access your accounts on Robots Building Education apps. Store it in a password manager or a safe place. We cannot recover it for you.",
+          t("accountMenu.installSecretBody"),
         action: (
           <Button
             size="xs"
@@ -111,22 +113,22 @@ export function AccountMenu({
             leftIcon={<LuKeyRound size={14} />}
             colorScheme="orange"
             onClick={() =>
-              copyWithToast(currentSecret, "Secret key copied")
+              copyWithToast(currentSecret, t("accountMenu.toasts.secretKeyCopied"))
             }
             isDisabled={!currentSecret}
           >
-            Copy Secret Key
+            {t("accountMenu.copySecretKeyAction")}
           </Button>
         ),
       },
     ],
-    [currentSecret]
+    [currentSecret, t]
   );
 
   return (
     <>
       <IconButton
-        aria-label="Menu"
+        aria-label={t("accountMenu.menuLabel")}
         onClick={() => setIsOpen(true)}
         variant="ghost"
         size="lg"
@@ -159,10 +161,10 @@ export function AccountMenu({
             <VStack align="stretch" p="4" gap="4">
               <HStack justify="space-between">
                 <Text fontSize="lg" fontWeight="bold">
-                  Account
+                  {t("accountMenu.accountTitle")}
                 </Text>
                 <IconButton
-                  aria-label="Close"
+                  aria-label={t("accountMenu.close")}
                   onClick={() => setIsOpen(false)}
                   variant="ghost"
                   size="sm"
@@ -172,31 +174,31 @@ export function AccountMenu({
               </HStack>
 
               {isLoading ? (
-                <Text color="gray.400">Loading...</Text>
+                <Text color="gray.400">{t("accountMenu.loading")}</Text>
               ) : identity ? (
                 <VStack align="stretch" gap="3">
                   <Button
                     onClick={() =>
-                      copyWithToast(identity.npub, "User ID copied")
+                      copyWithToast(identity.npub, t("accountMenu.toasts.userIdCopied"))
                     }
                     colorScheme="blue"
                     variant="outline"
                     size="sm"
                     leftIcon={<HiUserCircle />}
                   >
-                    Copy User ID
+                    {t("accountMenu.copyUserId")}
                   </Button>
 
                   <Button
                     onClick={() =>
-                      copyWithToast(identity.nsec, "Secret key copied")
+                      copyWithToast(identity.nsec, t("accountMenu.toasts.secretKeyCopied"))
                     }
                     colorScheme="purple"
                     variant="outline"
                     size="sm"
                     leftIcon={<HiKey />}
                   >
-                    Copy Secret Key
+                    {t("accountMenu.copySecretKey")}
                   </Button>
 
                   <Button
@@ -205,7 +207,7 @@ export function AccountMenu({
                     variant="outline"
                     size="sm"
                   >
-                    Switch Account
+                    {t("accountMenu.switchAccount")}
                   </Button>
 
                   <Button
@@ -214,7 +216,7 @@ export function AccountMenu({
                     variant="outline"
                     size="sm"
                   >
-                    Install App
+                    {t("accountMenu.installApp")}
                   </Button>
 
                   <Button
@@ -224,11 +226,11 @@ export function AccountMenu({
                     size="sm"
                   >
                     <HiLogout />
-                    <Text ml="2">Logout</Text>
+                    <Text ml="2">{t("accountMenu.logout")}</Text>
                   </Button>
                 </VStack>
               ) : (
-                <Text color="gray.400">No identity loaded</Text>
+                <Text color="gray.400">{t("accountMenu.noIdentity")}</Text>
               )}
 
               {error && (
@@ -271,10 +273,10 @@ export function AccountMenu({
             <VStack align="stretch" gap="4">
               <HStack justify="space-between">
                 <Text fontSize="lg" fontWeight="bold">
-                  Switch Account
+                  {t("accountMenu.switchModalTitle")}
                 </Text>
                 <IconButton
-                  aria-label="Close"
+                  aria-label={t("accountMenu.close")}
                   onClick={() => {
                     setShowSwitchModal(false);
                     setNsecInput("");
@@ -288,12 +290,11 @@ export function AccountMenu({
               </HStack>
 
               <Text fontSize="sm" color="gray.400">
-                Paste your nsec (secret key) to switch to a different account.
-                If the account doesn't exist, it will be created.
+                {t("accountMenu.switchDescription")}
               </Text>
 
               <Input
-                placeholder="nsec1..."
+                placeholder={t("accountMenu.nsecPlaceholder")}
                 value={nsecInput}
                 onChange={(e) => {
                   setNsecInput(e.target.value);
@@ -322,7 +323,7 @@ export function AccountMenu({
                     setSwitchError("");
                   }}
                 >
-                  Cancel
+                  {t("accountMenu.cancel")}
                 </Button>
                 <Button
                   flex="1"
@@ -331,7 +332,7 @@ export function AccountMenu({
                   loading={isSwitching}
                   disabled={isSwitching}
                 >
-                  Switch
+                  {t("accountMenu.switchAction")}
                 </Button>
               </HStack>
             </VStack>
@@ -365,10 +366,10 @@ export function AccountMenu({
             <VStack align="stretch" gap="4">
               <HStack justify="space-between">
                 <Text fontSize="lg" fontWeight="bold">
-                  Install App
+                  {t("accountMenu.installTitle")}
                 </Text>
                 <IconButton
-                  aria-label="Close"
+                  aria-label={t("accountMenu.close")}
                   onClick={() => setShowInstallModal(false)}
                   variant="ghost"
                   size="sm"
