@@ -1,6 +1,5 @@
 import { Box, VStack, Text, Textarea, Button } from "@chakra-ui/react";
-
-const PLACEHOLDER_TEXT = `Enter your expenses and financial goals.`;
+import { useI18n } from "@/i18n/I18nProvider";
 
 export function FinancialInput({
   onGenerate,
@@ -9,6 +8,7 @@ export function FinancialInput({
   onInputChange,
   hasSavedData,
 }) {
+  const { t } = useI18n();
   const handleGenerate = () => {
     if (input.trim() && onGenerate) {
       onGenerate(input);
@@ -26,19 +26,17 @@ export function FinancialInput({
       <VStack align="stretch" gap={{ base: "3", md: "4" }}>
         <Box>
           <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" mb="2">
-            Financial Planner
+            {t("financialInput.title")}
           </Text>
           <Text color="gray.400" fontSize={{ base: "xs", md: "sm" }}>
-            Describe your expenses, income, and savings goals. Our AI will
-            analyze your finances and create a personalized, opinionated plan
-            with specific recommendations to help you reach your targets.
+            {t("financialInput.description")}
           </Text>
         </Box>
 
         <Textarea
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
-          placeholder={PLACEHOLDER_TEXT}
+          placeholder={t("financialInput.placeholder")}
           // minH={{ base: "90px", md: "90px" }}
           height="120px"
           bg="gray.800"
@@ -66,10 +64,10 @@ export function FinancialInput({
             }}
           >
             {isGenerating
-              ? "Creating Your Plan..."
+              ? t("financialInput.creatingPlan")
               : hasSavedData
-                ? "Update My Plan"
-                : "Generate My Plan"}
+                ? t("financialInput.updatePlan")
+                : t("financialInput.generatePlan")}
           </Button>
         </Box>
       </VStack>

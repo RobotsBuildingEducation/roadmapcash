@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { Box, HStack, VStack, Text, Spinner } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { useDecentralizedIdentity } from "@/hooks/useDecentralizedIdentity";
@@ -7,10 +7,13 @@ import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { AccountMenu } from "@/components/AccountMenu";
 import { FinancialInput } from "@/components/FinancialInput";
 import { FinancialChart } from "@/components/FinancialChart";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { Toaster } from "@/components/ui/toaster";
+import { useI18n } from "@/i18n/I18nProvider";
 import "./App.css";
 
 function App() {
+  const { t, language, setLanguage } = useI18n();
   const {
     identity,
     userData,
@@ -19,6 +22,7 @@ function App() {
     switchAccount,
     logout,
     saveRoadmap,
+    updateUserData,
   } = useDecentralizedIdentity();
   const {
     parseFinancialInput,
@@ -39,6 +43,8 @@ function App() {
   const [userInput, setUserInput] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
   const [loaderStep, setLoaderStep] = useState(0);
+  const skipLanguageSyncRef = useRef(false);
+  const hasHydratedLanguageRef = useRef(false);
   // Initialize from saved data (called once by callback ref)
   const initializeFromSaved = useCallback(
     (node) => {
@@ -82,18 +88,34 @@ function App() {
     }
   };
 
-  const loaderMessages = useMemo(
-    () => [
-      "Reviewing income, expenses, and savings details.",
-      "Estimating savings goals and current progress.",
-      "Calculating a sustainable monthly budget split.",
-      "Drafting savings strategies tailored to your situation.",
-      "Listing near-term action items to move faster.",
-      "Writing your weekly check-in and motivation note.",
-      "Projecting potential savings if you follow the plan.",
-    ],
-    [],
-  );
+  const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
+
+  useEffect(() => {
+    const storedLanguage = userData?.settings?.language;
+    if (!storedLanguage || hasHydratedLanguageRef.current) return;
+    if (storedLanguage !== language) {
+      skipLanguageSyncRef.current = true;
+      setLanguage(storedLanguage);
+    }
+    hasHydratedLanguageRef.current = true;
+  }, [language, setLanguage, userData]);
+
+  useEffect(() => {
+    if (!identity?.npub || !userData) return;
+    if (skipLanguageSyncRef.current) {
+      skipLanguageSyncRef.current = false;
+      return;
+    }
+    const storedLanguage = userData.settings?.language;
+    if (language && storedLanguage !== language) {
+      updateUserData({
+        settings: {
+          ...(userData.settings || {}),
+          language,
+        },
+      });
+    }
+  }, [identity?.npub, language, updateUserData, userData]);
 
   useEffect(() => {
     if (!isGenerating || financialData) {
@@ -130,13 +152,16 @@ function App() {
       >
         <AnimatedLogo />
 
-        <AccountMenu
-          identity={identity}
-          isLoading={isLoading}
-          error={error}
-          onSwitchAccount={switchAccount}
-          onLogout={logout}
-        />
+        <HStack spacing="2">
+          <LanguageSwitch />
+          <AccountMenu
+            identity={identity}
+            isLoading={isLoading}
+            error={error}
+            onSwitchAccount={switchAccount}
+            onLogout={logout}
+          />
+        </HStack>
       </HStack>
 
       <Box as="main" p={{ base: "3", md: "6" }}>
@@ -144,13 +169,13 @@ function App() {
           <VStack py={{ base: "10", md: "20" }}>
             <Spinner size="xl" color="blue.400" />
             <Text color="gray.400" mt="4">
-              Initializing identity...
+              {t("app.initializingIdentity")}
             </Text>
           </VStack>
         ) : error ? (
           <VStack py={{ base: "10", md: "20" }}>
             <Text color="red.400" fontSize="lg">
-              Error: {error}
+              {t("app.errorPrefix", { error })}
             </Text>
           </VStack>
         ) : identity ? (
@@ -197,7 +222,7 @@ function App() {
                     fontSize={{ base: "lg", md: "xl" }}
                     fontWeight="semibo  ld"
                   >
-                    Building your financial plan...
+                    {t("app.buildingPlan")}
                   </Text>
                   <Text
                     key={loaderStep}
