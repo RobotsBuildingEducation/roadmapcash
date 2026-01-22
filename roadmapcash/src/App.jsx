@@ -1,12 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import {
-  Box,
-  HStack,
-  VStack,
-  Text,
-  Spinner,
-  keyframes,
-} from "@chakra-ui/react";
+import { Box, HStack, VStack, Text, Spinner } from "@chakra-ui/react";
+import { keyframes } from "@emotion/react";
 import { useDecentralizedIdentity } from "@/hooks/useDecentralizedIdentity";
 import { useFinancialParser } from "@/hooks/useFinancialParser";
 import { AnimatedLogo } from "@/components/AnimatedLogo";
@@ -197,7 +191,10 @@ function App() {
               >
                 <VStack spacing="4">
                   <AnimatedLogo showWordmark={false} size={120} />
-                  <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="semibold">
+                  <Text
+                    fontSize={{ base: "lg", md: "xl" }}
+                    fontWeight="semibold"
+                  >
                     Building your financial plan...
                   </Text>
                   <Text
