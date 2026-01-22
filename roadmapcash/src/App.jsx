@@ -148,6 +148,28 @@ function App() {
               </Box>
             )}
 
+            {isGenerating && !financialData && (
+              <Box
+                p={{ base: "6", md: "8" }}
+                bg="gray.900"
+                borderRadius="lg"
+                borderWidth="1px"
+                borderColor="gray.800"
+              >
+                <VStack spacing="4">
+                  <AnimatedLogo showWordmark={false} size={120} />
+                  <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="semibold">
+                    Building your financial plan...
+                  </Text>
+                  <VStack spacing="1" color="gray.400" fontSize="sm">
+                    <Text>Analyzing your income, expenses, and goals.</Text>
+                    <Text>Calculating a sustainable monthly budget.</Text>
+                    <Text>Drafting strategies and action steps tailored to you.</Text>
+                  </VStack>
+                </VStack>
+              </Box>
+            )}
+
             {financialData && (
               <FinancialChart
                 data={financialData}

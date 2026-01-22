@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { Box, Text } from "@chakra-ui/react";
 
-export function AnimatedLogo() {
+export function AnimatedLogo({ showWordmark = true, size = 60 }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
 
@@ -10,8 +10,8 @@ export function AnimatedLogo() {
     if (!containerRef.current) return;
 
     const container = containerRef.current;
-    const width = 60;
-    const height = 60;
+    const width = size;
+    const height = size;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
@@ -145,28 +145,30 @@ export function AnimatedLogo() {
       coreMaterial.dispose();
       renderer.dispose();
     };
-  }, []);
+  }, [size]);
 
   return (
     <Box display="flex" alignItems="center" gap="2">
       <Box
         ref={containerRef}
-        width="60px"
-        height="60px"
+        width={`${size}px`}
+        height={`${size}px`}
         borderRadius="full"
         overflow="hidden"
       />
-      <Text
-        fontSize="xl"
-        fontWeight="bold"
-        bgGradient="to-r"
-        gradientFrom="blue.400"
-        gradientTo="purple.500"
-        bgClip="text"
-        letterSpacing="tight"
-      >
-        roadmap.cash
-      </Text>
+      {showWordmark ? (
+        <Text
+          fontSize="xl"
+          fontWeight="bold"
+          bgGradient="to-r"
+          gradientFrom="blue.400"
+          gradientTo="purple.500"
+          bgClip="text"
+          letterSpacing="tight"
+        >
+          roadmap.cash
+        </Text>
+      ) : null}
     </Box>
   );
 }
