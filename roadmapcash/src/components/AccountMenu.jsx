@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -9,6 +9,10 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { HiMenu, HiX, HiUserCircle, HiLogout, HiKey } from "react-icons/hi";
+import { IoIosMore } from "react-icons/io";
+import { MdOutlineFileUpload } from "react-icons/md";
+import { CiSquarePlus } from "react-icons/ci";
+import { LuBadgeCheck, LuKeyRound } from "react-icons/lu";
 
 export function AccountMenu({
   identity,
@@ -19,9 +23,11 @@ export function AccountMenu({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showSwitchModal, setShowSwitchModal] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
   const [nsecInput, setNsecInput] = useState("");
   const [switchError, setSwitchError] = useState("");
   const [isSwitching, setIsSwitching] = useState(false);
+  const currentSecret = identity?.nsec || "";
 
   const handleSwitchAccount = async () => {
     if (!nsecInput.trim()) {
@@ -57,6 +63,51 @@ export function AccountMenu({
       console.error("Failed to copy:", err);
     }
   };
+
+  const installSteps = useMemo(
+    () => [
+      {
+        id: "step1",
+        icon: <IoIosMore size={28} />,
+        text: "Open the browser menu.",
+      },
+      {
+        id: "step2",
+        icon: <MdOutlineFileUpload size={28} />,
+        text: "Choose 'Share' or 'Install'.",
+      },
+      {
+        id: "step3",
+        icon: <CiSquarePlus size={28} />,
+        text: "Add to Home Screen.",
+      },
+      {
+        id: "step4",
+        icon: <LuBadgeCheck size={28} />,
+        text: "Launch from your Home Screen.",
+      },
+      {
+        id: "step5",
+        icon: <LuKeyRound size={24} />,
+        text: "Copy your secret key to sign into your account",
+        subText:
+          "This key is the only way to access your accounts on Robots Building Education apps. Store it in a password manager or a safe place. We cannot recover it for you.",
+        action: (
+          <Button
+            size="xs"
+            padding={4}
+            leftIcon={<LuKeyRound size={14} />}
+            colorScheme="orange"
+            onClick={() => copyToClipboard(currentSecret)}
+            isDisabled={!currentSecret}
+          >
+            Copy Secret Key
+          </Button>
+        ),
+      },
+    ],
+    [currentSecret]
+  );
 
   return (
     <>
@@ -176,6 +227,15 @@ export function AccountMenu({
                   </Button>
 
                   <Button
+                    onClick={() => setShowInstallModal(true)}
+                    colorScheme="orange"
+                    variant="outline"
+                    size="sm"
+                  >
+                    Install App
+                  </Button>
+
+                  <Button
                     onClick={onLogout}
                     colorScheme="red"
                     variant="ghost"
@@ -292,6 +352,80 @@ export function AccountMenu({
                   Switch
                 </Button>
               </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
+
+      {showInstallModal && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.700"
+          zIndex="modal"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          onClick={() => setShowInstallModal(false)}
+        >
+          <Box
+            bg="gray.800"
+            p="6"
+            borderRadius="lg"
+            width={{ base: "90%", sm: "440px" }}
+            maxWidth="440px"
+            boxShadow="2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <VStack align="stretch" gap="4">
+              <HStack justify="space-between">
+                <Text fontSize="lg" fontWeight="bold">
+                  Install App
+                </Text>
+                <IconButton
+                  aria-label="Close"
+                  onClick={() => setShowInstallModal(false)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <HiX size={20} />
+                </IconButton>
+              </HStack>
+
+              <VStack align="stretch" gap="4">
+                {installSteps.map((step) => (
+                  <Box
+                    key={step.id}
+                    p="3"
+                    bg="gray.900"
+                    borderRadius="md"
+                    borderWidth="1px"
+                    borderColor="gray.700"
+                  >
+                    <HStack align="flex-start" gap="3">
+                      <Box color="orange.200" mt="1">
+                        {step.icon}
+                      </Box>
+                      <VStack align="stretch" spacing="2">
+                        <Text fontSize="sm" fontWeight="semibold">
+                          {step.text}
+                        </Text>
+                        {step.subText && (
+                          <Text fontSize="xs" color="gray.400">
+                            {step.subText}
+                          </Text>
+                        )}
+                        {step.action && (
+                          <Box mt="1">{step.action}</Box>
+                        )}
+                      </VStack>
+                    </HStack>
+                  </Box>
+                ))}
+              </VStack>
             </VStack>
           </Box>
         </Box>
