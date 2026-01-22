@@ -197,14 +197,19 @@ export function AccountMenu({
                   <Text fontSize="xs" color="gray.400">
                     {t("accountMenu.themeLight")}
                   </Text>
-                  <Switch
-                    isChecked={theme === "dark"}
-                    onChange={(event) =>
-                      onThemeChange?.(event.target.checked ? "dark" : "light")
+                  <Switch.Root
+                    checked={theme === "dark"}
+                    onCheckedChange={(event) =>
+                      onThemeChange?.(event.checked ? "dark" : "light")
                     }
                     aria-label={t("accountMenu.themeToggleLabel")}
                     colorScheme="blue"
-                  />
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch.Root>
                   <Text fontSize="xs" color="gray.400">
                     {t("accountMenu.themeDark")}
                   </Text>
