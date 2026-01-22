@@ -193,7 +193,7 @@ function App() {
                   <AnimatedLogo showWordmark={false} size={120} />
                   <Text
                     fontSize={{ base: "lg", md: "xl" }}
-                    fontWeight="semibold"
+                    fontWeight="semibo  ld"
                   >
                     Building your financial plan...
                   </Text>
