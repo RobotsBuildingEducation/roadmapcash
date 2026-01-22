@@ -13,7 +13,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import "./App.css";
 
 function App() {
-  const { t } = useI18n();
+  const { t, language, setLanguage } = useI18n();
   const {
     identity,
     userData,
@@ -22,6 +22,7 @@ function App() {
     switchAccount,
     logout,
     saveRoadmap,
+    updateUserData,
   } = useDecentralizedIdentity();
   const {
     parseFinancialInput,
@@ -86,6 +87,26 @@ function App() {
   };
 
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
+
+  useEffect(() => {
+    const storedLanguage = userData?.settings?.language;
+    if (storedLanguage && storedLanguage !== language) {
+      setLanguage(storedLanguage);
+    }
+  }, [language, setLanguage, userData]);
+
+  useEffect(() => {
+    if (!identity?.npub || !userData) return;
+    const storedLanguage = userData.settings?.language;
+    if (language && storedLanguage !== language) {
+      updateUserData({
+        settings: {
+          ...(userData.settings || {}),
+          language,
+        },
+      });
+    }
+  }, [identity?.npub, language, updateUserData, userData]);
 
   useEffect(() => {
     if (!isGenerating || financialData) {

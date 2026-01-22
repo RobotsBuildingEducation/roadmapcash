@@ -3,7 +3,9 @@ import { useI18n } from "@/i18n/I18nProvider";
 
 export function LanguageSwitch() {
   const { language, setLanguage, t, availableLanguages } = useI18n();
-  const languages = availableLanguages.filter((item) => ["en", "es"].includes(item));
+  const languages = availableLanguages.filter((item) =>
+    ["en", "es"].includes(item),
+  );
 
   return (
     <HStack

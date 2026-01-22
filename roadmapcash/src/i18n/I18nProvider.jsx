@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { detectUserLanguage } from "@/i18n/languageDetection";
 import { translations } from "@/i18n/translations";
 
 const I18nContext = createContext(null);
@@ -26,14 +27,14 @@ const formatTranslation = (value, params) => {
 export function I18nProvider({ children }) {
   const [language, setLanguageState] = useState(() => {
     if (typeof window === "undefined") return "en";
-    const stored = window.localStorage.getItem("language");
-    return stored && translations[stored] ? stored : "en";
+    const detected = detectUserLanguage();
+    return translations[detected] ? detected : "en";
   });
 
   const setLanguage = useCallback((next) => {
     setLanguageState(next);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("language", next);
+      window.localStorage.setItem("appLanguage", next);
     }
   }, []);
 
