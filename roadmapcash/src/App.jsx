@@ -7,6 +7,7 @@ import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { AccountMenu } from "@/components/AccountMenu";
 import { FinancialInput } from "@/components/FinancialInput";
 import { FinancialChart } from "@/components/FinancialChart";
+import { LinksPage } from "@/components/LinksPage";
 import "./App.css";
 
 function App() {
@@ -112,6 +113,9 @@ function App() {
     15%, 85% { opacity: 1; }
   `;
 
+  const isLinksPage =
+    typeof window !== "undefined" && window.location.pathname === "/links";
+
   return (
     <Box minH="100vh" bg="gray.950" color="white">
       <HStack
@@ -138,7 +142,11 @@ function App() {
       </HStack>
 
       <Box as="main" p={{ base: "3", md: "6" }}>
-        {isLoading ? (
+        {isLinksPage ? (
+          <Box maxW="900px" mx="auto">
+            <LinksPage />
+          </Box>
+        ) : isLoading ? (
           <VStack py={{ base: "10", md: "20" }}>
             <Spinner size="xl" color="blue.400" />
             <Text color="gray.400" mt="4">
