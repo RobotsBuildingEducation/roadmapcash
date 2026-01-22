@@ -49,10 +49,13 @@ function App() {
   const skipThemeSyncRef = useRef(false);
   const hasHydratedThemeRef = useRef(false);
   const { colorMode, setColorMode } = useColorMode();
-  const pageBg = useColorModeValue("gray.50", "gray.950");
+  const pageBg = useColorModeValue("#faf9f5", "gray.950");
   const pageColor = useColorModeValue("gray.900", "white");
-  const headerBg = useColorModeValue("white", "gray.950");
+  const headerBg = useColorModeValue("#faf9f5", "gray.950");
   const headerBorder = useColorModeValue("gray.200", "gray.800");
+  const loaderCardBg = useColorModeValue("white", "gray.900");
+  const loaderCardBorder = useColorModeValue("gray.200", "gray.800");
+  const loaderTextColor = useColorModeValue("gray.600", "gray.400");
   // Initialize from saved data (called once by callback ref)
   const initializeFromSaved = useCallback(
     (node) => {
@@ -248,10 +251,10 @@ function App() {
             {isGenerating && !financialData && (
               <Box
                 p={{ base: "6", md: "8" }}
-                bg="gray.900"
+                bg={loaderCardBg}
                 borderRadius="lg"
                 borderWidth="1px"
-                borderColor="gray.800"
+                borderColor={loaderCardBorder}
               >
                 <VStack spacing="4">
                   <AnimatedLogo showWordmark={false} size={120} />
@@ -263,7 +266,7 @@ function App() {
                   </Text>
                   <Text
                     key={loaderStep}
-                    color="gray.400"
+                    color={loaderTextColor}
                     fontSize="sm"
                     textAlign="center"
                     animation={`${loaderFade} 2s ease-in-out`}

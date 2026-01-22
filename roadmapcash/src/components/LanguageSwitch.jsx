@@ -1,8 +1,11 @@
 import { Button, HStack } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 export function LanguageSwitch() {
   const { language, setLanguage, t, availableLanguages } = useI18n();
+  const switchBg = useColorModeValue("white", "gray.900");
+  const switchBorder = useColorModeValue("gray.200", "gray.700");
   const languages = availableLanguages.filter((item) =>
     ["en", "es"].includes(item),
   );
@@ -12,8 +15,8 @@ export function LanguageSwitch() {
       spacing="1"
       borderRadius="full"
       borderWidth="1px"
-      borderColor="gray.700"
-      bg="gray.900"
+      borderColor={switchBorder}
+      bg={switchBg}
       p="1"
       aria-label={t("header.languageSwitchLabel")}
     >
