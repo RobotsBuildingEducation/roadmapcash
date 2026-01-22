@@ -10,6 +10,7 @@ import { FinancialChart } from "@/components/FinancialChart";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { Toaster } from "@/components/ui/toaster";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useColorMode, useColorModeValue } from "@/components/ui/color-mode";
 import "./App.css";
 
 function App() {
@@ -45,6 +46,16 @@ function App() {
   const [loaderStep, setLoaderStep] = useState(0);
   const skipLanguageSyncRef = useRef(false);
   const hasHydratedLanguageRef = useRef(false);
+  const skipThemeSyncRef = useRef(false);
+  const hasHydratedThemeRef = useRef(false);
+  const { colorMode, setColorMode } = useColorMode();
+  const pageBg = useColorModeValue("#faf9f5", "gray.950");
+  const pageColor = useColorModeValue("gray.900", "white");
+  const headerBg = useColorModeValue("#faf9f5", "gray.950");
+  const headerBorder = useColorModeValue("gray.200", "gray.800");
+  const loaderCardBg = useColorModeValue("white", "gray.900");
+  const loaderCardBorder = useColorModeValue("gray.200", "gray.800");
+  const loaderTextColor = useColorModeValue("gray.600", "gray.400");
   // Initialize from saved data (called once by callback ref)
   const initializeFromSaved = useCallback(
     (node) => {
@@ -101,6 +112,16 @@ function App() {
   }, [language, setLanguage, userData]);
 
   useEffect(() => {
+    const storedTheme = userData?.settings?.theme;
+    if (!storedTheme || hasHydratedThemeRef.current) return;
+    if (storedTheme !== colorMode) {
+      skipThemeSyncRef.current = true;
+      setColorMode(storedTheme);
+    }
+    hasHydratedThemeRef.current = true;
+  }, [colorMode, setColorMode, userData]);
+
+  useEffect(() => {
     if (!identity?.npub || !userData) return;
     if (skipLanguageSyncRef.current) {
       skipLanguageSyncRef.current = false;
@@ -116,6 +137,23 @@ function App() {
       });
     }
   }, [identity?.npub, language, updateUserData, userData]);
+
+  useEffect(() => {
+    if (!identity?.npub || !userData) return;
+    if (skipThemeSyncRef.current) {
+      skipThemeSyncRef.current = false;
+      return;
+    }
+    const storedTheme = userData.settings?.theme;
+    if (colorMode && storedTheme !== colorMode) {
+      updateUserData({
+        settings: {
+          ...(userData.settings || {}),
+          theme: colorMode,
+        },
+      });
+    }
+  }, [colorMode, identity?.npub, updateUserData, userData]);
 
   useEffect(() => {
     if (!isGenerating || financialData) {
@@ -136,7 +174,7 @@ function App() {
   `;
 
   return (
-    <Box minH="100vh" bg="gray.950" color="white">
+    <Box minH="100vh" bg={pageBg} color={pageColor}>
       <Toaster />
       <HStack
         as="header"
@@ -144,10 +182,10 @@ function App() {
         align="center"
         p="4"
         borderBottomWidth="1px"
-        borderColor="gray.800"
+        borderColor={headerBorder}
         position="sticky"
         top="0"
-        bg="gray.950"
+        bg={headerBg}
         zIndex="sticky"
       >
         <AnimatedLogo />
@@ -160,6 +198,8 @@ function App() {
             error={error}
             onSwitchAccount={switchAccount}
             onLogout={logout}
+            theme={colorMode}
+            onThemeChange={setColorMode}
           />
         </HStack>
       </HStack>
@@ -211,10 +251,10 @@ function App() {
             {isGenerating && !financialData && (
               <Box
                 p={{ base: "6", md: "8" }}
-                bg="gray.900"
+                bg={loaderCardBg}
                 borderRadius="lg"
                 borderWidth="1px"
-                borderColor="gray.800"
+                borderColor={loaderCardBorder}
               >
                 <VStack spacing="4">
                   <AnimatedLogo showWordmark={false} size={120} />
@@ -226,7 +266,7 @@ function App() {
                   </Text>
                   <Text
                     key={loaderStep}
-                    color="gray.400"
+                    color={loaderTextColor}
                     fontSize="sm"
                     textAlign="center"
                     animation={`${loaderFade} 2s ease-in-out`}

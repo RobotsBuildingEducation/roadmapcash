@@ -1,5 +1,6 @@
 import { Box, VStack, Text, Textarea, Button } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 export function FinancialInput({
   onGenerate,
@@ -9,6 +10,12 @@ export function FinancialInput({
   hasSavedData,
 }) {
   const { t } = useI18n();
+  const cardBg = useColorModeValue("white", "gray.900");
+  const cardBorder = useColorModeValue("gray.200", "gray.800");
+  const descriptionColor = useColorModeValue("gray.600", "gray.400");
+  const textareaBg = useColorModeValue("white", "gray.800");
+  const textareaBorder = useColorModeValue("gray.200", "gray.700");
+  const textareaHover = useColorModeValue("gray.300", "gray.600");
   const handleGenerate = () => {
     if (input.trim() && onGenerate) {
       onGenerate(input);
@@ -18,17 +25,17 @@ export function FinancialInput({
   return (
     <Box
       p={{ base: "4", md: "6" }}
-      bg="gray.900"
+      bg={cardBg}
       borderRadius="lg"
       borderWidth="1px"
-      borderColor="gray.800"
+      borderColor={cardBorder}
     >
       <VStack align="stretch" gap={{ base: "3", md: "4" }}>
         <Box>
           <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" mb="2">
             {t("financialInput.title")}
           </Text>
-          <Text color="gray.400" fontSize={{ base: "xs", md: "sm" }}>
+          <Text color={descriptionColor} fontSize={{ base: "xs", md: "sm" }}>
             {t("financialInput.description")}
           </Text>
         </Box>
@@ -39,9 +46,9 @@ export function FinancialInput({
           placeholder={t("financialInput.placeholder")}
           // minH={{ base: "90px", md: "90px" }}
           height="120px"
-          bg="gray.800"
-          borderColor="gray.700"
-          _hover={{ borderColor: "gray.600" }}
+          bg={textareaBg}
+          borderColor={textareaBorder}
+          _hover={{ borderColor: textareaHover }}
           _focus={{
             borderColor: "blue.400",
             boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)",

@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { Box, Text } from "@chakra-ui/react";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 export function AnimatedLogo({ showWordmark = true, size = 60 }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
+  const wordmarkColor = useColorModeValue("gray.900", "white");
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -160,10 +162,7 @@ export function AnimatedLogo({ showWordmark = true, size = 60 }) {
         <Text
           fontSize="xl"
           fontWeight="bold"
-          bgGradient="to-r"
-          gradientFrom="whiteAlpha.700"
-          gradientTo="whiteAlpha.800"
-          bgClip="text"
+          color={wordmarkColor}
           letterSpacing="tight"
           ml="-4"
         >

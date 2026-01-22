@@ -7,6 +7,7 @@ import {
   HStack,
   Input,
   IconButton,
+  Switch,
 } from "@chakra-ui/react";
 import { HiMenu, HiX, HiUserCircle, HiLogout, HiKey } from "react-icons/hi";
 import { IoIosMore } from "react-icons/io";
@@ -15,6 +16,7 @@ import { CiSquarePlus } from "react-icons/ci";
 import { LuBadgeCheck, LuKeyRound } from "react-icons/lu";
 import { toaster } from "@/components/ui/toaster";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 export function AccountMenu({
   identity,
@@ -22,6 +24,8 @@ export function AccountMenu({
   error,
   onSwitchAccount,
   onLogout,
+  theme,
+  onThemeChange,
 }) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +35,16 @@ export function AccountMenu({
   const [switchError, setSwitchError] = useState("");
   const [isSwitching, setIsSwitching] = useState(false);
   const currentSecret = identity?.nsec || "";
+  const drawerBg = useColorModeValue("white", "gray.900");
+  const drawerBorder = useColorModeValue("gray.200", "gray.700");
+  const panelBg = useColorModeValue("gray.100", "gray.800");
+  const modalBg = useColorModeValue("white", "gray.800");
+  const inputBg = useColorModeValue("gray.100", "gray.700");
+  const inputBorder = useColorModeValue("gray.300", "gray.600");
+  const switchTrackBg = useColorModeValue("gray.300", "gray.600");
+  const switchTrackBorder = useColorModeValue("gray.400", "gray.500");
+  const switchCheckedBg = useColorModeValue("blue.500", "blue.400");
+  const switchThumbBg = useColorModeValue("white", "gray.100");
 
   const handleSwitchAccount = async () => {
     if (!nsecInput.trim()) {
@@ -104,8 +118,7 @@ export function AccountMenu({
         id: "step5",
         icon: <LuKeyRound size={24} />,
         text: t("accountMenu.installSecretTitle"),
-        subText:
-          t("accountMenu.installSecretBody"),
+        subText: t("accountMenu.installSecretBody"),
         action: (
           <Button
             size="xs"
@@ -113,7 +126,10 @@ export function AccountMenu({
             leftIcon={<LuKeyRound size={14} />}
             colorScheme="orange"
             onClick={() =>
-              copyWithToast(currentSecret, t("accountMenu.toasts.secretKeyCopied"))
+              copyWithToast(
+                currentSecret,
+                t("accountMenu.toasts.secretKeyCopied"),
+              )
             }
             isDisabled={!currentSecret}
           >
@@ -122,7 +138,7 @@ export function AccountMenu({
         ),
       },
     ],
-    [currentSecret, t]
+    [currentSecret, t],
   );
 
   return (
@@ -153,7 +169,7 @@ export function AccountMenu({
             right="0"
             width={{ base: "100%", sm: "350px" }}
             height="100%"
-            bg="gray.900"
+            bg={drawerBg}
             boxShadow="xl"
             onClick={(e) => e.stopPropagation()}
             overflowY="auto"
@@ -173,13 +189,61 @@ export function AccountMenu({
                 </IconButton>
               </HStack>
 
+              <HStack
+                justify="space-between"
+                align="center"
+                p="3"
+                borderRadius="md"
+                bg={panelBg}
+              >
+                <Text fontSize="sm" fontWeight="semibold">
+                  {t("accountMenu.themeLabel")}
+                </Text>
+                <HStack spacing="2">
+                  <Text
+                    fontSize="xs"
+                    color={theme === "dark" ? "gray.400" : "gray.600"}
+                  >
+                    {t("accountMenu.themeLight")}
+                  </Text>
+                  <Switch.Root
+                    checked={theme === "dark"}
+                    onCheckedChange={(event) =>
+                      onThemeChange?.(event.checked ? "dark" : "light")
+                    }
+                    aria-label={t("accountMenu.themeToggleLabel")}
+                  >
+                    <Switch.HiddenInput />
+                    <Switch.Control
+                      bg={switchTrackBg}
+                      borderColor={switchTrackBorder}
+                      _checked={{
+                        bg: switchCheckedBg,
+                        borderColor: switchCheckedBg,
+                      }}
+                    >
+                      <Switch.Thumb bg={switchThumbBg} />
+                    </Switch.Control>
+                  </Switch.Root>
+                  <Text
+                    fontSize="xs"
+                    color={theme === "dark" ? "gray.400" : "gray.600"}
+                  >
+                    {t("accountMenu.themeDark")}
+                  </Text>
+                </HStack>
+              </HStack>
+
               {isLoading ? (
                 <Text color="gray.400">{t("accountMenu.loading")}</Text>
               ) : identity ? (
                 <VStack align="stretch" gap="3">
                   <Button
                     onClick={() =>
-                      copyWithToast(identity.npub, t("accountMenu.toasts.userIdCopied"))
+                      copyWithToast(
+                        identity.npub,
+                        t("accountMenu.toasts.userIdCopied"),
+                      )
                     }
                     colorScheme="blue"
                     variant="outline"
@@ -191,7 +255,10 @@ export function AccountMenu({
 
                   <Button
                     onClick={() =>
-                      copyWithToast(identity.nsec, t("accountMenu.toasts.secretKeyCopied"))
+                      copyWithToast(
+                        identity.nsec,
+                        t("accountMenu.toasts.secretKeyCopied"),
+                      )
                     }
                     colorScheme="purple"
                     variant="outline"
@@ -262,7 +329,7 @@ export function AccountMenu({
           }}
         >
           <Box
-            bg="gray.800"
+            bg={modalBg}
             p="6"
             borderRadius="lg"
             width={{ base: "90%", sm: "400px" }}
@@ -302,8 +369,8 @@ export function AccountMenu({
                 }}
                 fontFamily="mono"
                 fontSize="sm"
-                bg="gray.700"
-                borderColor="gray.600"
+                bg={inputBg}
+                borderColor={inputBorder}
                 _focus={{ borderColor: "blue.400" }}
               />
 
@@ -355,7 +422,7 @@ export function AccountMenu({
           onClick={() => setShowInstallModal(false)}
         >
           <Box
-            bg="gray.800"
+            bg={modalBg}
             p="6"
             borderRadius="lg"
             width={{ base: "90%", sm: "440px" }}
@@ -383,10 +450,10 @@ export function AccountMenu({
                   <Box
                     key={step.id}
                     p="3"
-                    bg="gray.900"
+                    bg={drawerBg}
                     borderRadius="md"
                     borderWidth="1px"
-                    borderColor="gray.700"
+                    borderColor={drawerBorder}
                   >
                     <HStack align="flex-start" gap="3">
                       <Box color="orange.200" mt="1">
@@ -401,9 +468,7 @@ export function AccountMenu({
                             {step.subText}
                           </Text>
                         )}
-                        {step.action && (
-                          <Box mt="1">{step.action}</Box>
-                        )}
+                        {step.action && <Box mt="1">{step.action}</Box>}
                       </VStack>
                     </HStack>
                   </Box>

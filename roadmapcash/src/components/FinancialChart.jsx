@@ -15,6 +15,7 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 // Color palette for consistent theming
 const COLORS = {
@@ -116,17 +117,53 @@ const formatCurrency = (amount) => {
   return `$${amount?.toLocaleString() || 0}`;
 };
 
+const useChartTheme = () => ({
+  surfaceBg: useColorModeValue("white", "gray.800"),
+  surfaceBorder: useColorModeValue("gray.200", "gray.700"),
+  elevatedBg: useColorModeValue("white", "gray.900"),
+  elevatedBorder: useColorModeValue("gray.200", "gray.800"),
+  insetBg: useColorModeValue("gray.50", "gray.750"),
+  insetBorder: useColorModeValue("gray.200", "gray.700"),
+  mutedText: useColorModeValue("gray.600", "gray.400"),
+  subText: useColorModeValue("gray.600", "gray.300"),
+  faintText: useColorModeValue("gray.500", "gray.500"),
+  highlightText: useColorModeValue("gray.700", "gray.200"),
+  hoverBorder: useColorModeValue("gray.300", "gray.600"),
+  iconBg: useColorModeValue("gray.100", "gray.700"),
+  successBg: useColorModeValue("green.50", "green.900"),
+  successBorder: useColorModeValue("green.200", "green.700"),
+  successIconBg: useColorModeValue("green.100", "green.600"),
+  milestoneIconBg: useColorModeValue("gray.200", "gray.600"),
+  finalIconBg: useColorModeValue("purple.100", "purple.600"),
+  headerBg: useColorModeValue(
+    "linear-gradient(135deg, #ffffff 0%, #f3f1ea 100%)",
+    "linear-gradient(135deg, #171c22 0%, #0d0d0f 100%)",
+  ),
+  headerTitle: useColorModeValue("gray.900", "white"),
+  headerBody: useColorModeValue("gray.600", "gray.300"),
+  donutBg: useColorModeValue("#f3f1ea", "#1f2937"),
+  donutLabel: useColorModeValue("#4b5563", "#9ca3af"),
+  chartGrid: useColorModeValue("#e2e8f0", "#374151"),
+  barBg: useColorModeValue("#e5e7eb", "#1f2937"),
+  chartLabel: useColorModeValue("#4b5563", "#d1d5db"),
+  axisText: useColorModeValue("#6b7280", "#6b7280"),
+  inputBg: useColorModeValue("white", "gray.800"),
+  inputBorder: useColorModeValue("gray.300", "gray.700"),
+  tabHoverBg: useColorModeValue("gray.100", "gray.700"),
+});
+
 // Plan Header with title and overview
 function PlanHeader({ plan, potentialSavings, t }) {
   if (!plan) return null;
+  const theme = useChartTheme();
 
   return (
     <Box
-      bg="linear-gradient(135deg, #171c22 0%, #0d0d0f 100%)"
+      bg={theme.headerBg}
       borderRadius="xl"
       p={{ base: "4", md: "6" }}
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor={theme.surfaceBorder}
       position="relative"
       overflow="hidden"
     >
@@ -149,7 +186,7 @@ function PlanHeader({ plan, potentialSavings, t }) {
             <Text
               fontSize={{ base: "xl", md: "2xl" }}
               fontWeight="bold"
-              color="white"
+              color={theme.headerTitle}
             >
               {plan.title || t("financialChart.planFallbackTitle")}
             </Text>
@@ -171,7 +208,7 @@ function PlanHeader({ plan, potentialSavings, t }) {
 
         <Text
           fontSize={{ base: "sm", md: "md" }}
-          color="gray.300"
+          color={theme.headerBody}
           lineHeight="tall"
         >
           {plan.overview}
@@ -261,6 +298,30 @@ function PlanHeader({ plan, potentialSavings, t }) {
 // Expense Analysis with recommendations
 function ExpenseAnalysis({ expenses, onSelect, t }) {
   if (!expenses || expenses.length === 0) return null;
+  const theme = useChartTheme();
+  const priorityConfig = useColorModeValue(
+    {
+      essential: {
+        bg: "blue.50",
+        border: "blue.200",
+        text: "blue.800",
+        badge: "blue",
+      },
+      important: {
+        bg: "purple.50",
+        border: "purple.200",
+        text: "purple.800",
+        badge: "purple",
+      },
+      discretionary: {
+        bg: "orange.50",
+        border: "orange.200",
+        text: "orange.800",
+        badge: "orange",
+      },
+    },
+    PRIORITY_COLORS,
+  );
 
   const groupedByPriority = {
     essential: expenses.filter((e) => e.priority === "essential"),
@@ -270,16 +331,16 @@ function ExpenseAnalysis({ expenses, onSelect, t }) {
 
   return (
     <Box
-      bg="gray.800"
+      bg={theme.surfaceBg}
       borderRadius="xl"
       p={{ base: "4", md: "5" }}
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor={theme.surfaceBorder}
     >
       <Text
         fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
-        color="gray.400"
+        color={theme.mutedText}
         mb={{ base: "3", md: "4" }}
         textTransform="uppercase"
         letterSpacing="wide"
@@ -290,7 +351,7 @@ function ExpenseAnalysis({ expenses, onSelect, t }) {
       <VStack align="stretch" spacing={{ base: "3", md: "4" }}>
         {Object.entries(groupedByPriority).map(([priority, items]) => {
           if (items.length === 0) return null;
-          const config = PRIORITY_COLORS[priority];
+          const config = priorityConfig[priority];
           const total = items.reduce((sum, e) => sum + e.amount, 0);
 
           return (
@@ -303,7 +364,7 @@ function ExpenseAnalysis({ expenses, onSelect, t }) {
                 >
                   {t(`financialChart.priorityLabels.${priority}`)}
                 </Badge>
-                <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+                <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
                   {t("financialChart.itemsCount", {
                     count: items.length,
                     amount: formatCurrency(total),
@@ -352,14 +413,14 @@ function ExpenseAnalysis({ expenses, onSelect, t }) {
                         <Text
                           fontSize={{ base: "xs", md: "sm" }}
                           fontWeight="bold"
-                          color="white"
+                          color={theme.highlightText}
                         >
                           {formatCurrency(expense.amount)}
                         </Text>
                       </HStack>
                       <Text
                         fontSize={{ base: "2xs", md: "xs" }}
-                        color="gray.400"
+                        color={theme.mutedText}
                         lineHeight="tall"
                       >
                         {expense.recommendation}
@@ -379,21 +440,22 @@ function ExpenseAnalysis({ expenses, onSelect, t }) {
 // Savings Strategies
 function SavingsStrategies({ strategies, onSelect, t }) {
   if (!strategies || strategies.length === 0) return null;
+  const theme = useChartTheme();
 
   const difficultyConfigMap = getDifficultyConfig(t);
 
   return (
     <Box
-      bg="gray.800"
+      bg={theme.surfaceBg}
       borderRadius="xl"
       p={{ base: "4", md: "5" }}
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor={theme.surfaceBorder}
     >
       <Text
         fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
-        color="gray.400"
+        color={theme.mutedText}
         mb={{ base: "3", md: "4" }}
         textTransform="uppercase"
         letterSpacing="wide"
@@ -410,12 +472,12 @@ function SavingsStrategies({ strategies, onSelect, t }) {
             <Box
               key={strategy.id || index}
               p={{ base: "3", md: "4" }}
-              bg="gray.750"
+              bg={theme.insetBg}
               borderRadius="lg"
               borderWidth="1px"
-              borderColor="gray.700"
+              borderColor={theme.insetBorder}
               _hover={{
-                borderColor: "gray.600",
+                borderColor: theme.hoverBorder,
                 transform: "translateY(-1px)",
               }}
               transition="all 0.2s"
@@ -454,7 +516,7 @@ function SavingsStrategies({ strategies, onSelect, t }) {
                   <Text
                     fontSize={{ base: "xs", md: "sm" }}
                     fontWeight="semibold"
-                    color="white"
+                    color={theme.highlightText}
                     isTruncated
                   >
                     {strategy.title}
@@ -471,7 +533,7 @@ function SavingsStrategies({ strategies, onSelect, t }) {
 
               <Text
                 fontSize={{ base: "xs", md: "sm" }}
-                color="gray.400"
+                color={theme.mutedText}
                 mb="2"
                 pl={{ base: "8", md: "10" }}
               >
@@ -505,21 +567,22 @@ function ActionItems({
 }) {
   const hasItems = actionItems && actionItems.length > 0;
   if (!hasItems && !weeklyCheckIn) return null;
+  const theme = useChartTheme();
 
   const categoryConfigMap = getCategoryConfig(t);
 
   return (
     <Box
-      bg="gray.800"
+      bg={theme.surfaceBg}
       borderRadius="xl"
       p={{ base: "4", md: "5" }}
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor={theme.surfaceBorder}
     >
       <Text
         fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
-        color="gray.400"
+        color={theme.mutedText}
         mb={{ base: "3", md: "4" }}
         textTransform="uppercase"
         letterSpacing="wide"
@@ -536,11 +599,11 @@ function ActionItems({
               <HStack
                 key={item.id || index}
                 p={{ base: "2", md: "3" }}
-                bg="gray.750"
+                bg={theme.insetBg}
                 borderRadius="lg"
                 spacing={{ base: "2", md: "3" }}
                 borderWidth="1px"
-                borderColor="gray.700"
+                borderColor={theme.insetBorder}
                 cursor="pointer"
                 role="button"
                 tabIndex={0}
@@ -556,7 +619,7 @@ function ActionItems({
                   w={{ base: "6", md: "8" }}
                   h={{ base: "6", md: "8" }}
                   borderRadius="lg"
-                  bg="gray.700"
+                  bg={theme.iconBg}
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
@@ -566,7 +629,7 @@ function ActionItems({
                   {categoryConfig.icon}
                 </Box>
                 <VStack align="start" spacing="0" flex="1" minW="0">
-                  <Text fontSize={{ base: "xs", md: "sm" }} color="gray.200">
+                  <Text fontSize={{ base: "xs", md: "sm" }} color={theme.highlightText}>
                     {item.action}
                   </Text>
                   <HStack spacing="2" flexWrap="wrap">
@@ -576,10 +639,10 @@ function ActionItems({
                     >
                       {categoryConfig.label}
                     </Text>
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
                       •
                     </Text>
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
                       {item.timeframe}
                     </Text>
                   </HStack>
@@ -619,7 +682,7 @@ function ActionItems({
               >
                 {t("financialChart.weeklyCheckInLabel")}
               </Text>
-              <Text fontSize={{ base: "xs", md: "sm" }} color="gray.300">
+              <Text fontSize={{ base: "xs", md: "sm" }} color={theme.subText}>
                 {weeklyCheckIn.text}
               </Text>
             </VStack>
@@ -670,6 +733,7 @@ function OverviewChart({ income, expenses, t }) {
   const total = income || 1;
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const savingsAmount = Math.max(0, income - totalExpenses);
+  const theme = useChartTheme();
 
   const segments = useMemo(() => {
     const result = [];
@@ -738,16 +802,16 @@ function OverviewChart({ income, expenses, t }) {
 
   return (
     <Box
-      bg="gray.800"
+      bg={theme.surfaceBg}
       borderRadius="xl"
       p={{ base: "4", md: "5" }}
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor={theme.surfaceBorder}
     >
       <Text
         fontSize={{ base: "xs", md: "sm" }}
         fontWeight="semibold"
-        color="gray.400"
+        color={theme.mutedText}
         mb={{ base: "3", md: "4" }}
         textTransform="uppercase"
         letterSpacing="wide"
@@ -786,7 +850,7 @@ function OverviewChart({ income, expenses, t }) {
                   }}
                 />
               ))}
-              <circle cx="80" cy="80" r="45" fill="#1f2937" />
+              <circle cx="80" cy="80" r="45" fill={theme.donutBg} />
               <text
                 x="80"
                 y="72"
@@ -801,7 +865,7 @@ function OverviewChart({ income, expenses, t }) {
                 x="80"
                 y="92"
                 textAnchor="middle"
-                fill="#9ca3af"
+                fill={theme.donutLabel}
                 fontSize="11"
               >
                 {t("financialChart.savedLabel")}
@@ -822,7 +886,7 @@ function OverviewChart({ income, expenses, t }) {
                   />
                   <Text
                     fontSize={{ base: "xs", md: "sm" }}
-                    color="gray.300"
+                    color={theme.subText}
                     isTruncated
                   >
                     {segment.name}
@@ -830,7 +894,7 @@ function OverviewChart({ income, expenses, t }) {
                 </HStack>
                 <Text
                   fontSize={{ base: "xs", md: "sm" }}
-                  color={segment.isSavings ? "green.400" : "gray.400"}
+                  color={segment.isSavings ? "green.400" : theme.mutedText}
                   fontWeight="medium"
                   flexShrink="0"
                 >
@@ -839,7 +903,7 @@ function OverviewChart({ income, expenses, t }) {
               </HStack>
             ))}
             {segments.length > 5 && (
-              <Text fontSize="xs" color="gray.500">
+              <Text fontSize="xs" color={theme.faintText}>
                 {t("financialChart.moreSegments", {
                   count: segments.length - 5,
                 })}
@@ -855,6 +919,7 @@ function OverviewChart({ income, expenses, t }) {
 // Expense Bar Chart - Horizontal bars comparing expenses
 function ExpenseBarChart({ expenses, income, t }) {
   if (!expenses || expenses.length === 0) return null;
+  const theme = useChartTheme();
 
   const maxAmount = Math.max(...expenses.map((e) => e.amount), 1);
   const sortedExpenses = [...expenses].sort((a, b) => b.amount - a.amount);
@@ -887,11 +952,11 @@ function ExpenseBarChart({ expenses, income, t }) {
 
   return (
     <Box
-      bg="gray.800"
+      bg={theme.surfaceBg}
       borderRadius="xl"
       p={{ base: "4", md: "5" }}
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor={theme.surfaceBorder}
     >
       <HStack
         justify="space-between"
@@ -902,7 +967,7 @@ function ExpenseBarChart({ expenses, income, t }) {
         <Text
           fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
-          color="gray.400"
+          color={theme.mutedText}
           textTransform="uppercase"
           letterSpacing="wide"
         >
@@ -911,19 +976,19 @@ function ExpenseBarChart({ expenses, income, t }) {
         <HStack spacing="3" flexWrap="wrap">
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#3b82f6" />
-            <Text fontSize="2xs" color="gray.500">
+            <Text fontSize="2xs" color={theme.faintText}>
               {t("financialChart.priorityLabels.essential")}
             </Text>
           </HStack>
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#8b5cf6" />
-            <Text fontSize="2xs" color="gray.500">
+            <Text fontSize="2xs" color={theme.faintText}>
               {t("financialChart.priorityLabels.important")}
             </Text>
           </HStack>
           <HStack spacing="1">
             <Box w="2" h="2" borderRadius="full" bg="#f97316" />
-            <Text fontSize="2xs" color="gray.500">
+            <Text fontSize="2xs" color={theme.faintText}>
               {t("financialChart.priorityLabels.discretionary")}
             </Text>
           </HStack>
@@ -945,7 +1010,7 @@ function ExpenseBarChart({ expenses, income, t }) {
               y1={10}
               x2={labelWidth + ratio * barAreaWidth}
               y2={chartHeight - 30}
-              stroke="#374151"
+              stroke={theme.chartGrid}
               strokeWidth="1"
               strokeDasharray={i === 0 ? "0" : "4,4"}
             />
@@ -964,7 +1029,7 @@ function ExpenseBarChart({ expenses, income, t }) {
                   x={labelWidth - 4}
                   y={y + barHeight / 2 + 3}
                   textAnchor="end"
-                  fill="#d1d5db"
+                  fill={theme.chartLabel}
                   fontSize="9"
                   fontWeight="500"
                   style={{ fontSize: "6px" }}
@@ -980,7 +1045,7 @@ function ExpenseBarChart({ expenses, income, t }) {
                   y={y}
                   width={barAreaWidth}
                   height={barHeight}
-                  fill="#1f2937"
+                  fill={theme.barBg}
                   rx="4"
                 />
 
@@ -1000,7 +1065,7 @@ function ExpenseBarChart({ expenses, income, t }) {
                   x={labelWidth + barAreaWidth + 4}
                   y={y + barHeight / 2 + 3}
                   textAnchor="start"
-                  fill="#9ca3af"
+                  fill={theme.donutLabel}
                   fontSize="9"
                   fontWeight="600"
                   style={{ fontSize: "9px" }}
@@ -1036,7 +1101,7 @@ function ExpenseBarChart({ expenses, income, t }) {
                 y={20 + sortedExpenses.length * (barHeight + barGap)}
                 width={barAreaWidth}
                 height={barHeight}
-                fill="#1f2937"
+                fill={theme.barBg}
                 rx="4"
               />
 
@@ -1076,7 +1141,7 @@ function ExpenseBarChart({ expenses, income, t }) {
               x={labelWidth + ratio * barAreaWidth}
               y={chartHeight - 6}
               textAnchor="middle"
-              fill="#6b7280"
+              fill={theme.axisText}
               fontSize="8"
               style={{ fontSize: "9px" }}
             >
@@ -1092,12 +1157,12 @@ function ExpenseBarChart({ expenses, income, t }) {
         mt="3"
         pt="3"
         borderTopWidth="1px"
-        borderColor="gray.700"
+        borderColor={theme.surfaceBorder}
         flexWrap="wrap"
         gap="2"
       >
         <VStack align="start" spacing="0">
-          <Text fontSize="2xs" color="gray.500">
+          <Text fontSize="2xs" color={theme.faintText}>
             {t("financialChart.totalExpenses")}
           </Text>
           <Text fontSize="sm" fontWeight="bold" color="red.400">
@@ -1106,7 +1171,7 @@ function ExpenseBarChart({ expenses, income, t }) {
         </VStack>
         {income > 0 && (
           <VStack align="end" spacing="0">
-            <Text fontSize="2xs" color="gray.500">
+            <Text fontSize="2xs" color={theme.faintText}>
               {t("financialChart.percentOfIncome")}
             </Text>
             <Text
@@ -1132,6 +1197,7 @@ function MonthlyChart({
   t,
 }) {
   const projectionMonths = 24;
+  const theme = useChartTheme();
 
   // Calculate both current path and optimized path
   const projectionData = useMemo(() => {
@@ -1208,11 +1274,11 @@ function MonthlyChart({
 
   return (
     <Box
-      bg="gray.800"
+      bg={theme.surfaceBg}
       borderRadius="xl"
       p={{ base: "4", md: "5" }}
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor={theme.surfaceBorder}
     >
       <HStack
         justify="space-between"
@@ -1223,7 +1289,7 @@ function MonthlyChart({
         <Text
           fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
-          color="gray.400"
+          color={theme.mutedText}
           textTransform="uppercase"
           letterSpacing="wide"
         >
@@ -1261,7 +1327,7 @@ function MonthlyChart({
             y1={padding.top + innerHeight * (1 - ratio)}
             x2={padding.left + innerWidth}
             y2={padding.top + innerHeight * (1 - ratio)}
-            stroke="#374151"
+            stroke={theme.chartGrid}
             strokeWidth="1"
             strokeDasharray={i === 0 ? "0" : "4,4"}
           />
@@ -1338,7 +1404,7 @@ function MonthlyChart({
               x={padding.left + (d.month / projectionMonths) * innerWidth}
               y={chartHeight - 5}
               textAnchor="middle"
-              fill="#9ca3af"
+              fill={theme.donutLabel}
               fontSize="10"
               style={{ fontSize: "9px" }}
             >
@@ -1349,7 +1415,7 @@ function MonthlyChart({
 
       <HStack justify="space-between" mt="2" flexWrap="wrap" gap="2">
         <VStack align="start" spacing="0">
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
             {t("financialChart.currentPath")}
           </Text>
           <Text
@@ -1364,7 +1430,7 @@ function MonthlyChart({
         </VStack>
         {potentialSavings > 0 && (
           <VStack align="end" spacing="0">
-            <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+            <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
               {t("financialChart.withPlan")}
             </Text>
             <Text
@@ -1392,6 +1458,7 @@ function BirdsEyeView({
   t,
 }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const theme = useChartTheme();
 
   const milestones = useMemo(() => {
     if (!savingsGoal || monthlySavings <= 0) return [];
@@ -1463,11 +1530,11 @@ function BirdsEyeView({
 
   return (
     <Box
-      bg="gray.800"
+      bg={theme.surfaceBg}
       borderRadius="xl"
       p={{ base: "4", md: "5" }}
       borderWidth="1px"
-      borderColor="gray.700"
+      borderColor={theme.surfaceBorder}
     >
       <HStack
         justify="space-between"
@@ -1478,7 +1545,7 @@ function BirdsEyeView({
         <Text
           fontSize={{ base: "xs", md: "sm" }}
           fontWeight="semibold"
-          color="gray.400"
+          color={theme.mutedText}
           textTransform="uppercase"
           letterSpacing="wide"
         >
@@ -1497,7 +1564,7 @@ function BirdsEyeView({
 
       <Box mb="5">
         <HStack justify="space-between" mb="2">
-          <Text fontSize="xs" color="gray.500">
+          <Text fontSize="xs" color={theme.faintText}>
             {t("financialChart.currentProgress")}
           </Text>
           <Text fontSize="xs" color="green.400" fontWeight="bold">
@@ -1507,7 +1574,7 @@ function BirdsEyeView({
         <Box
           position="relative"
           h="3"
-          bg="gray.700"
+          bg={theme.insetBg}
           borderRadius="full"
           overflow="hidden"
         >
@@ -1532,7 +1599,7 @@ function BirdsEyeView({
                 transform="translate(-50%, -50%)"
                 w="2"
                 h="2"
-                bg={position <= progressPercent ? "green.400" : "gray.500"}
+                bg={position <= progressPercent ? "green.400" : theme.faintText}
                 borderRadius="full"
               />
             );
@@ -1548,15 +1615,15 @@ function BirdsEyeView({
               <HStack
                 key={index}
                 p={{ base: "2", md: "3" }}
-                bg={isReached ? "green.900" : "gray.750"}
+                bg={isReached ? theme.successBg : theme.insetBg}
                 borderRadius="lg"
                 borderWidth="1px"
                 borderColor={
                   isReached
-                    ? "green.700"
+                    ? theme.successBorder
                     : milestone.isFinal
-                      ? "purple.700"
-                      : "gray.700"
+                      ? "purple.400"
+                      : theme.insetBorder
                 }
                 opacity={isReached ? 0.7 : 1}
               >
@@ -1566,10 +1633,10 @@ function BirdsEyeView({
                   borderRadius="lg"
                   bg={
                     isReached
-                      ? "green.600"
+                      ? theme.successIconBg
                       : milestone.isFinal
-                        ? "purple.600"
-                        : "gray.600"
+                        ? theme.finalIconBg
+                        : theme.milestoneIconBg
                   }
                   display="flex"
                   alignItems="center"
@@ -1587,14 +1654,14 @@ function BirdsEyeView({
                   <Text
                     fontSize={{ base: "xs", md: "sm" }}
                     fontWeight="semibold"
-                    color={isReached ? "green.300" : "gray.200"}
+                    color={isReached ? "green.300" : theme.highlightText}
                     isTruncated
                   >
                     {milestone.label}
                   </Text>
                   <Text
                     fontSize={{ base: "2xs", md: "xs" }}
-                    color="gray.500"
+                    color={theme.faintText}
                     isTruncated
                   >
                     {milestone.sublabel || formatCurrency(milestone.amount)}
@@ -1609,7 +1676,7 @@ function BirdsEyeView({
                         ? "green.400"
                         : milestone.isFinal
                           ? "purple.400"
-                          : "gray.400"
+                          : theme.mutedText
                     }
                   >
                     {isReached
@@ -1619,7 +1686,7 @@ function BirdsEyeView({
                         })}
                   </Text>
                   {!isReached && (
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500">
+                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
                       {formatCurrency(milestone.amount)}
                     </Text>
                   )}
@@ -1631,8 +1698,8 @@ function BirdsEyeView({
       )}
 
       {(!savingsGoal || monthlySavings <= 0) && (
-        <Box p="4" bg="gray.750" borderRadius="lg" textAlign="center">
-          <Text fontSize="sm" color="gray.400">
+        <Box p="4" bg={theme.insetBg} borderRadius="lg" textAlign="center">
+          <Text fontSize="sm" color={theme.mutedText}>
             {!savingsGoal
               ? t("financialChart.noGoalMessage")
               : t("financialChart.increaseSavingsMessage")}
@@ -1655,6 +1722,7 @@ function MetricsSummary({
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const savingsRate =
     income > 0 ? ((monthlySavings / income) * 100).toFixed(0) : 0;
+  const theme = useChartTheme();
 
   return (
     <Grid
@@ -1663,14 +1731,14 @@ function MetricsSummary({
     >
       <GridItem>
         <Box
-          bg="gray.800"
+          bg={theme.surfaceBg}
           borderRadius="xl"
           p={{ base: "3", md: "4" }}
           borderWidth="1px"
-          borderColor="gray.700"
+          borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
             {t("financialChart.metrics.monthlyIncome")}
           </Text>
           <Text
@@ -1684,14 +1752,14 @@ function MetricsSummary({
       </GridItem>
       <GridItem>
         <Box
-          bg="gray.800"
+          bg={theme.surfaceBg}
           borderRadius="xl"
           p={{ base: "3", md: "4" }}
           borderWidth="1px"
-          borderColor="gray.700"
+          borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
             {t("financialChart.metrics.expenses")}
           </Text>
           <Text
@@ -1705,14 +1773,14 @@ function MetricsSummary({
       </GridItem>
       <GridItem>
         <Box
-          bg="gray.800"
+          bg={theme.surfaceBg}
           borderRadius="xl"
           p={{ base: "3", md: "4" }}
           borderWidth="1px"
-          borderColor="gray.700"
+          borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
             {t("financialChart.metrics.youSave")}
           </Text>
           <Text
@@ -1732,14 +1800,14 @@ function MetricsSummary({
       </GridItem>
       <GridItem>
         <Box
-          bg="gray.800"
+          bg={theme.surfaceBg}
           borderRadius="xl"
           p={{ base: "3", md: "4" }}
           borderWidth="1px"
-          borderColor="gray.700"
+          borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.500" mb="1">
+          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
             {t("financialChart.metrics.goalProgress")}
           </Text>
           <Text
@@ -1765,6 +1833,7 @@ function MetricsSummary({
 // Main FinancialChart component
 export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
   const { t } = useI18n();
+  const theme = useChartTheme();
   const [activeTab, setActiveTab] = useState(0);
   const [draftIncome, setDraftIncome] = useState(0);
   const [draftSavingsGoal, setDraftSavingsGoal] = useState("");
@@ -2062,10 +2131,10 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
 
         {/* Interactive Updates */}
         <Box
-          bg="gray.900"
+          bg={theme.elevatedBg}
           borderRadius="xl"
           borderWidth="1px"
-          borderColor="gray.800"
+          borderColor={theme.elevatedBorder}
           p={{ base: "4", md: "5" }}
         >
           <VStack align="stretch" spacing="4">
@@ -2074,7 +2143,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                 <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
                   {t("financialChart.updateSection.title")}
                 </Text>
-                <Text fontSize={{ base: "2xs", md: "xs" }} color="gray.400">
+                <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.mutedText}>
                   {t("financialChart.updateSection.subtitle")}
                 </Text>
               </Box>
@@ -2082,20 +2151,20 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
 
             <Box
               p="3"
-              bg="gray.850"
+              bg={theme.insetBg}
               borderRadius="lg"
               borderWidth="1px"
-              borderColor="gray.700"
+              borderColor={theme.insetBorder}
               animation={
                 showUpdateFlash ? `${flashAnimation} 1.4s ease-out` : "none"
               }
             >
               <HStack justify="space-between" flexWrap="wrap" gap="2">
                 <VStack align="start" spacing="0">
-                  <Text fontSize="xs" color="gray.400" fontWeight="semibold">
+                  <Text fontSize="xs" color={theme.mutedText} fontWeight="semibold">
                     {t("financialChart.updateSection.statusLabel")}
                   </Text>
-                  <Text fontSize="xs" color="gray.300">
+                  <Text fontSize="xs" color={theme.subText}>
                     {isUpdating
                       ? t("financialChart.updateSection.statusApplying")
                       : updateSummary.length === 0
@@ -2126,41 +2195,41 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               gap="3"
             >
               <Box>
-                <Text fontSize="2xs" color="gray.500" mb="1">
+                <Text fontSize="2xs" color={theme.faintText} mb="1">
                   {t("financialChart.updateSection.monthlyIncome")}
                 </Text>
                 <Input
                   value={draftIncome}
                   onChange={(e) => setDraftIncome(e.target.value)}
                   type="number"
-                  bg="gray.800"
-                  borderColor="gray.700"
+                  bg={theme.inputBg}
+                  borderColor={theme.inputBorder}
                   fontSize="sm"
                 />
               </Box>
               <Box>
-                <Text fontSize="2xs" color="gray.500" mb="1">
+                <Text fontSize="2xs" color={theme.faintText} mb="1">
                   {t("financialChart.updateSection.currentSavings")}
                 </Text>
                 <Input
                   value={draftCurrentSavings}
                   onChange={(e) => setDraftCurrentSavings(e.target.value)}
                   type="number"
-                  bg="gray.800"
-                  borderColor="gray.700"
+                  bg={theme.inputBg}
+                  borderColor={theme.inputBorder}
                   fontSize="sm"
                 />
               </Box>
               <Box>
-                <Text fontSize="2xs" color="gray.500" mb="1">
+                <Text fontSize="2xs" color={theme.faintText} mb="1">
                   {t("financialChart.updateSection.savingsGoal")}
                 </Text>
                 <Input
                   value={draftSavingsGoal}
                   onChange={(e) => setDraftSavingsGoal(e.target.value)}
                   type="number"
-                  bg="gray.800"
-                  borderColor="gray.700"
+                  bg={theme.inputBg}
+                  borderColor={theme.inputBorder}
                   fontSize="sm"
                 />
               </Box>
@@ -2168,7 +2237,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
 
             <VStack align="stretch" spacing="2">
               <HStack justify="space-between">
-                <Text fontSize="2xs" color="gray.500">
+                <Text fontSize="2xs" color={theme.faintText}>
                   {t("financialChart.updateSection.expenses")}
                 </Text>
                 <Button
@@ -2193,8 +2262,8 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                       updateExpenseField(index, "name", e.target.value)
                     }
                     placeholder={t("financialChart.updateSection.expenseName")}
-                    bg="gray.800"
-                    borderColor="gray.700"
+                    bg={theme.inputBg}
+                    borderColor={theme.inputBorder}
                     fontSize="sm"
                   />
                   <Input
@@ -2204,8 +2273,8 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                     }
                     type="number"
                     placeholder={t("financialChart.updateSection.amount")}
-                    bg="gray.800"
-                    borderColor="gray.700"
+                    bg={theme.inputBg}
+                    borderColor={theme.inputBorder}
                     fontSize="sm"
                   />
                   <NativeSelect.Root>
@@ -2214,8 +2283,8 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                       onChange={(e) =>
                         updateExpenseField(index, "priority", e.target.value)
                       }
-                      bg="gray.800"
-                      borderColor="gray.700"
+                      bg={theme.inputBg}
+                      borderColor={theme.inputBorder}
                       fontSize="sm"
                     >
                       <option value="essential">
@@ -2242,15 +2311,15 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
             </VStack>
 
             <Box>
-              <Text fontSize="2xs" color="gray.500" mb="1">
+              <Text fontSize="2xs" color={theme.faintText} mb="1">
                 {t("financialChart.updateSection.notesLabel")}
               </Text>
               <Textarea
                 value={updateNotes}
                 onChange={(e) => setUpdateNotes(e.target.value)}
                 placeholder={t("financialChart.updateSection.notesPlaceholder")}
-                bg="gray.800"
-                borderColor="gray.700"
+                bg={theme.inputBg}
+                borderColor={theme.inputBorder}
                 fontSize="sm"
                 minH="90px"
               />
@@ -2270,18 +2339,18 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
 
         {/* Tabbed Content */}
         <Box
-          bg="gray.900"
+          bg={theme.elevatedBg}
           borderRadius="xl"
           borderWidth="1px"
-          borderColor="gray.800"
+          borderColor={theme.elevatedBorder}
           overflow="hidden"
         >
           {/* Custom Tab List */}
           <HStack
             p={{ base: "3", md: "4" }}
-            bg="gray.850"
+            bg={theme.insetBg}
             borderBottomWidth="1px"
-            borderColor="gray.800"
+            borderColor={theme.insetBorder}
             gap={{ base: "1", md: "2" }}
             overflowX="auto"
             css={{
@@ -2300,8 +2369,8 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                 fontSize={{ base: "xs", md: "sm" }}
                 borderRadius="full"
                 bg={activeTab === index ? "blue.600" : "transparent"}
-                color={activeTab === index ? "white" : "gray.400"}
-                _hover={{ bg: activeTab === index ? "blue.600" : "gray.700" }}
+                color={activeTab === index ? "white" : theme.mutedText}
+                _hover={{ bg: activeTab === index ? "blue.600" : theme.tabHoverBg }}
                 onClick={() => setActiveTab(index)}
                 flexShrink="0"
                 px={{ base: "3", md: "4" }}
@@ -2413,19 +2482,19 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
           onClick={closeInteraction}
         >
           <Box
-            bg="gray.900"
+            bg={theme.elevatedBg}
             p={{ base: "4", md: "6" }}
             borderRadius="xl"
             width={{ base: "92%", sm: "480px" }}
             maxWidth="480px"
             borderWidth="1px"
-            borderColor="gray.700"
+            borderColor={theme.surfaceBorder}
             onClick={(event) => event.stopPropagation()}
           >
             <VStack align="stretch" spacing="4">
               <HStack justify="space-between" align="start">
                 <Box>
-                  <Text fontSize="sm" color="gray.400">
+                  <Text fontSize="sm" color={theme.mutedText}>
                     {interaction.type === "expense"
                       ? t("financialChart.interaction.expenseQuest")
                       : interaction.type === "weekly"
@@ -2445,26 +2514,26 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               </HStack>
 
               {interaction.item.description && (
-                <Text fontSize="sm" color="gray.400">
+                <Text fontSize="sm" color={theme.mutedText}>
                   {interaction.item.description}
                 </Text>
               )}
 
               {interaction.item.recommendation && (
-                <Text fontSize="sm" color="gray.300">
+                <Text fontSize="sm" color={theme.subText}>
                   {interaction.item.recommendation}
                 </Text>
               )}
 
               {interaction.item.challenge && (
                 <Box
-                  bg="gray.800"
+                  bg={theme.surfaceBg}
                   borderRadius="lg"
                   p="3"
                   borderWidth="1px"
-                  borderColor="gray.700"
+                  borderColor={theme.surfaceBorder}
                 >
-                  <Text fontSize="2xs" color="gray.500" mb="1">
+                  <Text fontSize="2xs" color={theme.faintText} mb="1">
                     {t("financialChart.interaction.challenge")}
                   </Text>
                   <Text fontSize="sm" color="cyan.200">
@@ -2474,13 +2543,13 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               )}
 
               <Box
-                bg="gray.850"
+                bg={theme.insetBg}
                 borderRadius="lg"
                 p="3"
                 borderWidth="1px"
-                borderColor="gray.700"
+                borderColor={theme.insetBorder}
               >
-                <Text fontSize="2xs" color="gray.500">
+                <Text fontSize="2xs" color={theme.faintText}>
                   {t("financialChart.interaction.nextSteps")}
                 </Text>
                 <Text fontSize="sm" color="green.300">
