@@ -7,6 +7,7 @@ import {
   HStack,
   Input,
   IconButton,
+  Switch,
 } from "@chakra-ui/react";
 import { HiMenu, HiX, HiUserCircle, HiLogout, HiKey } from "react-icons/hi";
 import { IoIosMore } from "react-icons/io";
@@ -15,6 +16,7 @@ import { CiSquarePlus } from "react-icons/ci";
 import { LuBadgeCheck, LuKeyRound } from "react-icons/lu";
 import { toaster } from "@/components/ui/toaster";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 export function AccountMenu({
   identity,
@@ -22,6 +24,8 @@ export function AccountMenu({
   error,
   onSwitchAccount,
   onLogout,
+  theme,
+  onThemeChange,
 }) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +35,12 @@ export function AccountMenu({
   const [switchError, setSwitchError] = useState("");
   const [isSwitching, setIsSwitching] = useState(false);
   const currentSecret = identity?.nsec || "";
+  const drawerBg = useColorModeValue("white", "gray.900");
+  const drawerBorder = useColorModeValue("gray.200", "gray.700");
+  const panelBg = useColorModeValue("gray.100", "gray.800");
+  const modalBg = useColorModeValue("white", "gray.800");
+  const inputBg = useColorModeValue("gray.100", "gray.700");
+  const inputBorder = useColorModeValue("gray.300", "gray.600");
 
   const handleSwitchAccount = async () => {
     if (!nsecInput.trim()) {
@@ -153,7 +163,7 @@ export function AccountMenu({
             right="0"
             width={{ base: "100%", sm: "350px" }}
             height="100%"
-            bg="gray.900"
+            bg={drawerBg}
             boxShadow="xl"
             onClick={(e) => e.stopPropagation()}
             overflowY="auto"
@@ -171,6 +181,34 @@ export function AccountMenu({
                 >
                   <HiX size={20} />
                 </IconButton>
+              </HStack>
+
+              <HStack
+                justify="space-between"
+                align="center"
+                p="3"
+                borderRadius="md"
+                bg={panelBg}
+              >
+                <Text fontSize="sm" fontWeight="semibold">
+                  {t("accountMenu.themeLabel")}
+                </Text>
+                <HStack spacing="2">
+                  <Text fontSize="xs" color="gray.400">
+                    {t("accountMenu.themeLight")}
+                  </Text>
+                  <Switch
+                    isChecked={theme === "dark"}
+                    onChange={(event) =>
+                      onThemeChange?.(event.target.checked ? "dark" : "light")
+                    }
+                    aria-label={t("accountMenu.themeToggleLabel")}
+                    colorScheme="blue"
+                  />
+                  <Text fontSize="xs" color="gray.400">
+                    {t("accountMenu.themeDark")}
+                  </Text>
+                </HStack>
               </HStack>
 
               {isLoading ? (
@@ -262,7 +300,7 @@ export function AccountMenu({
           }}
         >
           <Box
-            bg="gray.800"
+            bg={modalBg}
             p="6"
             borderRadius="lg"
             width={{ base: "90%", sm: "400px" }}
@@ -302,8 +340,8 @@ export function AccountMenu({
                 }}
                 fontFamily="mono"
                 fontSize="sm"
-                bg="gray.700"
-                borderColor="gray.600"
+                bg={inputBg}
+                borderColor={inputBorder}
                 _focus={{ borderColor: "blue.400" }}
               />
 
@@ -355,7 +393,7 @@ export function AccountMenu({
           onClick={() => setShowInstallModal(false)}
         >
           <Box
-            bg="gray.800"
+            bg={modalBg}
             p="6"
             borderRadius="lg"
             width={{ base: "90%", sm: "440px" }}
@@ -383,10 +421,10 @@ export function AccountMenu({
                   <Box
                     key={step.id}
                     p="3"
-                    bg="gray.900"
+                    bg={drawerBg}
                     borderRadius="md"
                     borderWidth="1px"
-                    borderColor="gray.700"
+                    borderColor={drawerBorder}
                   >
                     <HStack align="flex-start" gap="3">
                       <Box color="orange.200" mt="1">
