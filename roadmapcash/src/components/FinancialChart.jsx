@@ -1063,6 +1063,22 @@ function InvestmentPortfolio({ allocations, t }) {
                   </text>
                 </svg>
               </Box>
+              <HStack spacing="2" flexWrap="wrap" justify="center">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  borderColor={theme.surfaceBorder}
+                >
+                  {t("financialChart.portfolio.customizeButton")}
+                </Button>
+                <Button
+                  size="xs"
+                  colorScheme="blue"
+                  variant="ghost"
+                >
+                  {t("financialChart.portfolio.qualityButton")}
+                </Button>
+              </HStack>
             </VStack>
           </GridItem>
           <GridItem>
@@ -1134,10 +1150,14 @@ function ExpenseBarChart({ expenses, income, t }) {
   if (!expenses || expenses.length === 0) return null;
   const theme = useChartTheme();
 
-  const maxAmount = Math.max(...expenses.map((e) => e.amount), 1);
   const sortedExpenses = [...expenses].sort((a, b) => b.amount - a.amount);
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const savingsAmount = Math.max(0, (income || 0) - totalExpenses);
+  const maxAmount = Math.max(
+    ...expenses.map((e) => e.amount),
+    savingsAmount,
+    1,
+  );
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -1231,7 +1251,10 @@ function ExpenseBarChart({ expenses, income, t }) {
 
           {/* Expense bars */}
           {sortedExpenses.map((expense, index) => {
-            const barWidth = (expense.amount / maxAmount) * barAreaWidth;
+            const barWidth = Math.min(
+              (expense.amount / maxAmount) * barAreaWidth,
+              barAreaWidth,
+            );
             const y = 20 + index * (barHeight + barGap);
             const color = getPriorityColor(expense.priority);
 
@@ -1321,7 +1344,10 @@ function ExpenseBarChart({ expenses, income, t }) {
               <rect
                 x={labelWidth}
                 y={20 + sortedExpenses.length * (barHeight + barGap)}
-                width={(savingsAmount / maxAmount) * barAreaWidth}
+                width={Math.min(
+                  (savingsAmount / maxAmount) * barAreaWidth,
+                  barAreaWidth,
+                )}
                 height={barHeight}
                 fill="#10b981"
                 rx="4"
