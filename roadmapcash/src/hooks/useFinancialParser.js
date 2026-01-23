@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { getGenerativeModel, Schema } from "@firebase/vertexai";
-import { ai } from "@/database/firebaseConfig";
+import { ai, simplemodel } from "@/database/firebaseConfig";
 import { useI18n } from "@/i18n/I18nProvider";
 
 const financialDataSchema = Schema.object({
@@ -157,13 +157,6 @@ const financialModel = getGenerativeModel(ai, {
   generationConfig: {
     responseMimeType: "application/json",
     responseSchema: financialDataSchema,
-  },
-});
-
-const portfolioQualityModel = getGenerativeModel(ai, {
-  model: "gemini-3-flash-preview",
-  generationConfig: {
-    responseMimeType: "text/plain",
   },
 });
 
@@ -572,8 +565,7 @@ ${updateRequest}`;
           allocations: formattedAllocations,
         });
 
-        const result =
-          await portfolioQualityModel.generateContentStream(prompt);
+        const result = await simplemodel.generateContentStream(prompt);
 
         let fullText = "";
 
