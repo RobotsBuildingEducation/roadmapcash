@@ -561,9 +561,21 @@ ${updateRequest}`;
           prompt,
         );
 
+        const extractChunkText = (chunk) => {
+          if (chunk?.text) {
+            const text = chunk.text();
+            if (text) return text;
+          }
+          const parts = chunk?.candidates
+            ?.flatMap((candidate) => candidate.content?.parts || [])
+            .map((part) => part.text)
+            .filter(Boolean);
+          return parts?.join("") || "";
+        };
+
         let fullText = "";
         for await (const chunk of stream.stream) {
-          const chunkText = chunk.text();
+          const chunkText = extractChunkText(chunk);
           if (!chunkText) continue;
           fullText += chunkText;
           setFinancialData((prev) => {

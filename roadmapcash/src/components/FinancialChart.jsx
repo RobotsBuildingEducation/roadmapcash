@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import { keyframes } from "@emotion/react";
 import {
   Box,
@@ -1165,10 +1166,35 @@ function InvestmentPortfolio({
             <Text fontSize="2xs" color={theme.faintText} mb="1">
               {t("financialChart.portfolio.qualityTitle")}
             </Text>
-            <Text fontSize="sm" color={theme.subText}>
-              {qualitySummary ||
-                t("financialChart.portfolio.qualityLoading")}
-            </Text>
+            {qualitySummary ? (
+              <ReactMarkdown
+                components={{
+                  p: (props) => (
+                    <Text fontSize="sm" color={theme.subText} {...props} />
+                  ),
+                  ul: (props) => <Box as="ul" pl="4" {...props} />,
+                  ol: (props) => <Box as="ol" pl="4" {...props} />,
+                  li: (props) => (
+                    <Text
+                      as="li"
+                      fontSize="sm"
+                      color={theme.subText}
+                      ml="2"
+                      {...props}
+                    />
+                  ),
+                  strong: (props) => (
+                    <Text as="strong" color={theme.highlightText} {...props} />
+                  ),
+                }}
+              >
+                {qualitySummary}
+              </ReactMarkdown>
+            ) : (
+              <Text fontSize="sm" color={theme.subText}>
+                {t("financialChart.portfolio.qualityLoading")}
+              </Text>
+            )}
           </Box>
         )}
       </VStack>
