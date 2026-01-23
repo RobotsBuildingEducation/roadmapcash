@@ -945,6 +945,7 @@ function OverviewChart({ income, expenses, t }) {
 function InvestmentPortfolio({
   allocations,
   qualitySummary,
+  streamedQualitySummary,
   onCustomize,
   onQualityCheck,
   isUpdating,
@@ -954,9 +955,13 @@ function InvestmentPortfolio({
   const theme = useChartTheme();
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
+  const summarySource =
+    streamedQualitySummary !== null && streamedQualitySummary !== undefined
+      ? streamedQualitySummary
+      : qualitySummary;
   const normalizedQualitySummary = useMemo(() => {
-    return sanitizePortfolioQualitySummary(qualitySummary);
-  }, [qualitySummary]);
+    return sanitizePortfolioQualitySummary(summarySource);
+  }, [summarySource]);
 
   const segments = useMemo(() => {
     const result = [];
@@ -2150,6 +2155,7 @@ export function FinancialChart({
   onItemUpdate,
   onPortfolioQuality,
   isUpdating,
+  portfolioQualityDraft,
 }) {
   const { t } = useI18n();
   const theme = useChartTheme();
@@ -2834,6 +2840,7 @@ export function FinancialChart({
                 <InvestmentPortfolio
                   allocations={portfolioAllocations}
                   qualitySummary={plan?.portfolio?.qualitySummary}
+                  streamedQualitySummary={portfolioQualityDraft}
                   onCustomize={openPortfolioModal}
                   onQualityCheck={handlePortfolioQuality}
                   isUpdating={isUpdating}

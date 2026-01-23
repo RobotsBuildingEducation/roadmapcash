@@ -32,6 +32,7 @@ function App() {
     streamPortfolioQuality,
     financialData,
     setFinancialData,
+    portfolioQualityDraft,
     isLoading: isGenerating,
     error: parseError,
     isUpdating,
@@ -293,6 +294,7 @@ function App() {
                 onItemUpdate={handleItemUpdate}
                 onPortfolioQuality={handlePortfolioQualityStream}
                 isUpdating={isUpdating}
+                portfolioQualityDraft={portfolioQualityDraft}
               />
             )}
           </VStack>

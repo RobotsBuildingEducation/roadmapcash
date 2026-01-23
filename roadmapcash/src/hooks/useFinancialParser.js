@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { flushSync } from "react-dom";
 import { getGenerativeModel, Schema } from "@firebase/vertexai";
 import { ai } from "@/database/firebaseConfig";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -317,6 +316,7 @@ export function useFinancialParser() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [financialData, setFinancialData] = useState(null);
+  const [portfolioQualityDraft, setPortfolioQualityDraft] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
 
@@ -562,6 +562,7 @@ ${updateRequest}`;
 
       setIsUpdating(true);
       setUpdateError(null);
+      setPortfolioQualityDraft("");
 
       try {
         const formattedAllocations = allocations
@@ -592,22 +593,7 @@ ${updateRequest}`;
           if (!chunkText) continue;
           fullText += chunkText;
           const cleanedText = sanitizePortfolioQualitySummary(fullText);
-          flushSync(() => {
-            setFinancialData((prev) => {
-              if (!prev) return prev;
-              return {
-                ...prev,
-                plan: {
-                  ...prev.plan,
-                  portfolio: {
-                    ...prev.plan?.portfolio,
-                    allocations,
-                    qualitySummary: cleanedText,
-                  },
-                },
-              };
-            });
-          });
+          setPortfolioQualityDraft(cleanedText);
         }
 
         const cleanedText = sanitizePortfolioQualitySummary(fullText);
@@ -623,10 +609,12 @@ ${updateRequest}`;
           },
         };
         setFinancialData(finalized);
+        setPortfolioQualityDraft(null);
         return finalized;
       } catch (err) {
         console.error("Error streaming portfolio quality:", err);
         setUpdateError(err.message || t("ai.updateError"));
+        setPortfolioQualityDraft(null);
         return null;
       } finally {
         setIsUpdating(false);
@@ -643,6 +631,7 @@ ${updateRequest}`;
     clearData,
     financialData,
     setFinancialData,
+    portfolioQualityDraft,
     isLoading,
     error,
     isUpdating,
