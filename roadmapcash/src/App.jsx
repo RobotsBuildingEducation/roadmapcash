@@ -99,6 +99,22 @@ function App() {
     }
   };
 
+  const handlePortfolioSave = async (portfolio) => {
+    if (!financialData) return;
+    const updated = {
+      ...financialData,
+      plan: {
+        ...financialData.plan,
+        portfolio: {
+          ...financialData.plan?.portfolio,
+          ...portfolio,
+        },
+      },
+    };
+    setFinancialData(updated);
+    await saveRoadmap(userInput, updated, "Portfolio update");
+  };
+
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
 
   useEffect(() => {
@@ -282,6 +298,7 @@ function App() {
                 data={financialData}
                 onUpdate={handleUpdate}
                 onItemUpdate={handleItemUpdate}
+                onPortfolioSave={handlePortfolioSave}
                 isUpdating={isUpdating}
               />
             )}

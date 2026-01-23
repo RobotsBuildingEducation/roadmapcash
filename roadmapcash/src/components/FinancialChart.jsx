@@ -943,14 +943,24 @@ function OverviewChart({ income, expenses, t }) {
 }
 
 // Investment Portfolio - standard allocation with charts
-function InvestmentPortfolio({ allocations, onCustomize, isUpdating, t }) {
+function InvestmentPortfolio({
+  allocations,
+  qualitySummary,
+  onCustomize,
+  onSaveQuality,
+  isUpdating,
+  t,
+}) {
   const theme = useChartTheme();
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
 
-  // Local state for quality check - completely independent
+  // Local state for quality check streaming
   const [qualityText, setQualityText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+
+  // Use saved summary if available and not currently streaming
+  const displayText = isStreaming || qualityText ? qualityText : qualitySummary;
 
   const handleCheckQuality = async () => {
     setQualityText("");
@@ -969,6 +979,11 @@ function InvestmentPortfolio({ allocations, onCustomize, isUpdating, t }) {
     }
 
     setIsStreaming(false);
+
+    // Save the quality summary
+    if (onSaveQuality && fullText) {
+      onSaveQuality(fullText);
+    }
   };
 
   const segments = useMemo(() => {
@@ -1180,7 +1195,7 @@ function InvestmentPortfolio({ allocations, onCustomize, isUpdating, t }) {
           {t("financialChart.portfolio.note")}
         </Text>
 
-        {(qualityText || isStreaming) && (
+        {(displayText || isStreaming) && (
           <Box
             bg={theme.insetBg}
             borderRadius="lg"
@@ -1191,7 +1206,7 @@ function InvestmentPortfolio({ allocations, onCustomize, isUpdating, t }) {
             <Text fontSize="2xs" color={theme.faintText} mb="1">
               {t("financialChart.portfolio.qualityTitle")}
             </Text>
-            {qualityText ? (
+            {displayText ? (
               <ReactMarkdown
                 components={{
                   p: (props) => (
@@ -1213,7 +1228,7 @@ function InvestmentPortfolio({ allocations, onCustomize, isUpdating, t }) {
                   ),
                 }}
               >
-                {qualityText}
+                {displayText}
               </ReactMarkdown>
             ) : (
               <Spinner size="sm" />
@@ -2150,7 +2165,13 @@ function MetricsSummary({
 }
 
 // Main FinancialChart component
-export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
+export function FinancialChart({
+  data,
+  onUpdate,
+  onItemUpdate,
+  onPortfolioSave,
+  isUpdating,
+}) {
   const { t } = useI18n();
   const theme = useChartTheme();
   const [activeTab, setActiveTab] = useState(0);
@@ -2225,12 +2246,12 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     );
   }, [expenses, plan]);
 
+  // Sync portfolio allocations from saved data
   useEffect(() => {
-    if (!portfolioCustomized) return;
     if (plan?.portfolio?.allocations?.length) {
       setPortfolioAllocations(plan.portfolio.allocations);
     }
-  }, [plan, portfolioCustomized]);
+  }, [plan?.portfolio?.allocations]);
 
   useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
@@ -2477,6 +2498,9 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     setPortfolioAllocations(portfolioDraft);
     setPortfolioCustomized(true);
     setPortfolioModalOpen(false);
+    if (onPortfolioSave) {
+      onPortfolioSave({ allocations: portfolioDraft });
+    }
   };
 
   const portfolioDraftTotal = portfolioDraft.reduce(
@@ -2824,7 +2848,11 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <InvestmentPortfolio
                   allocations={portfolioAllocations}
+                  qualitySummary={plan?.portfolio?.qualitySummary}
                   onCustomize={openPortfolioModal}
+                  onSaveQuality={(summary) =>
+                    onPortfolioSave?.({ qualitySummary: summary })
+                  }
                   isUpdating={isUpdating}
                   t={t}
                 />
