@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { getGenerativeModel, Schema } from "@firebase/vertexai";
 import { ai } from "@/database/firebaseConfig";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -593,7 +594,9 @@ ${updateRequest}`;
           if (!chunkText) continue;
           fullText += chunkText;
           const cleanedText = sanitizePortfolioQualitySummary(fullText);
-          setPortfolioQualityDraft(cleanedText);
+          flushSync(() => {
+            setPortfolioQualityDraft(cleanedText);
+          });
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
 
