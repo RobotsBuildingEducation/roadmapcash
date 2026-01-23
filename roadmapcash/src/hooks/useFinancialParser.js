@@ -211,6 +211,19 @@ const parseNumber = (value) => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
+const sanitizePortfolioQualitySummary = (text) => {
+  if (!text) return "";
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/^[`"'“”]+/, "");
+  cleaned = cleaned.replace(
+    /^(?:plan\.portfolio\.)?qualitySummary\s*:\s*/i,
+    "",
+  );
+  cleaned = cleaned.replace(/^[`"'“”]+/, "");
+  cleaned = cleaned.replace(/[`"'“”]+$/, "");
+  return cleaned.trim();
+};
+
 const extractMatch = (text, pattern) => {
   const match = text.match(pattern);
   if (!match) return null;
@@ -303,6 +316,7 @@ export function useFinancialParser() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [financialData, setFinancialData] = useState(null);
+  const [portfolioQualityDraft, setPortfolioQualityDraft] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
 
@@ -548,6 +562,7 @@ ${updateRequest}`;
 
       setIsUpdating(true);
       setUpdateError(null);
+      setPortfolioQualityDraft("");
 
       try {
         const formattedAllocations = allocations
@@ -577,22 +592,12 @@ ${updateRequest}`;
           const chunkText = extractChunkText(chunk);
           if (!chunkText) continue;
           fullText += chunkText;
-          setFinancialData((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              plan: {
-                ...prev.plan,
-                portfolio: {
-                  ...prev.plan?.portfolio,
-                  allocations,
-                  qualitySummary: fullText,
-                },
-              },
-            };
-          });
+          const cleanedText = sanitizePortfolioQualitySummary(fullText);
+          setPortfolioQualityDraft(cleanedText);
+          await new Promise((resolve) => setTimeout(resolve, 0));
         }
 
+        const cleanedText = sanitizePortfolioQualitySummary(fullText);
         const finalized = {
           ...currentData,
           plan: {
@@ -600,15 +605,17 @@ ${updateRequest}`;
             portfolio: {
               ...currentData.plan?.portfolio,
               allocations,
-              qualitySummary: fullText,
+              qualitySummary: cleanedText,
             },
           },
         };
         setFinancialData(finalized);
+        setPortfolioQualityDraft(null);
         return finalized;
       } catch (err) {
         console.error("Error streaming portfolio quality:", err);
         setUpdateError(err.message || t("ai.updateError"));
+        setPortfolioQualityDraft(null);
         return null;
       } finally {
         setIsUpdating(false);
@@ -625,6 +632,7 @@ ${updateRequest}`;
     clearData,
     financialData,
     setFinancialData,
+    portfolioQualityDraft,
     isLoading,
     error,
     isUpdating,
