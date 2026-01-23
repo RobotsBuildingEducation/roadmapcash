@@ -226,7 +226,7 @@ export const translations = {
         expenseComplete:
           "Add a new, distinct optimization recommendation for the expense \"{name}\". Keep the expense list the same, but update the recommendation field for \"{name}\".",
         portfolioQuality:
-          "Review the investment allocation below and update plan.portfolio.qualitySummary with a concise summary (2-3 sentences) highlighting strengths, risks, and one improvement.\n{allocations}",
+          "Review the investment allocation below and return only a concise 2-3 sentence summary highlighting strengths, risks, and one improvement. Do not include keys, labels, or quotes.\n{allocations}",
       },
     },
     ai: {
@@ -525,7 +525,7 @@ Respond in English.`,
         expenseComplete:
           "Agrega una nueva recomendación de optimización para el gasto \"{name}\". Mantén la lista de gastos igual, pero actualiza el campo recommendation para \"{name}\".",
         portfolioQuality:
-          "Revisa la asignación de inversión a continuación y actualiza plan.portfolio.qualitySummary con un resumen conciso (2-3 oraciones) que destaque fortalezas, riesgos y una mejora.\n{allocations}",
+          "Revisa la asignación de inversión a continuación y devuelve solo un resumen conciso de 2-3 oraciones que destaque fortalezas, riesgos y una mejora. No incluyas claves, etiquetas ni comillas.\n{allocations}",
       },
     },
     ai: {

@@ -65,6 +65,19 @@ const STANDARD_PORTFOLIO = [
   { name: "Bitcoin", percentage: 5 },
 ];
 
+const sanitizePortfolioQualitySummary = (text) => {
+  if (!text) return "";
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/^[`"'“”]+/, "");
+  cleaned = cleaned.replace(
+    /^(?:plan\.portfolio\.)?qualitySummary\s*:\s*/i,
+    "",
+  );
+  cleaned = cleaned.replace(/^[`"'“”]+/, "");
+  cleaned = cleaned.replace(/[`"'“”]+$/, "");
+  return cleaned.trim();
+};
+
 const PRIORITY_COLORS = {
   essential: {
     bg: "blue.900",
@@ -942,11 +955,7 @@ function InvestmentPortfolio({
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
   const normalizedQualitySummary = useMemo(() => {
-    if (!qualitySummary) return "";
-    return qualitySummary.replace(
-      /^plan\\.portfolio\\.qualitySummary:\\s*/i,
-      "",
-    );
+    return sanitizePortfolioQualitySummary(qualitySummary);
   }, [qualitySummary]);
 
   const segments = useMemo(() => {

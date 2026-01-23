@@ -211,6 +211,19 @@ const parseNumber = (value) => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
+const sanitizePortfolioQualitySummary = (text) => {
+  if (!text) return "";
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/^[`"'“”]+/, "");
+  cleaned = cleaned.replace(
+    /^(?:plan\.portfolio\.)?qualitySummary\s*:\s*/i,
+    "",
+  );
+  cleaned = cleaned.replace(/^[`"'“”]+/, "");
+  cleaned = cleaned.replace(/[`"'“”]+$/, "");
+  return cleaned.trim();
+};
+
 const extractMatch = (text, pattern) => {
   const match = text.match(pattern);
   if (!match) return null;
@@ -577,6 +590,7 @@ ${updateRequest}`;
           const chunkText = extractChunkText(chunk);
           if (!chunkText) continue;
           fullText += chunkText;
+          const cleanedText = sanitizePortfolioQualitySummary(fullText);
           setFinancialData((prev) => {
             if (!prev) return prev;
             return {
@@ -586,13 +600,14 @@ ${updateRequest}`;
                 portfolio: {
                   ...prev.plan?.portfolio,
                   allocations,
-                  qualitySummary: fullText,
+                  qualitySummary: cleanedText,
                 },
               },
             };
           });
         }
 
+        const cleanedText = sanitizePortfolioQualitySummary(fullText);
         const finalized = {
           ...currentData,
           plan: {
@@ -600,7 +615,7 @@ ${updateRequest}`;
             portfolio: {
               ...currentData.plan?.portfolio,
               allocations,
-              qualitySummary: fullText,
+              qualitySummary: cleanedText,
             },
           },
         };
