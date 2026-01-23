@@ -46,6 +46,24 @@ const COLORS = {
   ],
 };
 
+const PORTFOLIO_COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#a855f7",
+  "#94a3b8",
+  "#f97316",
+];
+
+const STANDARD_PORTFOLIO = [
+  { name: "SPY", percentage: 30 },
+  { name: "Cash on hand", percentage: 25 },
+  { name: "Berkshire Hathaway", percentage: 20 },
+  { name: "Gold", percentage: 10 },
+  { name: "Bonds", percentage: 10 },
+  { name: "Bitcoin", percentage: 5 },
+];
+
 const PRIORITY_COLORS = {
   essential: {
     bg: "blue.900",
@@ -911,6 +929,201 @@ function OverviewChart({ income, expenses, t }) {
             )}
           </VStack>
         </HStack>
+      </VStack>
+    </Box>
+  );
+}
+
+// Investment Portfolio - standard allocation with charts
+function InvestmentPortfolio({ allocations, t }) {
+  const theme = useChartTheme();
+  const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
+  const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
+
+  const segments = useMemo(() => {
+    const result = [];
+    let currentAngle = -90;
+
+    portfolio.forEach((item, index) => {
+      const percentage = total ? (item.percentage / total) * 100 : 0;
+      const angle = (percentage / 100) * 360;
+      result.push({
+        ...item,
+        percentage,
+        startAngle: currentAngle,
+        endAngle: currentAngle + angle,
+        color: PORTFOLIO_COLORS[index % PORTFOLIO_COLORS.length],
+      });
+      currentAngle += angle;
+    });
+
+    return result;
+  }, [portfolio, total]);
+
+  const describeArc = (cx, cy, radius, startAngle, endAngle) => {
+    const start = polarToCartesian(cx, cy, radius, endAngle);
+    const end = polarToCartesian(cx, cy, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+      "M",
+      start.x,
+      start.y,
+      "A",
+      radius,
+      radius,
+      0,
+      largeArcFlag,
+      0,
+      end.x,
+      end.y,
+    ].join(" ");
+  };
+
+  const polarToCartesian = (cx, cy, radius, angle) => {
+    const rad = (angle * Math.PI) / 180;
+    return {
+      x: cx + radius * Math.cos(rad),
+      y: cy + radius * Math.sin(rad),
+    };
+  };
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <VStack align="stretch" spacing={{ base: "3", md: "4" }}>
+        <Box>
+          <Text
+            fontSize={{ base: "xs", md: "sm" }}
+            fontWeight="semibold"
+            color={theme.mutedText}
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            {t("financialChart.portfolio.title")}
+          </Text>
+          <Text fontSize={{ base: "xs", md: "sm" }} color={theme.subText}>
+            {t("financialChart.portfolio.subtitle")}
+          </Text>
+        </Box>
+
+        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="4">
+          <GridItem>
+            <VStack align="center" spacing="3">
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                color={theme.mutedText}
+                textTransform="uppercase"
+                letterSpacing="wide"
+              >
+                {t("financialChart.portfolio.allocationChart")}
+              </Text>
+              <Box position="relative">
+                <svg width="160" height="160" viewBox="0 0 160 160">
+                  {segments.map((segment, index) => (
+                    <path
+                      key={`${segment.name}-${index}`}
+                      d={describeArc(
+                        80,
+                        80,
+                        60,
+                        segment.startAngle,
+                        segment.endAngle - 0.5,
+                      )}
+                      fill="none"
+                      stroke={segment.color}
+                      strokeWidth="22"
+                      strokeLinecap="round"
+                    />
+                  ))}
+                  <circle cx="80" cy="80" r="45" fill={theme.donutBg} />
+                  <text
+                    x="80"
+                    y="78"
+                    textAnchor="middle"
+                    fill={theme.headerTitle}
+                    fontSize="18"
+                    fontWeight="bold"
+                  >
+                    {total}%
+                  </text>
+                  <text
+                    x="80"
+                    y="98"
+                    textAnchor="middle"
+                    fill={theme.donutLabel}
+                    fontSize="11"
+                  >
+                    {t("financialChart.portfolio.totalLabel")}
+                  </text>
+                </svg>
+              </Box>
+            </VStack>
+          </GridItem>
+          <GridItem>
+            <VStack align="stretch" spacing="3">
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                color={theme.mutedText}
+                textTransform="uppercase"
+                letterSpacing="wide"
+              >
+                {t("financialChart.portfolio.breakdownTitle")}
+              </Text>
+              {segments.map((segment) => (
+                <VStack key={segment.name} align="stretch" spacing="1">
+                  <HStack justify="space-between">
+                    <HStack spacing="2" minW="0">
+                      <Box
+                        w="3"
+                        h="3"
+                        borderRadius="full"
+                        bg={segment.color}
+                        flexShrink="0"
+                      />
+                      <Text
+                        fontSize={{ base: "xs", md: "sm" }}
+                        color={theme.subText}
+                        isTruncated
+                      >
+                        {segment.name}
+                      </Text>
+                    </HStack>
+                    <Text
+                      fontSize={{ base: "xs", md: "sm" }}
+                      color={theme.mutedText}
+                      fontWeight="medium"
+                    >
+                      {Math.round(segment.percentage)}%
+                    </Text>
+                  </HStack>
+                  <Box
+                    h="2"
+                    bg={theme.barBg}
+                    borderRadius="full"
+                    overflow="hidden"
+                  >
+                    <Box
+                      h="100%"
+                      w={`${segment.percentage}%`}
+                      bg={segment.color}
+                    />
+                  </Box>
+                </VStack>
+              ))}
+            </VStack>
+          </GridItem>
+        </Grid>
+
+        <Text fontSize="xs" color={theme.faintText}>
+          {t("financialChart.portfolio.note")}
+        </Text>
       </VStack>
     </Box>
   );
@@ -2361,6 +2574,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
             {[
               t("financialChart.tabs.overview"),
               t("financialChart.tabs.plan"),
+              t("financialChart.tabs.portfolio"),
               t("financialChart.tabs.expenses"),
             ].map((tab, index) => (
               <Button
@@ -2453,8 +2667,18 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               </VStack>
             )}
 
-            {/* Expenses Tab */}
+            {/* Portfolio Tab */}
             {activeTab === 2 && (
+              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                <InvestmentPortfolio
+                  allocations={plan?.portfolio?.allocations}
+                  t={t}
+                />
+              </VStack>
+            )}
+
+            {/* Expenses Tab */}
+            {activeTab === 3 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <ExpenseAnalysis
                   expenses={interactiveExpenses}

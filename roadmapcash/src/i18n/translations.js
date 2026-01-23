@@ -163,7 +163,17 @@ export const translations = {
       tabs: {
         overview: "Overview",
         plan: "Your Plan",
+        portfolio: "Portfolio",
         expenses: "Expenses",
+      },
+      portfolio: {
+        title: "Investment portfolio",
+        subtitle:
+          "Start with this standardized allocation and adjust it over time.",
+        allocationChart: "Allocation chart",
+        breakdownTitle: "Target allocation",
+        totalLabel: "Target mix",
+        note: "This is a starting point designed for diversification and flexibility.",
       },
       interaction: {
         expenseQuest: "Expense Quest",
@@ -439,7 +449,18 @@ Respond in English.`,
       tabs: {
         overview: "Resumen",
         plan: "Tu plan",
+        portfolio: "Portafolio",
         expenses: "Gastos",
+      },
+      portfolio: {
+        title: "Portafolio de inversión",
+        subtitle:
+          "Comienza con esta asignación estándar y ajústala con el tiempo.",
+        allocationChart: "Gráfico de asignación",
+        breakdownTitle: "Asignación objetivo",
+        totalLabel: "Mezcla objetivo",
+        note:
+          "Este es un punto de partida pensado para diversificación y flexibilidad.",
       },
       interaction: {
         expenseQuest: "Misión de gastos",

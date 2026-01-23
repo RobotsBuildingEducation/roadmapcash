@@ -112,6 +112,25 @@ const financialDataSchema = Schema.object({
           description:
             "A personalized, encouraging note about their journey - be specific to their goals",
         }),
+        portfolio: Schema.object({
+          properties: {
+            allocations: Schema.array({
+              items: Schema.object({
+                properties: {
+                  name: Schema.string({
+                    description: "Name of the investment or asset",
+                  }),
+                  percentage: Schema.number({
+                    description: "Target allocation percentage",
+                  }),
+                },
+                required: ["name", "percentage"],
+              }),
+              description: "Target investment portfolio allocation",
+            }),
+          },
+          required: ["allocations"],
+        }),
       },
       required: [
         "title",
@@ -157,6 +176,15 @@ const MONTHLY_MULTIPLIERS = {
   annual: 1 / 12,
   annually: 1 / 12,
 };
+
+const STANDARD_PORTFOLIO = [
+  { name: "SPY", percentage: 30 },
+  { name: "Cash on hand", percentage: 25 },
+  { name: "Berkshire Hathaway", percentage: 20 },
+  { name: "Gold", percentage: 10 },
+  { name: "Bonds", percentage: 10 },
+  { name: "Bitcoin", percentage: 5 },
+];
 
 const normalizeAmount = (amount, period) => {
   if (!amount || Number.isNaN(amount)) return null;
@@ -349,6 +377,14 @@ export function useFinancialParser() {
         plan.motivationalNote ||
         basePlan.motivationalNote ||
         t("ai.motivationalNoteFallback"),
+      portfolio: {
+        allocations:
+          (plan.portfolio?.allocations?.length
+            ? plan.portfolio.allocations
+            : basePlan.portfolio?.allocations?.length
+              ? basePlan.portfolio.allocations
+              : STANDARD_PORTFOLIO),
+      },
     };
 
     return result;
