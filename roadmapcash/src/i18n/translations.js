@@ -225,8 +225,6 @@ export const translations = {
           "Generate a new recommendation for the expense \"{name}\" that is different from the current one. Keep the expense list the same, but update the recommendation field for \"{name}\".",
         expenseComplete:
           "Add a new, distinct optimization recommendation for the expense \"{name}\". Keep the expense list the same, but update the recommendation field for \"{name}\".",
-        portfolioUpdate:
-          "Update plan.portfolio.allocations to:\n{allocations}\nKeep everything else the same.",
         portfolioQuality:
           "Review the investment allocation below and update plan.portfolio.qualitySummary with a concise summary (2-3 sentences) highlighting strengths, risks, and one improvement.\n{allocations}",
       },
@@ -526,8 +524,6 @@ Respond in English.`,
           "Genera una nueva recomendación para el gasto \"{name}\" que sea distinta de la actual. Mantén la lista de gastos igual, pero actualiza el campo recommendation para \"{name}\".",
         expenseComplete:
           "Agrega una nueva recomendación de optimización para el gasto \"{name}\". Mantén la lista de gastos igual, pero actualiza el campo recommendation para \"{name}\".",
-        portfolioUpdate:
-          "Actualiza plan.portfolio.allocations a:\n{allocations}\nMantén todo lo demás igual.",
         portfolioQuality:
           "Revisa la asignación de inversión a continuación y actualiza plan.portfolio.qualitySummary con un resumen conciso (2-3 oraciones) que destaque fortalezas, riesgos y una mejora.\n{allocations}",
       },

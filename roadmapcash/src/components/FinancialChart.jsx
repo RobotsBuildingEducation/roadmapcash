@@ -2391,11 +2391,6 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
       .map((allocation) => `${allocation.percentage}% ${allocation.name}`)
       .join("\n");
 
-  const buildPortfolioUpdatePrompt = (allocations) =>
-    t("financialChart.prompts.portfolioUpdate", {
-      allocations: formatPortfolioAllocations(allocations),
-    });
-
   const buildPortfolioQualityPrompt = (allocations) =>
     t("financialChart.prompts.portfolioQuality", {
       allocations: formatPortfolioAllocations(allocations),
@@ -2443,11 +2438,6 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     setPortfolioAllocations(portfolioDraft);
     setPortfolioCustomized(true);
     setPortfolioModalOpen(false);
-    if (!onItemUpdate) return;
-    const prompt = buildPortfolioUpdatePrompt(portfolioDraft);
-    if (!prompt) return;
-    setPortfolioAction("customize");
-    onItemUpdate(prompt);
   };
 
   const handlePortfolioQuality = () => {
@@ -2986,7 +2976,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               <VStack align="stretch" spacing="3">
                 {portfolioDraft.map((allocation, index) => (
                   <Grid
-                    key={`${allocation.name}-${index}`}
+                    key={`portfolio-${index}`}
                     templateColumns={{ base: "1fr 90px", md: "1fr 120px" }}
                     gap="3"
                     alignItems="center"
