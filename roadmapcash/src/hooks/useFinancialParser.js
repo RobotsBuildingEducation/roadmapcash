@@ -306,105 +306,107 @@ export function useFinancialParser() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
 
-  const finalizeFinancialData = useCallback((parsed, fallback) => {
-    const reviewFallback = t("ai.reviewExpenseFallback");
-    const result = { ...parsed };
+  const finalizeFinancialData = useCallback(
+    (parsed, fallback) => {
+      const reviewFallback = t("ai.reviewExpenseFallback");
+      const result = { ...parsed };
 
-    if (!result.expenses) {
-      result.expenses = fallback.expenses || [];
-    }
+      if (!result.expenses) {
+        result.expenses = fallback.expenses || [];
+      }
 
-    if (result.expenses.length === 0 && fallback.expenses?.length > 0) {
-      result.expenses = fallback.expenses.map((expense) => ({
-        ...expense,
-        recommendation: expense.recommendation || reviewFallback,
-        priority: expense.priority || "important",
-      }));
-    }
+      if (result.expenses.length === 0 && fallback.expenses?.length > 0) {
+        result.expenses = fallback.expenses.map((expense) => ({
+          ...expense,
+          recommendation: expense.recommendation || reviewFallback,
+          priority: expense.priority || "important",
+        }));
+      }
 
-    result.expenses = result.expenses
-      .filter(
-        (expense) =>
-          expense &&
-          expense.name &&
-          typeof expense.amount === "number" &&
-          expense.amount > 0,
-      )
-      .map((expense) => ({
-        ...expense,
-        recommendation: expense.recommendation || reviewFallback,
-        priority: expense.priority || "important",
-      }));
+      result.expenses = result.expenses
+        .filter(
+          (expense) =>
+            expense &&
+            expense.name &&
+            typeof expense.amount === "number" &&
+            expense.amount > 0,
+        )
+        .map((expense) => ({
+          ...expense,
+          recommendation: expense.recommendation || reviewFallback,
+          priority: expense.priority || "important",
+        }));
 
-    if (
-      result.income === null ||
-      result.income === undefined ||
-      result.income === 0
-    ) {
-      result.income = fallback.income ?? 0;
-    }
+      if (
+        result.income === null ||
+        result.income === undefined ||
+        result.income === 0
+      ) {
+        result.income = fallback.income ?? 0;
+      }
 
-    if (result.currentSavings === null || result.currentSavings === undefined) {
-      result.currentSavings = fallback.currentSavings ?? 0;
-    }
+      if (
+        result.currentSavings === null ||
+        result.currentSavings === undefined
+      ) {
+        result.currentSavings = fallback.currentSavings ?? 0;
+      }
 
-    if (result.savingsGoal === null || result.savingsGoal === undefined) {
-      result.savingsGoal = fallback.savingsGoal ?? null;
-    }
+      if (result.savingsGoal === null || result.savingsGoal === undefined) {
+        result.savingsGoal = fallback.savingsGoal ?? null;
+      }
 
-    const totalExpenses = result.expenses.reduce(
-      (sum, expense) => sum + expense.amount,
-      0,
-    );
-    const monthlySavings = (result.income || 0) - totalExpenses;
-    const basePlan = fallback.plan || {};
-    const plan = result.plan || {};
+      const totalExpenses = result.expenses.reduce(
+        (sum, expense) => sum + expense.amount,
+        0,
+      );
+      const monthlySavings = (result.income || 0) - totalExpenses;
+      const basePlan = fallback.plan || {};
+      const plan = result.plan || {};
 
-    const monthlyBudget = plan.monthlyBudget ||
-      basePlan.monthlyBudget || {
-        needs: Math.round((result.income || 0) * 0.5),
-        wants: Math.round((result.income || 0) * 0.3),
-        savings: Math.round((result.income || 0) * 0.2),
-      };
+      const monthlyBudget = plan.monthlyBudget ||
+        basePlan.monthlyBudget || {
+          needs: Math.round((result.income || 0) * 0.5),
+          wants: Math.round((result.income || 0) * 0.3),
+          savings: Math.round((result.income || 0) * 0.2),
+        };
 
-    result.plan = {
-      title:
-        plan.title || basePlan.title || t("ai.planTitleFallback"),
-      overview:
-        plan.overview ||
-        basePlan.overview ||
-        t("ai.overviewFallback"),
-      monthlyBudget,
-      strategies: plan.strategies || basePlan.strategies || [],
-      actionItems: plan.actionItems || basePlan.actionItems || [],
-      weeklyCheckIn:
-        plan.weeklyCheckIn ||
-        basePlan.weeklyCheckIn ||
-        t("ai.weeklyCheckInFallback"),
-      potentialSavings:
-        plan.potentialSavings ||
-        basePlan.potentialSavings ||
-        Math.max(0, monthlySavings),
-      motivationalNote:
-        plan.motivationalNote ||
-        basePlan.motivationalNote ||
-        t("ai.motivationalNoteFallback"),
-      portfolio: {
-        allocations:
-          (plan.portfolio?.allocations?.length
+      result.plan = {
+        title: plan.title || basePlan.title || t("ai.planTitleFallback"),
+        overview:
+          plan.overview || basePlan.overview || t("ai.overviewFallback"),
+        monthlyBudget,
+        strategies: plan.strategies || basePlan.strategies || [],
+        actionItems: plan.actionItems || basePlan.actionItems || [],
+        weeklyCheckIn:
+          plan.weeklyCheckIn ||
+          basePlan.weeklyCheckIn ||
+          t("ai.weeklyCheckInFallback"),
+        potentialSavings:
+          plan.potentialSavings ||
+          basePlan.potentialSavings ||
+          Math.max(0, monthlySavings),
+        motivationalNote:
+          plan.motivationalNote ||
+          basePlan.motivationalNote ||
+          t("ai.motivationalNoteFallback"),
+        portfolio: {
+          allocations: plan.portfolio?.allocations?.length
             ? plan.portfolio.allocations
             : basePlan.portfolio?.allocations?.length
               ? basePlan.portfolio.allocations
-              : STANDARD_PORTFOLIO),
-        qualitySummary:
-          plan.portfolio?.qualitySummary ||
-          basePlan.portfolio?.qualitySummary ||
-          "",
-      },
-    };
+              : STANDARD_PORTFOLIO,
+          qualitySummary:
+            plan.portfolio?.qualitySummary ||
+            basePlan.portfolio?.qualitySummary ||
+            "",
+        },
+      };
 
-    return result;
-  }, [t]);
+      return result;
+    },
+    [t],
+  );
 
   const parseFinancialInput = useCallback(
     async (userInput, additionalContext = "") => {
@@ -549,17 +551,14 @@ ${updateRequest}`;
 
       try {
         const formattedAllocations = allocations
-          .map(
-            (allocation) => `${allocation.percentage}% ${allocation.name}`,
-          )
+          .map((allocation) => `${allocation.percentage}% ${allocation.name}`)
           .join("\n");
         const prompt = t("financialChart.prompts.portfolioQuality", {
           allocations: formattedAllocations,
         });
 
-        const stream = await portfolioQualityModel.generateContentStream(
-          prompt,
-        );
+        const stream =
+          await portfolioQualityModel.generateContentStream(prompt);
 
         const extractChunkText = (chunk) => {
           if (typeof chunk?.text === "function") {
