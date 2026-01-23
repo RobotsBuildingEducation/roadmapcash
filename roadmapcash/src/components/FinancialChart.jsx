@@ -2986,14 +2986,27 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               <VStack align="stretch" spacing="3">
                 {portfolioDraft.map((allocation, index) => (
                   <Grid
-                    key={allocation.name}
+                    key={`${allocation.name}-${index}`}
                     templateColumns={{ base: "1fr 90px", md: "1fr 120px" }}
                     gap="3"
                     alignItems="center"
                   >
-                    <Text fontSize="sm" color={theme.subText}>
-                      {allocation.name}
-                    </Text>
+                    <Input
+                      value={allocation.name}
+                      onChange={(event) =>
+                        setPortfolioDraft((current) =>
+                          current.map((item, currentIndex) =>
+                            currentIndex === index
+                              ? { ...item, name: event.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                      placeholder={t("financialChart.portfolio.assetPlaceholder")}
+                      bg={theme.inputBg}
+                      borderColor={theme.inputBorder}
+                      fontSize="sm"
+                    />
                     <Input
                       type="number"
                       value={allocation.percentage}

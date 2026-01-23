@@ -183,6 +183,7 @@ export const translations = {
         closeModal: "Close",
         cancelModal: "Cancel",
         saveModal: "Save allocation",
+        assetPlaceholder: "Asset name",
       },
       interaction: {
         expenseQuest: "Expense Quest",
@@ -483,6 +484,7 @@ Respond in English.`,
         closeModal: "Cerrar",
         cancelModal: "Cancelar",
         saveModal: "Guardar asignación",
+        assetPlaceholder: "Nombre del activo",
       },
       interaction: {
         expenseQuest: "Misión de gastos",
