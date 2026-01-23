@@ -397,7 +397,10 @@ function ExpenseAnalysis({ expenses, onSelect, t }) {
                 >
                   {t(`financialChart.priorityLabels.${priority}`)}
                 </Badge>
-                <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
+                <Text
+                  fontSize={{ base: "2xs", md: "xs" }}
+                  color={theme.faintText}
+                >
                   {t("financialChart.itemsCount", {
                     count: items.length,
                     amount: formatCurrency(total),
@@ -662,7 +665,10 @@ function ActionItems({
                   {categoryConfig.icon}
                 </Box>
                 <VStack align="start" spacing="0" flex="1" minW="0">
-                  <Text fontSize={{ base: "xs", md: "sm" }} color={theme.highlightText}>
+                  <Text
+                    fontSize={{ base: "xs", md: "sm" }}
+                    color={theme.highlightText}
+                  >
                     {item.action}
                   </Text>
                   <HStack spacing="2" flexWrap="wrap">
@@ -672,10 +678,16 @@ function ActionItems({
                     >
                       {categoryConfig.label}
                     </Text>
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color={theme.faintText}
+                    >
                       •
                     </Text>
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color={theme.faintText}
+                    >
                       {item.timeframe}
                     </Text>
                   </HStack>
@@ -966,7 +978,10 @@ function InvestmentPortfolio({
     setQualityText("");
     setIsStreaming(true);
 
-    const prompt = `Review this investment portfolio and give a brief 2-3 sentence assessment of its quality, risks, and one suggestion:\n${portfolio.map((a) => `${a.percentage}% ${a.name}`).join("\n")}`;
+    const prompt = `Review this investment portfolio and assessment of its quality, catalysts, risks, and suggestions:\n${portfolio.map((a) => `${a.percentage}% ${a.name}`).join("\n")}
+    
+    Formatting: Do not use lists. This must be in a professional essay format. Use a professional title. Use a professional title with an ### HeaderSize.
+    `;
 
     const result = await simplemodel.generateContentStream(prompt);
 
@@ -1209,8 +1224,24 @@ function InvestmentPortfolio({
             {displayText ? (
               <ReactMarkdown
                 components={{
+                  h3: (props) => (
+                    <Text
+                      fontFamily="ui-serif"
+                      fontWeight={"bold"}
+                      fontSize="xl"
+                      color={theme.subText}
+                      mb={"6px"}
+                      {...props}
+                    />
+                  ),
                   p: (props) => (
-                    <Text fontSize="sm" color={theme.subText} {...props} />
+                    <Text
+                      fontFamilyfontSize="sm"
+                      fontFamily="ui-serif"
+                      color={theme.subText}
+                      mb={"14px"}
+                      {...props}
+                    />
                   ),
                   ul: (props) => <Box as="ul" pl="4" {...props} />,
                   ol: (props) => <Box as="ol" pl="4" {...props} />,
@@ -2020,7 +2051,10 @@ function BirdsEyeView({
                         })}
                   </Text>
                   {!isReached && (
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color={theme.faintText}
+                    >
                       {formatCurrency(milestone.amount)}
                     </Text>
                   )}
@@ -2072,7 +2106,11 @@ function MetricsSummary({
           borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
+          <Text
+            fontSize={{ base: "2xs", md: "xs" }}
+            color={theme.faintText}
+            mb="1"
+          >
             {t("financialChart.metrics.monthlyIncome")}
           </Text>
           <Text
@@ -2093,7 +2131,11 @@ function MetricsSummary({
           borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
+          <Text
+            fontSize={{ base: "2xs", md: "xs" }}
+            color={theme.faintText}
+            mb="1"
+          >
             {t("financialChart.metrics.expenses")}
           </Text>
           <Text
@@ -2114,7 +2156,11 @@ function MetricsSummary({
           borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
+          <Text
+            fontSize={{ base: "2xs", md: "xs" }}
+            color={theme.faintText}
+            mb="1"
+          >
             {t("financialChart.metrics.youSave")}
           </Text>
           <Text
@@ -2141,7 +2187,11 @@ function MetricsSummary({
           borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
+          <Text
+            fontSize={{ base: "2xs", md: "xs" }}
+            color={theme.faintText}
+            mb="1"
+          >
             {t("financialChart.metrics.goalProgress")}
           </Text>
           <Text
@@ -2532,7 +2582,10 @@ export function FinancialChart({
                 <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
                   {t("financialChart.updateSection.title")}
                 </Text>
-                <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.mutedText}>
+                <Text
+                  fontSize={{ base: "2xs", md: "xs" }}
+                  color={theme.mutedText}
+                >
                   {t("financialChart.updateSection.subtitle")}
                 </Text>
               </Box>
@@ -2550,7 +2603,11 @@ export function FinancialChart({
             >
               <HStack justify="space-between" flexWrap="wrap" gap="2">
                 <VStack align="start" spacing="0">
-                  <Text fontSize="xs" color={theme.mutedText} fontWeight="semibold">
+                  <Text
+                    fontSize="xs"
+                    color={theme.mutedText}
+                    fontWeight="semibold"
+                  >
                     {t("financialChart.updateSection.statusLabel")}
                   </Text>
                   <Text fontSize="xs" color={theme.subText}>
@@ -2760,7 +2817,9 @@ export function FinancialChart({
                 borderRadius="full"
                 bg={activeTab === index ? "blue.600" : "transparent"}
                 color={activeTab === index ? "white" : theme.mutedText}
-                _hover={{ bg: activeTab === index ? "blue.600" : theme.tabHoverBg }}
+                _hover={{
+                  bg: activeTab === index ? "blue.600" : theme.tabHoverBg,
+                }}
                 onClick={() => setActiveTab(index)}
                 flexShrink="0"
                 px={{ base: "3", md: "4" }}
@@ -3048,7 +3107,9 @@ export function FinancialChart({
                           ),
                         )
                       }
-                      placeholder={t("financialChart.portfolio.assetPlaceholder")}
+                      placeholder={t(
+                        "financialChart.portfolio.assetPlaceholder",
+                      )}
                       bg={theme.inputBg}
                       borderColor={theme.inputBorder}
                       fontSize="sm"
