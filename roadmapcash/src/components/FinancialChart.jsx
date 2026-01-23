@@ -2101,7 +2101,13 @@ function MetricsSummary({
 }
 
 // Main FinancialChart component
-export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
+export function FinancialChart({
+  data,
+  onUpdate,
+  onItemUpdate,
+  onPortfolioQuality,
+  isUpdating,
+}) {
   const { t } = useI18n();
   const theme = useChartTheme();
   const [activeTab, setActiveTab] = useState(0);
@@ -2386,16 +2392,6 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     return "";
   };
 
-  const formatPortfolioAllocations = (allocations) =>
-    allocations
-      .map((allocation) => `${allocation.percentage}% ${allocation.name}`)
-      .join("\n");
-
-  const buildPortfolioQualityPrompt = (allocations) =>
-    t("financialChart.prompts.portfolioQuality", {
-      allocations: formatPortfolioAllocations(allocations),
-    });
-
   const handleAiUpdate = (action) => {
     if (!interaction || !onItemUpdate) return;
     const prompt = buildInteractionPrompt(
@@ -2434,18 +2430,19 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     );
   };
 
-  const savePortfolioDraft = () => {
+  const savePortfolioDraft = async () => {
     setPortfolioAllocations(portfolioDraft);
     setPortfolioCustomized(true);
     setPortfolioModalOpen(false);
+    if (!onPortfolioQuality) return;
+    setPortfolioAction("quality");
+    await onPortfolioQuality(portfolioDraft);
   };
 
-  const handlePortfolioQuality = () => {
-    if (!onItemUpdate) return;
-    const prompt = buildPortfolioQualityPrompt(portfolioAllocations);
-    if (!prompt) return;
+  const handlePortfolioQuality = async () => {
+    if (!onPortfolioQuality) return;
     setPortfolioAction("quality");
-    onItemUpdate(prompt);
+    await onPortfolioQuality(portfolioAllocations);
   };
 
   const portfolioDraftTotal = portfolioDraft.reduce(

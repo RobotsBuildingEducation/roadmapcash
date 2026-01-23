@@ -160,6 +160,13 @@ const financialModel = getGenerativeModel(ai, {
   },
 });
 
+const portfolioQualityModel = getGenerativeModel(ai, {
+  model: "gemini-3-flash-preview",
+  generationConfig: {
+    responseMimeType: "text/plain",
+  },
+});
+
 const fastUpdateModel = getGenerativeModel(ai, {
   model: "gemini-3-flash-preview",
   generationConfig: {
@@ -533,10 +540,77 @@ ${updateRequest}`;
     [finalizeFinancialData, t],
   );
 
+  const streamPortfolioQuality = useCallback(
+    async (currentData, allocations) => {
+      if (!currentData || !allocations?.length) return null;
+
+      setIsUpdating(true);
+      setUpdateError(null);
+
+      try {
+        const formattedAllocations = allocations
+          .map(
+            (allocation) => `${allocation.percentage}% ${allocation.name}`,
+          )
+          .join("\n");
+        const prompt = t("financialChart.prompts.portfolioQuality", {
+          allocations: formattedAllocations,
+        });
+
+        const stream = await portfolioQualityModel.generateContentStream(
+          prompt,
+        );
+
+        let fullText = "";
+        for await (const chunk of stream.stream) {
+          const chunkText = chunk.text();
+          if (!chunkText) continue;
+          fullText += chunkText;
+          setFinancialData((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              plan: {
+                ...prev.plan,
+                portfolio: {
+                  ...prev.plan?.portfolio,
+                  allocations,
+                  qualitySummary: fullText,
+                },
+              },
+            };
+          });
+        }
+
+        const finalized = {
+          ...currentData,
+          plan: {
+            ...currentData.plan,
+            portfolio: {
+              ...currentData.plan?.portfolio,
+              allocations,
+              qualitySummary: fullText,
+            },
+          },
+        };
+        setFinancialData(finalized);
+        return finalized;
+      } catch (err) {
+        console.error("Error streaming portfolio quality:", err);
+        setUpdateError(err.message || t("ai.updateError"));
+        return null;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [t],
+  );
+
   return {
     parseFinancialInput,
     updateFinancialData,
     updateFinancialItem,
+    streamPortfolioQuality,
     clearData,
     financialData,
     setFinancialData,
