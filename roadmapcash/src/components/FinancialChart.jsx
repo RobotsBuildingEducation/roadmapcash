@@ -941,6 +941,13 @@ function InvestmentPortfolio({
   const theme = useChartTheme();
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
+  const normalizedQualitySummary = useMemo(() => {
+    if (!qualitySummary) return "";
+    return qualitySummary.replace(
+      /^plan\\.portfolio\\.qualitySummary:\\s*/i,
+      "",
+    );
+  }, [qualitySummary]);
 
   const segments = useMemo(() => {
     const result = [];
@@ -1155,7 +1162,8 @@ function InvestmentPortfolio({
           {t("financialChart.portfolio.note")}
         </Text>
 
-        {(qualitySummary || (isUpdating && portfolioAction === "quality")) && (
+        {(normalizedQualitySummary ||
+          (isUpdating && portfolioAction === "quality")) && (
           <Box
             bg={theme.insetBg}
             borderRadius="lg"
@@ -1166,7 +1174,7 @@ function InvestmentPortfolio({
             <Text fontSize="2xs" color={theme.faintText} mb="1">
               {t("financialChart.portfolio.qualityTitle")}
             </Text>
-            {qualitySummary ? (
+            {normalizedQualitySummary ? (
               <ReactMarkdown
                 components={{
                   p: (props) => (
@@ -1188,7 +1196,7 @@ function InvestmentPortfolio({
                   ),
                 }}
               >
-                {qualitySummary}
+                {normalizedQualitySummary}
               </ReactMarkdown>
             ) : (
               <Text fontSize="sm" color={theme.subText}>

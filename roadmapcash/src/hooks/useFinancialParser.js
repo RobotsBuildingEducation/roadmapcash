@@ -562,7 +562,7 @@ ${updateRequest}`;
         );
 
         const extractChunkText = (chunk) => {
-          if (chunk?.text) {
+          if (typeof chunk?.text === "function") {
             const text = chunk.text();
             if (text) return text;
           }
