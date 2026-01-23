@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { flushSync } from "react-dom";
 import { getGenerativeModel, Schema } from "@firebase/vertexai";
 import { ai } from "@/database/firebaseConfig";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -573,31 +572,21 @@ ${updateRequest}`;
           allocations: formattedAllocations,
         });
 
-        const stream =
+        const result =
           await portfolioQualityModel.generateContentStream(prompt);
 
-        const extractChunkText = (chunk) => {
-          if (typeof chunk?.text === "function") {
-            const text = chunk.text();
-            if (text) return text;
-          }
-          const parts = chunk?.candidates
-            ?.flatMap((candidate) => candidate.content?.parts || [])
-            .map((part) => part.text)
-            .filter(Boolean);
-          return parts?.join("") || "";
-        };
-
         let fullText = "";
-        for await (const chunk of stream.stream) {
-          const chunkText = extractChunkText(chunk);
+
+        for await (const chunk of result.stream) {
+          const chunkText =
+            typeof chunk.text === "function" ? chunk.text() : "";
+
           if (!chunkText) continue;
+
           fullText += chunkText;
-          const cleanedText = sanitizePortfolioQualitySummary(fullText);
-          flushSync(() => {
-            setPortfolioQualityDraft(cleanedText);
-          });
-          await new Promise((resolve) => setTimeout(resolve, 0));
+
+          const current = sanitizePortfolioQualitySummary(fullText);
+          setPortfolioQualityDraft(current);
         }
 
         const cleanedText = sanitizePortfolioQualitySummary(fullText);
