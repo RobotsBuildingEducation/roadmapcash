@@ -160,13 +160,6 @@ const financialModel = getGenerativeModel(ai, {
   },
 });
 
-const portfolioQualityModel = getGenerativeModel(ai, {
-  model: "gemini-3-flash-preview",
-  generationConfig: {
-    responseMimeType: "text/plain",
-  },
-});
-
 const fastUpdateModel = getGenerativeModel(ai, {
   model: "gemini-3-flash-preview",
   generationConfig: {
@@ -209,19 +202,6 @@ const parseNumber = (value) => {
   const normalized = value.replace(/,/g, "");
   const parsed = Number.parseFloat(normalized);
   return Number.isNaN(parsed) ? null : parsed;
-};
-
-const sanitizePortfolioQualitySummary = (text) => {
-  if (!text) return "";
-  let cleaned = text.trim();
-  cleaned = cleaned.replace(/^[`"'“”]+/, "");
-  cleaned = cleaned.replace(
-    /^(?:plan\.portfolio\.)?qualitySummary\s*:\s*/i,
-    "",
-  );
-  cleaned = cleaned.replace(/^[`"'“”]+/, "");
-  cleaned = cleaned.replace(/[`"'“”]+$/, "");
-  return cleaned.trim();
 };
 
 const extractMatch = (text, pattern) => {
@@ -316,7 +296,6 @@ export function useFinancialParser() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [financialData, setFinancialData] = useState(null);
-  const [portfolioQualityDraft, setPortfolioQualityDraft] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
 
@@ -556,83 +535,13 @@ ${updateRequest}`;
     [finalizeFinancialData, t],
   );
 
-  const streamPortfolioQuality = useCallback(
-    async (currentData, allocations) => {
-      if (!currentData || !allocations?.length) return null;
-
-      setIsUpdating(true);
-      setUpdateError(null);
-      setPortfolioQualityDraft("");
-
-      try {
-        const formattedAllocations = allocations
-          .map((allocation) => `${allocation.percentage}% ${allocation.name}`)
-          .join("\n");
-        const prompt = t("financialChart.prompts.portfolioQuality", {
-          allocations: formattedAllocations,
-        });
-
-        const stream =
-          await portfolioQualityModel.generateContentStream(prompt);
-
-        const extractChunkText = (chunk) => {
-          if (typeof chunk?.text === "function") {
-            const text = chunk.text();
-            if (text) return text;
-          }
-          const parts = chunk?.candidates
-            ?.flatMap((candidate) => candidate.content?.parts || [])
-            .map((part) => part.text)
-            .filter(Boolean);
-          return parts?.join("") || "";
-        };
-
-        let fullText = "";
-        for await (const chunk of stream.stream) {
-          const chunkText = extractChunkText(chunk);
-          if (!chunkText) continue;
-          fullText += chunkText;
-          const cleanedText = sanitizePortfolioQualitySummary(fullText);
-          setPortfolioQualityDraft(cleanedText);
-          await new Promise((resolve) => setTimeout(resolve, 0));
-        }
-
-        const cleanedText = sanitizePortfolioQualitySummary(fullText);
-        const finalized = {
-          ...currentData,
-          plan: {
-            ...currentData.plan,
-            portfolio: {
-              ...currentData.plan?.portfolio,
-              allocations,
-              qualitySummary: cleanedText,
-            },
-          },
-        };
-        setFinancialData(finalized);
-        setPortfolioQualityDraft(null);
-        return finalized;
-      } catch (err) {
-        console.error("Error streaming portfolio quality:", err);
-        setUpdateError(err.message || t("ai.updateError"));
-        setPortfolioQualityDraft(null);
-        return null;
-      } finally {
-        setIsUpdating(false);
-      }
-    },
-    [t],
-  );
-
   return {
     parseFinancialInput,
     updateFinancialData,
     updateFinancialItem,
-    streamPortfolioQuality,
     clearData,
     financialData,
     setFinancialData,
-    portfolioQualityDraft,
     isLoading,
     error,
     isUpdating,

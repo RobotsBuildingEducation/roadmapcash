@@ -17,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { useColorModeValue } from "@/components/ui/color-mode";
+import { simplemodel } from "@/database/firebaseConfig";
 
 // Color palette for consistent theming
 const COLORS = {
@@ -396,7 +397,10 @@ function ExpenseAnalysis({ expenses, onSelect, t }) {
                 >
                   {t(`financialChart.priorityLabels.${priority}`)}
                 </Badge>
-                <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
+                <Text
+                  fontSize={{ base: "2xs", md: "xs" }}
+                  color={theme.faintText}
+                >
                   {t("financialChart.itemsCount", {
                     count: items.length,
                     amount: formatCurrency(total),
@@ -661,7 +665,10 @@ function ActionItems({
                   {categoryConfig.icon}
                 </Box>
                 <VStack align="start" spacing="0" flex="1" minW="0">
-                  <Text fontSize={{ base: "xs", md: "sm" }} color={theme.highlightText}>
+                  <Text
+                    fontSize={{ base: "xs", md: "sm" }}
+                    color={theme.highlightText}
+                  >
                     {item.action}
                   </Text>
                   <HStack spacing="2" flexWrap="wrap">
@@ -671,10 +678,16 @@ function ActionItems({
                     >
                       {categoryConfig.label}
                     </Text>
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color={theme.faintText}
+                    >
                       •
                     </Text>
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color={theme.faintText}
+                    >
                       {item.timeframe}
                     </Text>
                   </HStack>
@@ -945,23 +958,48 @@ function OverviewChart({ income, expenses, t }) {
 function InvestmentPortfolio({
   allocations,
   qualitySummary,
-  streamedQualitySummary,
   onCustomize,
-  onQualityCheck,
+  onSaveQuality,
   isUpdating,
-  portfolioAction,
   t,
 }) {
   const theme = useChartTheme();
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
-  const summarySource =
-    streamedQualitySummary !== null && streamedQualitySummary !== undefined
-      ? streamedQualitySummary
-      : qualitySummary;
-  const normalizedQualitySummary = useMemo(() => {
-    return sanitizePortfolioQualitySummary(summarySource);
-  }, [summarySource]);
+
+  // Local state for quality check streaming
+  const [qualityText, setQualityText] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  // Use saved summary if available and not currently streaming
+  const displayText = isStreaming || qualityText ? qualityText : qualitySummary;
+
+  const handleCheckQuality = async () => {
+    setQualityText("");
+    setIsStreaming(true);
+
+    const prompt = `Review this investment portfolio and assessment of its quality, catalysts, risks, and suggestions:\n${portfolio.map((a) => `${a.percentage}% ${a.name}`).join("\n")}
+    
+    Formatting: Do not use lists. This must be in a professional essay format. Use a professional title. Use a professional title with an ### HeaderSize.
+    `;
+
+    const result = await simplemodel.generateContentStream(prompt);
+
+    let fullText = "";
+    for await (const chunk of result.stream) {
+      const chunkText = typeof chunk.text === "function" ? chunk.text() : "";
+      if (!chunkText) continue;
+      fullText += chunkText;
+      setQualityText(fullText);
+    }
+
+    setIsStreaming(false);
+
+    // Save the quality summary
+    if (onSaveQuality && fullText) {
+      onSaveQuality(fullText);
+    }
+  };
 
   const segments = useMemo(() => {
     const result = [];
@@ -1104,14 +1142,10 @@ function InvestmentPortfolio({
                   size="xs"
                   colorScheme="blue"
                   variant="ghost"
-                  onClick={onQualityCheck}
-                  isDisabled={!onQualityCheck || isUpdating}
+                  onClick={handleCheckQuality}
+                  isDisabled={isStreaming}
                 >
-                  {isUpdating && portfolioAction === "quality" ? (
-                    <Spinner size="xs" />
-                  ) : (
-                    t("financialChart.portfolio.qualityButton")
-                  )}
+                  {t("financialChart.portfolio.qualityButton")}
                 </Button>
               </HStack>
             </VStack>
@@ -1176,8 +1210,7 @@ function InvestmentPortfolio({
           {t("financialChart.portfolio.note")}
         </Text>
 
-        {(normalizedQualitySummary ||
-          (isUpdating && portfolioAction === "quality")) && (
+        {(displayText || isStreaming) && (
           <Box
             bg={theme.insetBg}
             borderRadius="lg"
@@ -1188,11 +1221,27 @@ function InvestmentPortfolio({
             <Text fontSize="2xs" color={theme.faintText} mb="1">
               {t("financialChart.portfolio.qualityTitle")}
             </Text>
-            {normalizedQualitySummary ? (
+            {displayText ? (
               <ReactMarkdown
                 components={{
+                  h3: (props) => (
+                    <Text
+                      fontFamily="ui-serif"
+                      fontWeight={"bold"}
+                      fontSize="xl"
+                      color={theme.subText}
+                      mb={"6px"}
+                      {...props}
+                    />
+                  ),
                   p: (props) => (
-                    <Text fontSize="sm" color={theme.subText} {...props} />
+                    <Text
+                      fontFamilyfontSize="sm"
+                      fontFamily="ui-serif"
+                      color={theme.subText}
+                      mb={"14px"}
+                      {...props}
+                    />
                   ),
                   ul: (props) => <Box as="ul" pl="4" {...props} />,
                   ol: (props) => <Box as="ol" pl="4" {...props} />,
@@ -1210,12 +1259,10 @@ function InvestmentPortfolio({
                   ),
                 }}
               >
-                {normalizedQualitySummary}
+                {displayText}
               </ReactMarkdown>
             ) : (
-              <Text fontSize="sm" color={theme.subText}>
-                {t("financialChart.portfolio.qualityLoading")}
-              </Text>
+              <Spinner size="sm" />
             )}
           </Box>
         )}
@@ -2004,7 +2051,10 @@ function BirdsEyeView({
                         })}
                   </Text>
                   {!isReached && (
-                    <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText}>
+                    <Text
+                      fontSize={{ base: "2xs", md: "xs" }}
+                      color={theme.faintText}
+                    >
                       {formatCurrency(milestone.amount)}
                     </Text>
                   )}
@@ -2056,7 +2106,11 @@ function MetricsSummary({
           borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
+          <Text
+            fontSize={{ base: "2xs", md: "xs" }}
+            color={theme.faintText}
+            mb="1"
+          >
             {t("financialChart.metrics.monthlyIncome")}
           </Text>
           <Text
@@ -2077,7 +2131,11 @@ function MetricsSummary({
           borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
+          <Text
+            fontSize={{ base: "2xs", md: "xs" }}
+            color={theme.faintText}
+            mb="1"
+          >
             {t("financialChart.metrics.expenses")}
           </Text>
           <Text
@@ -2098,7 +2156,11 @@ function MetricsSummary({
           borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
+          <Text
+            fontSize={{ base: "2xs", md: "xs" }}
+            color={theme.faintText}
+            mb="1"
+          >
             {t("financialChart.metrics.youSave")}
           </Text>
           <Text
@@ -2125,7 +2187,11 @@ function MetricsSummary({
           borderColor={theme.surfaceBorder}
           textAlign="center"
         >
-          <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.faintText} mb="1">
+          <Text
+            fontSize={{ base: "2xs", md: "xs" }}
+            color={theme.faintText}
+            mb="1"
+          >
             {t("financialChart.metrics.goalProgress")}
           </Text>
           <Text
@@ -2153,9 +2219,8 @@ export function FinancialChart({
   data,
   onUpdate,
   onItemUpdate,
-  onPortfolioQuality,
+  onPortfolioSave,
   isUpdating,
-  portfolioQualityDraft,
 }) {
   const { t } = useI18n();
   const theme = useChartTheme();
@@ -2231,12 +2296,12 @@ export function FinancialChart({
     );
   }, [expenses, plan]);
 
+  // Sync portfolio allocations from saved data
   useEffect(() => {
-    if (!portfolioCustomized) return;
     if (plan?.portfolio?.allocations?.length) {
       setPortfolioAllocations(plan.portfolio.allocations);
     }
-  }, [plan, portfolioCustomized]);
+  }, [plan?.portfolio?.allocations]);
 
   useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
@@ -2479,19 +2544,13 @@ export function FinancialChart({
     );
   };
 
-  const savePortfolioDraft = async () => {
+  const savePortfolioDraft = () => {
     setPortfolioAllocations(portfolioDraft);
     setPortfolioCustomized(true);
     setPortfolioModalOpen(false);
-    if (!onPortfolioQuality) return;
-    setPortfolioAction("quality");
-    await onPortfolioQuality(portfolioDraft);
-  };
-
-  const handlePortfolioQuality = async () => {
-    if (!onPortfolioQuality) return;
-    setPortfolioAction("quality");
-    await onPortfolioQuality(portfolioAllocations);
+    if (onPortfolioSave) {
+      onPortfolioSave({ allocations: portfolioDraft });
+    }
   };
 
   const portfolioDraftTotal = portfolioDraft.reduce(
@@ -2523,7 +2582,10 @@ export function FinancialChart({
                 <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
                   {t("financialChart.updateSection.title")}
                 </Text>
-                <Text fontSize={{ base: "2xs", md: "xs" }} color={theme.mutedText}>
+                <Text
+                  fontSize={{ base: "2xs", md: "xs" }}
+                  color={theme.mutedText}
+                >
                   {t("financialChart.updateSection.subtitle")}
                 </Text>
               </Box>
@@ -2541,7 +2603,11 @@ export function FinancialChart({
             >
               <HStack justify="space-between" flexWrap="wrap" gap="2">
                 <VStack align="start" spacing="0">
-                  <Text fontSize="xs" color={theme.mutedText} fontWeight="semibold">
+                  <Text
+                    fontSize="xs"
+                    color={theme.mutedText}
+                    fontWeight="semibold"
+                  >
                     {t("financialChart.updateSection.statusLabel")}
                   </Text>
                   <Text fontSize="xs" color={theme.subText}>
@@ -2751,7 +2817,9 @@ export function FinancialChart({
                 borderRadius="full"
                 bg={activeTab === index ? "blue.600" : "transparent"}
                 color={activeTab === index ? "white" : theme.mutedText}
-                _hover={{ bg: activeTab === index ? "blue.600" : theme.tabHoverBg }}
+                _hover={{
+                  bg: activeTab === index ? "blue.600" : theme.tabHoverBg,
+                }}
                 onClick={() => setActiveTab(index)}
                 flexShrink="0"
                 px={{ base: "3", md: "4" }}
@@ -2840,11 +2908,11 @@ export function FinancialChart({
                 <InvestmentPortfolio
                   allocations={portfolioAllocations}
                   qualitySummary={plan?.portfolio?.qualitySummary}
-                  streamedQualitySummary={portfolioQualityDraft}
                   onCustomize={openPortfolioModal}
-                  onQualityCheck={handlePortfolioQuality}
+                  onSaveQuality={(summary) =>
+                    onPortfolioSave?.({ qualitySummary: summary })
+                  }
                   isUpdating={isUpdating}
-                  portfolioAction={portfolioAction}
                   t={t}
                 />
               </VStack>
@@ -3039,7 +3107,9 @@ export function FinancialChart({
                           ),
                         )
                       }
-                      placeholder={t("financialChart.portfolio.assetPlaceholder")}
+                      placeholder={t(
+                        "financialChart.portfolio.assetPlaceholder",
+                      )}
                       bg={theme.inputBg}
                       borderColor={theme.inputBorder}
                       fontSize="sm"

@@ -29,10 +29,8 @@ function App() {
     parseFinancialInput,
     updateFinancialData,
     updateFinancialItem,
-    streamPortfolioQuality,
     financialData,
     setFinancialData,
-    portfolioQualityDraft,
     isLoading: isGenerating,
     error: parseError,
     isUpdating,
@@ -101,12 +99,20 @@ function App() {
     }
   };
 
-  const handlePortfolioQualityStream = async (allocations) => {
+  const handlePortfolioSave = async (portfolio) => {
     if (!financialData) return;
-    const result = await streamPortfolioQuality(financialData, allocations);
-    if (result) {
-      await saveRoadmap(userInput, result, "Portfolio quality summary");
-    }
+    const updated = {
+      ...financialData,
+      plan: {
+        ...financialData.plan,
+        portfolio: {
+          ...financialData.plan?.portfolio,
+          ...portfolio,
+        },
+      },
+    };
+    setFinancialData(updated);
+    await saveRoadmap(userInput, updated, "Portfolio update");
   };
 
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
@@ -292,9 +298,8 @@ function App() {
                 data={financialData}
                 onUpdate={handleUpdate}
                 onItemUpdate={handleItemUpdate}
-                onPortfolioQuality={handlePortfolioQualityStream}
+                onPortfolioSave={handlePortfolioSave}
                 isUpdating={isUpdating}
-                portfolioQualityDraft={portfolioQualityDraft}
               />
             )}
           </VStack>
