@@ -21,7 +21,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
-    "react-markdown": "file:./src/vendor/react-markdown",
+    "react-markdown": "^10.1.0",
     "three": "^0.182.0",
     "vite-plugin-pwa": "^1.2.0"
   },
