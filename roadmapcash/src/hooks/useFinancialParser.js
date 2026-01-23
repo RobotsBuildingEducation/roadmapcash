@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { getGenerativeModel, Schema } from "@firebase/vertexai";
 import { ai } from "@/database/firebaseConfig";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -591,19 +592,21 @@ ${updateRequest}`;
           if (!chunkText) continue;
           fullText += chunkText;
           const cleanedText = sanitizePortfolioQualitySummary(fullText);
-          setFinancialData((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              plan: {
-                ...prev.plan,
-                portfolio: {
-                  ...prev.plan?.portfolio,
-                  allocations,
-                  qualitySummary: cleanedText,
+          flushSync(() => {
+            setFinancialData((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                plan: {
+                  ...prev.plan,
+                  portfolio: {
+                    ...prev.plan?.portfolio,
+                    allocations,
+                    qualitySummary: cleanedText,
+                  },
                 },
-              },
-            };
+              };
+            });
           });
         }
 
