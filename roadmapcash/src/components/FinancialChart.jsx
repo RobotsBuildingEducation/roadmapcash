@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import { keyframes } from "@emotion/react";
 import {
   Box,
@@ -45,6 +46,24 @@ const COLORS = {
     "#ec4899",
   ],
 };
+
+const PORTFOLIO_COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#a855f7",
+  "#94a3b8",
+  "#f97316",
+];
+
+const STANDARD_PORTFOLIO = [
+  { name: "SPY", percentage: 30 },
+  { name: "Cash on hand", percentage: 25 },
+  { name: "Berkshire Hathaway", percentage: 20 },
+  { name: "Gold", percentage: 10 },
+  { name: "Bonds", percentage: 10 },
+  { name: "Bitcoin", percentage: 5 },
+];
 
 const PRIORITY_COLORS = {
   essential: {
@@ -874,7 +893,7 @@ function OverviewChart({ income, expenses, t }) {
           </Box>
 
           <VStack align="start" spacing="2" flex="1" minW="0">
-            {segments.slice(0, 5).map((segment, index) => (
+            {segments.map((segment, index) => (
               <HStack key={index} justify="space-between" w="100%">
                 <HStack spacing="2" minW="0" flex="1">
                   <Box
@@ -902,15 +921,290 @@ function OverviewChart({ income, expenses, t }) {
                 </Text>
               </HStack>
             ))}
-            {segments.length > 5 && (
-              <Text fontSize="xs" color={theme.faintText}>
-                {t("financialChart.moreSegments", {
-                  count: segments.length - 5,
-                })}
-              </Text>
-            )}
           </VStack>
         </HStack>
+      </VStack>
+    </Box>
+  );
+}
+
+// Investment Portfolio - standard allocation with charts
+function InvestmentPortfolio({
+  allocations,
+  qualitySummary,
+  onCustomize,
+  onQualityCheck,
+  isUpdating,
+  portfolioAction,
+  t,
+}) {
+  const theme = useChartTheme();
+  const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
+  const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
+  const normalizedQualitySummary = useMemo(() => {
+    if (!qualitySummary) return "";
+    return qualitySummary.replace(
+      /^plan\\.portfolio\\.qualitySummary:\\s*/i,
+      "",
+    );
+  }, [qualitySummary]);
+
+  const segments = useMemo(() => {
+    const result = [];
+    let currentAngle = -90;
+
+    portfolio.forEach((item, index) => {
+      const percentage = total ? (item.percentage / total) * 100 : 0;
+      const angle = (percentage / 100) * 360;
+      result.push({
+        ...item,
+        percentage,
+        startAngle: currentAngle,
+        endAngle: currentAngle + angle,
+        color: PORTFOLIO_COLORS[index % PORTFOLIO_COLORS.length],
+      });
+      currentAngle += angle;
+    });
+
+    return result;
+  }, [portfolio, total]);
+
+  const describeArc = (cx, cy, radius, startAngle, endAngle) => {
+    const start = polarToCartesian(cx, cy, radius, endAngle);
+    const end = polarToCartesian(cx, cy, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+      "M",
+      start.x,
+      start.y,
+      "A",
+      radius,
+      radius,
+      0,
+      largeArcFlag,
+      0,
+      end.x,
+      end.y,
+    ].join(" ");
+  };
+
+  const polarToCartesian = (cx, cy, radius, angle) => {
+    const rad = (angle * Math.PI) / 180;
+    return {
+      x: cx + radius * Math.cos(rad),
+      y: cy + radius * Math.sin(rad),
+    };
+  };
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <VStack align="stretch" spacing={{ base: "3", md: "4" }}>
+        <Box>
+          <Text
+            fontSize={{ base: "xs", md: "sm" }}
+            fontWeight="semibold"
+            color={theme.mutedText}
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            {t("financialChart.portfolio.title")}
+          </Text>
+          <Text fontSize={{ base: "xs", md: "sm" }} color={theme.subText}>
+            {t("financialChart.portfolio.subtitle")}
+          </Text>
+        </Box>
+
+        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="4">
+          <GridItem>
+            <VStack align="center" spacing="3">
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                color={theme.mutedText}
+                textTransform="uppercase"
+                letterSpacing="wide"
+              >
+                {t("financialChart.portfolio.allocationChart")}
+              </Text>
+              <Box position="relative">
+                <svg width="160" height="160" viewBox="0 0 160 160">
+                  {segments.map((segment, index) => (
+                    <path
+                      key={`${segment.name}-${index}`}
+                      d={describeArc(
+                        80,
+                        80,
+                        60,
+                        segment.startAngle,
+                        segment.endAngle - 0.5,
+                      )}
+                      fill="none"
+                      stroke={segment.color}
+                      strokeWidth="22"
+                      strokeLinecap="round"
+                    />
+                  ))}
+                  <circle cx="80" cy="80" r="45" fill={theme.donutBg} />
+                  <text
+                    x="80"
+                    y="78"
+                    textAnchor="middle"
+                    fill={theme.headerTitle}
+                    fontSize="18"
+                    fontWeight="bold"
+                  >
+                    {total}%
+                  </text>
+                  <text
+                    x="80"
+                    y="98"
+                    textAnchor="middle"
+                    fill={theme.donutLabel}
+                    fontSize="11"
+                  >
+                    {t("financialChart.portfolio.totalLabel")}
+                  </text>
+                </svg>
+              </Box>
+              <HStack spacing="2" flexWrap="wrap" justify="center">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  borderColor={theme.surfaceBorder}
+                  onClick={onCustomize}
+                  isDisabled={!onCustomize || isUpdating}
+                >
+                  {isUpdating && portfolioAction === "customize" ? (
+                    <Spinner size="xs" />
+                  ) : (
+                    t("financialChart.portfolio.customizeButton")
+                  )}
+                </Button>
+                <Button
+                  size="xs"
+                  colorScheme="blue"
+                  variant="ghost"
+                  onClick={onQualityCheck}
+                  isDisabled={!onQualityCheck || isUpdating}
+                >
+                  {isUpdating && portfolioAction === "quality" ? (
+                    <Spinner size="xs" />
+                  ) : (
+                    t("financialChart.portfolio.qualityButton")
+                  )}
+                </Button>
+              </HStack>
+            </VStack>
+          </GridItem>
+          <GridItem>
+            <VStack align="stretch" spacing="3">
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                color={theme.mutedText}
+                textTransform="uppercase"
+                letterSpacing="wide"
+              >
+                {t("financialChart.portfolio.breakdownTitle")}
+              </Text>
+              {segments.map((segment) => (
+                <VStack key={segment.name} align="stretch" spacing="1">
+                  <HStack justify="space-between">
+                    <HStack spacing="2" minW="0">
+                      <Box
+                        w="3"
+                        h="3"
+                        borderRadius="full"
+                        bg={segment.color}
+                        flexShrink="0"
+                      />
+                      <Text
+                        fontSize={{ base: "xs", md: "sm" }}
+                        color={theme.subText}
+                        isTruncated
+                      >
+                        {segment.name}
+                      </Text>
+                    </HStack>
+                    <Text
+                      fontSize={{ base: "xs", md: "sm" }}
+                      color={theme.mutedText}
+                      fontWeight="medium"
+                    >
+                      {Math.round(segment.percentage)}%
+                    </Text>
+                  </HStack>
+                  <Box
+                    h="2"
+                    bg={theme.barBg}
+                    borderRadius="full"
+                    overflow="hidden"
+                  >
+                    <Box
+                      h="100%"
+                      w={`${segment.percentage}%`}
+                      bg={segment.color}
+                    />
+                  </Box>
+                </VStack>
+              ))}
+            </VStack>
+          </GridItem>
+        </Grid>
+
+        <Text fontSize="xs" color={theme.faintText}>
+          {t("financialChart.portfolio.note")}
+        </Text>
+
+        {(normalizedQualitySummary ||
+          (isUpdating && portfolioAction === "quality")) && (
+          <Box
+            bg={theme.insetBg}
+            borderRadius="lg"
+            p="3"
+            borderWidth="1px"
+            borderColor={theme.insetBorder}
+          >
+            <Text fontSize="2xs" color={theme.faintText} mb="1">
+              {t("financialChart.portfolio.qualityTitle")}
+            </Text>
+            {normalizedQualitySummary ? (
+              <ReactMarkdown
+                components={{
+                  p: (props) => (
+                    <Text fontSize="sm" color={theme.subText} {...props} />
+                  ),
+                  ul: (props) => <Box as="ul" pl="4" {...props} />,
+                  ol: (props) => <Box as="ol" pl="4" {...props} />,
+                  li: (props) => (
+                    <Text
+                      as="li"
+                      fontSize="sm"
+                      color={theme.subText}
+                      ml="2"
+                      {...props}
+                    />
+                  ),
+                  strong: (props) => (
+                    <Text as="strong" color={theme.highlightText} {...props} />
+                  ),
+                }}
+              >
+                {normalizedQualitySummary}
+              </ReactMarkdown>
+            ) : (
+              <Text fontSize="sm" color={theme.subText}>
+                {t("financialChart.portfolio.qualityLoading")}
+              </Text>
+            )}
+          </Box>
+        )}
       </VStack>
     </Box>
   );
@@ -921,10 +1215,14 @@ function ExpenseBarChart({ expenses, income, t }) {
   if (!expenses || expenses.length === 0) return null;
   const theme = useChartTheme();
 
-  const maxAmount = Math.max(...expenses.map((e) => e.amount), 1);
   const sortedExpenses = [...expenses].sort((a, b) => b.amount - a.amount);
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const savingsAmount = Math.max(0, (income || 0) - totalExpenses);
+  const maxAmount = Math.max(
+    ...expenses.map((e) => e.amount),
+    savingsAmount,
+    1,
+  );
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -1018,7 +1316,10 @@ function ExpenseBarChart({ expenses, income, t }) {
 
           {/* Expense bars */}
           {sortedExpenses.map((expense, index) => {
-            const barWidth = (expense.amount / maxAmount) * barAreaWidth;
+            const barWidth = Math.min(
+              (expense.amount / maxAmount) * barAreaWidth,
+              barAreaWidth,
+            );
             const y = 20 + index * (barHeight + barGap);
             const color = getPriorityColor(expense.priority);
 
@@ -1108,7 +1409,10 @@ function ExpenseBarChart({ expenses, income, t }) {
               <rect
                 x={labelWidth}
                 y={20 + sortedExpenses.length * (barHeight + barGap)}
-                width={(savingsAmount / maxAmount) * barAreaWidth}
+                width={Math.min(
+                  (savingsAmount / maxAmount) * barAreaWidth,
+                  barAreaWidth,
+                )}
                 height={barHeight}
                 fill="#10b981"
                 rx="4"
@@ -1831,7 +2135,13 @@ function MetricsSummary({
 }
 
 // Main FinancialChart component
-export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
+export function FinancialChart({
+  data,
+  onUpdate,
+  onItemUpdate,
+  onPortfolioQuality,
+  isUpdating,
+}) {
   const { t } = useI18n();
   const theme = useChartTheme();
   const [activeTab, setActiveTab] = useState(0);
@@ -1850,6 +2160,12 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
   const [interaction, setInteraction] = useState(null);
   const [interactionIndex, setInteractionIndex] = useState(null);
   const [interactionAction, setInteractionAction] = useState("");
+  const [portfolioAllocations, setPortfolioAllocations] =
+    useState(STANDARD_PORTFOLIO);
+  const [portfolioDraft, setPortfolioDraft] = useState(STANDARD_PORTFOLIO);
+  const [portfolioAction, setPortfolioAction] = useState("");
+  const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
+  const [portfolioCustomized, setPortfolioCustomized] = useState(false);
 
   if (!data) return null;
 
@@ -1901,10 +2217,18 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
   }, [expenses, plan]);
 
   useEffect(() => {
+    if (!portfolioCustomized) return;
+    if (plan?.portfolio?.allocations?.length) {
+      setPortfolioAllocations(plan.portfolio.allocations);
+    }
+  }, [plan, portfolioCustomized]);
+
+  useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
       setShowUpdateFlash(true);
       const timeout = setTimeout(() => setShowUpdateFlash(false), 1400);
       setInteractionAction("");
+      setPortfolioAction("");
       previousUpdatingRef.current = isUpdating;
       return () => clearTimeout(timeout);
     }
@@ -2118,6 +2442,47 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     setInteraction(null);
     setInteractionIndex(null);
   };
+
+  const openPortfolioModal = () => {
+    setPortfolioDraft(
+      portfolioAllocations.map((allocation) => ({ ...allocation })),
+    );
+    setPortfolioModalOpen(true);
+  };
+
+  const closePortfolioModal = () => {
+    setPortfolioModalOpen(false);
+  };
+
+  const updatePortfolioDraft = (index, value) => {
+    setPortfolioDraft((current) =>
+      current.map((allocation, currentIndex) =>
+        currentIndex === index
+          ? { ...allocation, percentage: Number(value) || 0 }
+          : allocation,
+      ),
+    );
+  };
+
+  const savePortfolioDraft = async () => {
+    setPortfolioAllocations(portfolioDraft);
+    setPortfolioCustomized(true);
+    setPortfolioModalOpen(false);
+    if (!onPortfolioQuality) return;
+    setPortfolioAction("quality");
+    await onPortfolioQuality(portfolioDraft);
+  };
+
+  const handlePortfolioQuality = async () => {
+    if (!onPortfolioQuality) return;
+    setPortfolioAction("quality");
+    await onPortfolioQuality(portfolioAllocations);
+  };
+
+  const portfolioDraftTotal = portfolioDraft.reduce(
+    (sum, allocation) => sum + allocation.percentage,
+    0,
+  );
 
   return (
     <Box>
@@ -2361,6 +2726,7 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
             {[
               t("financialChart.tabs.overview"),
               t("financialChart.tabs.plan"),
+              t("financialChart.tabs.portfolio"),
               t("financialChart.tabs.expenses"),
             ].map((tab, index) => (
               <Button
@@ -2453,8 +2819,23 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
               </VStack>
             )}
 
-            {/* Expenses Tab */}
+            {/* Portfolio Tab */}
             {activeTab === 2 && (
+              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                <InvestmentPortfolio
+                  allocations={portfolioAllocations}
+                  qualitySummary={plan?.portfolio?.qualitySummary}
+                  onCustomize={openPortfolioModal}
+                  onQualityCheck={handlePortfolioQuality}
+                  isUpdating={isUpdating}
+                  portfolioAction={portfolioAction}
+                  t={t}
+                />
+              </VStack>
+            )}
+
+            {/* Expenses Tab */}
+            {activeTab === 3 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <ExpenseAnalysis
                   expenses={interactiveExpenses}
@@ -2577,6 +2958,111 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   {isUpdating && interactionAction === "complete"
                     ? t("financialChart.interaction.completing")
                     : t("financialChart.interaction.completeExercise")}
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
+
+      {portfolioModalOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.700"
+          zIndex="modal"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          onClick={closePortfolioModal}
+        >
+          <Box
+            bg={theme.elevatedBg}
+            p={{ base: "4", md: "6" }}
+            borderRadius="xl"
+            width={{ base: "92%", sm: "520px" }}
+            maxWidth="520px"
+            borderWidth="1px"
+            borderColor={theme.surfaceBorder}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <VStack align="stretch" spacing="4">
+              <HStack justify="space-between" align="start">
+                <Box>
+                  <Text fontSize="sm" color={theme.mutedText}>
+                    {t("financialChart.portfolio.modalTitle")}
+                  </Text>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    {t("financialChart.portfolio.modalSubtitle")}
+                  </Text>
+                </Box>
+                <Button size="xs" variant="ghost" onClick={closePortfolioModal}>
+                  {t("financialChart.portfolio.closeModal")}
+                </Button>
+              </HStack>
+
+              <VStack align="stretch" spacing="3">
+                {portfolioDraft.map((allocation, index) => (
+                  <Grid
+                    key={`portfolio-${index}`}
+                    templateColumns={{ base: "1fr 90px", md: "1fr 120px" }}
+                    gap="3"
+                    alignItems="center"
+                  >
+                    <Input
+                      value={allocation.name}
+                      onChange={(event) =>
+                        setPortfolioDraft((current) =>
+                          current.map((item, currentIndex) =>
+                            currentIndex === index
+                              ? { ...item, name: event.target.value }
+                              : item,
+                          ),
+                        )
+                      }
+                      placeholder={t("financialChart.portfolio.assetPlaceholder")}
+                      bg={theme.inputBg}
+                      borderColor={theme.inputBorder}
+                      fontSize="sm"
+                    />
+                    <Input
+                      type="number"
+                      value={allocation.percentage}
+                      onChange={(event) =>
+                        updatePortfolioDraft(index, event.target.value)
+                      }
+                      bg={theme.inputBg}
+                      borderColor={theme.inputBorder}
+                      fontSize="sm"
+                      textAlign="right"
+                    />
+                  </Grid>
+                ))}
+              </VStack>
+
+              <HStack justify="space-between" align="center">
+                <Text fontSize="xs" color={theme.faintText}>
+                  {t("financialChart.portfolio.totalLabel")}
+                </Text>
+                <Text fontSize="sm" fontWeight="semibold" color={theme.subText}>
+                  {portfolioDraftTotal}%
+                </Text>
+              </HStack>
+
+              <HStack justify="flex-end" spacing="2">
+                <Button size="sm" variant="ghost" onClick={closePortfolioModal}>
+                  {t("financialChart.portfolio.cancelModal")}
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={savePortfolioDraft}
+                  isDisabled={isUpdating}
+                >
+                  {t("financialChart.portfolio.saveModal")}
                 </Button>
               </HStack>
             </VStack>

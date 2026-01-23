@@ -112,6 +112,30 @@ const financialDataSchema = Schema.object({
           description:
             "A personalized, encouraging note about their journey - be specific to their goals",
         }),
+        portfolio: Schema.object({
+          properties: {
+            allocations: Schema.array({
+              items: Schema.object({
+                properties: {
+                  name: Schema.string({
+                    description: "Name of the investment or asset",
+                  }),
+                  percentage: Schema.number({
+                    description: "Target allocation percentage",
+                  }),
+                },
+                required: ["name", "percentage"],
+              }),
+              description: "Target investment portfolio allocation",
+            }),
+            qualitySummary: Schema.string({
+              description:
+                "Concise quality summary for the investment allocation",
+              nullable: true,
+            }),
+          },
+          required: ["allocations"],
+        }),
       },
       required: [
         "title",
@@ -136,6 +160,13 @@ const financialModel = getGenerativeModel(ai, {
   },
 });
 
+const portfolioQualityModel = getGenerativeModel(ai, {
+  model: "gemini-3-flash-preview",
+  generationConfig: {
+    responseMimeType: "text/plain",
+  },
+});
+
 const fastUpdateModel = getGenerativeModel(ai, {
   model: "gemini-3-flash-preview",
   generationConfig: {
@@ -157,6 +188,15 @@ const MONTHLY_MULTIPLIERS = {
   annual: 1 / 12,
   annually: 1 / 12,
 };
+
+const STANDARD_PORTFOLIO = [
+  { name: "SPY", percentage: 30 },
+  { name: "Cash on hand", percentage: 25 },
+  { name: "Berkshire Hathaway", percentage: 20 },
+  { name: "Gold", percentage: 10 },
+  { name: "Bonds", percentage: 10 },
+  { name: "Bitcoin", percentage: 5 },
+];
 
 const normalizeAmount = (amount, period) => {
   if (!amount || Number.isNaN(amount)) return null;
@@ -349,6 +389,18 @@ export function useFinancialParser() {
         plan.motivationalNote ||
         basePlan.motivationalNote ||
         t("ai.motivationalNoteFallback"),
+      portfolio: {
+        allocations:
+          (plan.portfolio?.allocations?.length
+            ? plan.portfolio.allocations
+            : basePlan.portfolio?.allocations?.length
+              ? basePlan.portfolio.allocations
+              : STANDARD_PORTFOLIO),
+        qualitySummary:
+          plan.portfolio?.qualitySummary ||
+          basePlan.portfolio?.qualitySummary ||
+          "",
+      },
     };
 
     return result;
@@ -488,10 +540,89 @@ ${updateRequest}`;
     [finalizeFinancialData, t],
   );
 
+  const streamPortfolioQuality = useCallback(
+    async (currentData, allocations) => {
+      if (!currentData || !allocations?.length) return null;
+
+      setIsUpdating(true);
+      setUpdateError(null);
+
+      try {
+        const formattedAllocations = allocations
+          .map(
+            (allocation) => `${allocation.percentage}% ${allocation.name}`,
+          )
+          .join("\n");
+        const prompt = t("financialChart.prompts.portfolioQuality", {
+          allocations: formattedAllocations,
+        });
+
+        const stream = await portfolioQualityModel.generateContentStream(
+          prompt,
+        );
+
+        const extractChunkText = (chunk) => {
+          if (typeof chunk?.text === "function") {
+            const text = chunk.text();
+            if (text) return text;
+          }
+          const parts = chunk?.candidates
+            ?.flatMap((candidate) => candidate.content?.parts || [])
+            .map((part) => part.text)
+            .filter(Boolean);
+          return parts?.join("") || "";
+        };
+
+        let fullText = "";
+        for await (const chunk of stream.stream) {
+          const chunkText = extractChunkText(chunk);
+          if (!chunkText) continue;
+          fullText += chunkText;
+          setFinancialData((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              plan: {
+                ...prev.plan,
+                portfolio: {
+                  ...prev.plan?.portfolio,
+                  allocations,
+                  qualitySummary: fullText,
+                },
+              },
+            };
+          });
+        }
+
+        const finalized = {
+          ...currentData,
+          plan: {
+            ...currentData.plan,
+            portfolio: {
+              ...currentData.plan?.portfolio,
+              allocations,
+              qualitySummary: fullText,
+            },
+          },
+        };
+        setFinancialData(finalized);
+        return finalized;
+      } catch (err) {
+        console.error("Error streaming portfolio quality:", err);
+        setUpdateError(err.message || t("ai.updateError"));
+        return null;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [t],
+  );
+
   return {
     parseFinancialInput,
     updateFinancialData,
     updateFinancialItem,
+    streamPortfolioQuality,
     clearData,
     financialData,
     setFinancialData,

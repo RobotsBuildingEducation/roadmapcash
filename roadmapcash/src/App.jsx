@@ -29,6 +29,7 @@ function App() {
     parseFinancialInput,
     updateFinancialData,
     updateFinancialItem,
+    streamPortfolioQuality,
     financialData,
     setFinancialData,
     isLoading: isGenerating,
@@ -96,6 +97,14 @@ function App() {
     const result = await updateFinancialItem(financialData, updateInput);
     if (result) {
       await saveRoadmap(userInput, result, updateInput);
+    }
+  };
+
+  const handlePortfolioQualityStream = async (allocations) => {
+    if (!financialData) return;
+    const result = await streamPortfolioQuality(financialData, allocations);
+    if (result) {
+      await saveRoadmap(userInput, result, "Portfolio quality summary");
     }
   };
 
@@ -282,6 +291,7 @@ function App() {
                 data={financialData}
                 onUpdate={handleUpdate}
                 onItemUpdate={handleItemUpdate}
+                onPortfolioQuality={handlePortfolioQualityStream}
                 isUpdating={isUpdating}
               />
             )}
