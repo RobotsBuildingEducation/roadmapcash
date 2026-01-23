@@ -17,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { useColorModeValue } from "@/components/ui/color-mode";
+import { simplemodel } from "@/database/firebaseConfig";
 
 // Color palette for consistent theming
 const COLORS = {
@@ -942,26 +943,33 @@ function OverviewChart({ income, expenses, t }) {
 }
 
 // Investment Portfolio - standard allocation with charts
-function InvestmentPortfolio({
-  allocations,
-  qualitySummary,
-  streamedQualitySummary,
-  onCustomize,
-  onQualityCheck,
-  isUpdating,
-  portfolioAction,
-  t,
-}) {
+function InvestmentPortfolio({ allocations, onCustomize, isUpdating, t }) {
   const theme = useChartTheme();
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
-  const summarySource =
-    streamedQualitySummary !== null && streamedQualitySummary !== undefined
-      ? streamedQualitySummary
-      : qualitySummary;
-  const normalizedQualitySummary = useMemo(() => {
-    return sanitizePortfolioQualitySummary(summarySource);
-  }, [summarySource]);
+
+  // Local state for quality check - completely independent
+  const [qualityText, setQualityText] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  const handleCheckQuality = async () => {
+    setQualityText("");
+    setIsStreaming(true);
+
+    const prompt = `Review this investment portfolio and give a brief 2-3 sentence assessment of its quality, risks, and one suggestion:\n${portfolio.map((a) => `${a.percentage}% ${a.name}`).join("\n")}`;
+
+    const result = await simplemodel.generateContentStream(prompt);
+
+    let fullText = "";
+    for await (const chunk of result.stream) {
+      const chunkText = typeof chunk.text === "function" ? chunk.text() : "";
+      if (!chunkText) continue;
+      fullText += chunkText;
+      setQualityText(fullText);
+    }
+
+    setIsStreaming(false);
+  };
 
   const segments = useMemo(() => {
     const result = [];
@@ -1104,14 +1112,10 @@ function InvestmentPortfolio({
                   size="xs"
                   colorScheme="blue"
                   variant="ghost"
-                  onClick={onQualityCheck}
-                  isDisabled={!onQualityCheck || isUpdating}
+                  onClick={handleCheckQuality}
+                  isDisabled={isStreaming}
                 >
-                  {isUpdating && portfolioAction === "quality" ? (
-                    <Spinner size="xs" />
-                  ) : (
-                    t("financialChart.portfolio.qualityButton")
-                  )}
+                  {t("financialChart.portfolio.qualityButton")}
                 </Button>
               </HStack>
             </VStack>
@@ -1176,8 +1180,7 @@ function InvestmentPortfolio({
           {t("financialChart.portfolio.note")}
         </Text>
 
-        {(normalizedQualitySummary ||
-          (isUpdating && portfolioAction === "quality")) && (
+        {(qualityText || isStreaming) && (
           <Box
             bg={theme.insetBg}
             borderRadius="lg"
@@ -1188,7 +1191,7 @@ function InvestmentPortfolio({
             <Text fontSize="2xs" color={theme.faintText} mb="1">
               {t("financialChart.portfolio.qualityTitle")}
             </Text>
-            {normalizedQualitySummary ? (
+            {qualityText ? (
               <ReactMarkdown
                 components={{
                   p: (props) => (
@@ -1210,12 +1213,10 @@ function InvestmentPortfolio({
                   ),
                 }}
               >
-                {normalizedQualitySummary}
+                {qualityText}
               </ReactMarkdown>
             ) : (
-              <Text fontSize="sm" color={theme.subText}>
-                {t("financialChart.portfolio.qualityLoading")}
-              </Text>
+              <Spinner size="sm" />
             )}
           </Box>
         )}
@@ -2149,14 +2150,7 @@ function MetricsSummary({
 }
 
 // Main FinancialChart component
-export function FinancialChart({
-  data,
-  onUpdate,
-  onItemUpdate,
-  onPortfolioQuality,
-  isUpdating,
-  portfolioQualityDraft,
-}) {
+export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
   const { t } = useI18n();
   const theme = useChartTheme();
   const [activeTab, setActiveTab] = useState(0);
@@ -2479,19 +2473,10 @@ export function FinancialChart({
     );
   };
 
-  const savePortfolioDraft = async () => {
+  const savePortfolioDraft = () => {
     setPortfolioAllocations(portfolioDraft);
     setPortfolioCustomized(true);
     setPortfolioModalOpen(false);
-    if (!onPortfolioQuality) return;
-    setPortfolioAction("quality");
-    await onPortfolioQuality(portfolioDraft);
-  };
-
-  const handlePortfolioQuality = async () => {
-    if (!onPortfolioQuality) return;
-    setPortfolioAction("quality");
-    await onPortfolioQuality(portfolioAllocations);
   };
 
   const portfolioDraftTotal = portfolioDraft.reduce(
@@ -2839,12 +2824,8 @@ export function FinancialChart({
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <InvestmentPortfolio
                   allocations={portfolioAllocations}
-                  qualitySummary={plan?.portfolio?.qualitySummary}
-                  streamedQualitySummary={portfolioQualityDraft}
                   onCustomize={openPortfolioModal}
-                  onQualityCheck={handlePortfolioQuality}
                   isUpdating={isUpdating}
-                  portfolioAction={portfolioAction}
                   t={t}
                 />
               </VStack>
