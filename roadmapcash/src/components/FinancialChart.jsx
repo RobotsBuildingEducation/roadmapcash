@@ -892,7 +892,7 @@ function OverviewChart({ income, expenses, t }) {
           </Box>
 
           <VStack align="start" spacing="2" flex="1" minW="0">
-            {segments.slice(0, 5).map((segment, index) => (
+            {segments.map((segment, index) => (
               <HStack key={index} justify="space-between" w="100%">
                 <HStack spacing="2" minW="0" flex="1">
                   <Box
@@ -920,13 +920,6 @@ function OverviewChart({ income, expenses, t }) {
                 </Text>
               </HStack>
             ))}
-            {segments.length > 5 && (
-              <Text fontSize="xs" color={theme.faintText}>
-                {t("financialChart.moreSegments", {
-                  count: segments.length - 5,
-                })}
-              </Text>
-            )}
           </VStack>
         </HStack>
       </VStack>
@@ -935,7 +928,15 @@ function OverviewChart({ income, expenses, t }) {
 }
 
 // Investment Portfolio - standard allocation with charts
-function InvestmentPortfolio({ allocations, t }) {
+function InvestmentPortfolio({
+  allocations,
+  qualitySummary,
+  onCustomize,
+  onQualityCheck,
+  isUpdating,
+  portfolioAction,
+  t,
+}) {
   const theme = useChartTheme();
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
@@ -1068,15 +1069,27 @@ function InvestmentPortfolio({ allocations, t }) {
                   size="xs"
                   variant="outline"
                   borderColor={theme.surfaceBorder}
+                  onClick={onCustomize}
+                  isDisabled={!onCustomize || isUpdating}
                 >
-                  {t("financialChart.portfolio.customizeButton")}
+                  {isUpdating && portfolioAction === "customize" ? (
+                    <Spinner size="xs" />
+                  ) : (
+                    t("financialChart.portfolio.customizeButton")
+                  )}
                 </Button>
                 <Button
                   size="xs"
                   colorScheme="blue"
                   variant="ghost"
+                  onClick={onQualityCheck}
+                  isDisabled={!onQualityCheck || isUpdating}
                 >
-                  {t("financialChart.portfolio.qualityButton")}
+                  {isUpdating && portfolioAction === "quality" ? (
+                    <Spinner size="xs" />
+                  ) : (
+                    t("financialChart.portfolio.qualityButton")
+                  )}
                 </Button>
               </HStack>
             </VStack>
@@ -1140,6 +1153,24 @@ function InvestmentPortfolio({ allocations, t }) {
         <Text fontSize="xs" color={theme.faintText}>
           {t("financialChart.portfolio.note")}
         </Text>
+
+        {(qualitySummary || (isUpdating && portfolioAction === "quality")) && (
+          <Box
+            bg={theme.insetBg}
+            borderRadius="lg"
+            p="3"
+            borderWidth="1px"
+            borderColor={theme.insetBorder}
+          >
+            <Text fontSize="2xs" color={theme.faintText} mb="1">
+              {t("financialChart.portfolio.qualityTitle")}
+            </Text>
+            <Text fontSize="sm" color={theme.subText}>
+              {qualitySummary ||
+                t("financialChart.portfolio.qualityLoading")}
+            </Text>
+          </Box>
+        )}
       </VStack>
     </Box>
   );
@@ -2089,6 +2120,12 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
   const [interaction, setInteraction] = useState(null);
   const [interactionIndex, setInteractionIndex] = useState(null);
   const [interactionAction, setInteractionAction] = useState("");
+  const [portfolioAllocations, setPortfolioAllocations] =
+    useState(STANDARD_PORTFOLIO);
+  const [portfolioDraft, setPortfolioDraft] = useState(STANDARD_PORTFOLIO);
+  const [portfolioAction, setPortfolioAction] = useState("");
+  const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
+  const [portfolioCustomized, setPortfolioCustomized] = useState(false);
 
   if (!data) return null;
 
@@ -2140,10 +2177,18 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
   }, [expenses, plan]);
 
   useEffect(() => {
+    if (!portfolioCustomized) return;
+    if (plan?.portfolio?.allocations?.length) {
+      setPortfolioAllocations(plan.portfolio.allocations);
+    }
+  }, [plan, portfolioCustomized]);
+
+  useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
       setShowUpdateFlash(true);
       const timeout = setTimeout(() => setShowUpdateFlash(false), 1400);
       setInteractionAction("");
+      setPortfolioAction("");
       previousUpdatingRef.current = isUpdating;
       return () => clearTimeout(timeout);
     }
@@ -2341,6 +2386,21 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     return "";
   };
 
+  const formatPortfolioAllocations = (allocations) =>
+    allocations
+      .map((allocation) => `${allocation.percentage}% ${allocation.name}`)
+      .join("\n");
+
+  const buildPortfolioUpdatePrompt = (allocations) =>
+    t("financialChart.prompts.portfolioUpdate", {
+      allocations: formatPortfolioAllocations(allocations),
+    });
+
+  const buildPortfolioQualityPrompt = (allocations) =>
+    t("financialChart.prompts.portfolioQuality", {
+      allocations: formatPortfolioAllocations(allocations),
+    });
+
   const handleAiUpdate = (action) => {
     if (!interaction || !onItemUpdate) return;
     const prompt = buildInteractionPrompt(
@@ -2357,6 +2417,51 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
     setInteraction(null);
     setInteractionIndex(null);
   };
+
+  const openPortfolioModal = () => {
+    setPortfolioDraft(
+      portfolioAllocations.map((allocation) => ({ ...allocation })),
+    );
+    setPortfolioModalOpen(true);
+  };
+
+  const closePortfolioModal = () => {
+    setPortfolioModalOpen(false);
+  };
+
+  const updatePortfolioDraft = (index, value) => {
+    setPortfolioDraft((current) =>
+      current.map((allocation, currentIndex) =>
+        currentIndex === index
+          ? { ...allocation, percentage: Number(value) || 0 }
+          : allocation,
+      ),
+    );
+  };
+
+  const savePortfolioDraft = () => {
+    setPortfolioAllocations(portfolioDraft);
+    setPortfolioCustomized(true);
+    setPortfolioModalOpen(false);
+    if (!onItemUpdate) return;
+    const prompt = buildPortfolioUpdatePrompt(portfolioDraft);
+    if (!prompt) return;
+    setPortfolioAction("customize");
+    onItemUpdate(prompt);
+  };
+
+  const handlePortfolioQuality = () => {
+    if (!onItemUpdate) return;
+    const prompt = buildPortfolioQualityPrompt(portfolioAllocations);
+    if (!prompt) return;
+    setPortfolioAction("quality");
+    onItemUpdate(prompt);
+  };
+
+  const portfolioDraftTotal = portfolioDraft.reduce(
+    (sum, allocation) => sum + allocation.percentage,
+    0,
+  );
 
   return (
     <Box>
@@ -2697,7 +2802,12 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
             {activeTab === 2 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <InvestmentPortfolio
-                  allocations={plan?.portfolio?.allocations}
+                  allocations={portfolioAllocations}
+                  qualitySummary={plan?.portfolio?.qualitySummary}
+                  onCustomize={openPortfolioModal}
+                  onQualityCheck={handlePortfolioQuality}
+                  isUpdating={isUpdating}
+                  portfolioAction={portfolioAction}
                   t={t}
                 />
               </VStack>
@@ -2827,6 +2937,98 @@ export function FinancialChart({ data, onUpdate, onItemUpdate, isUpdating }) {
                   {isUpdating && interactionAction === "complete"
                     ? t("financialChart.interaction.completing")
                     : t("financialChart.interaction.completeExercise")}
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
+
+      {portfolioModalOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.700"
+          zIndex="modal"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          onClick={closePortfolioModal}
+        >
+          <Box
+            bg={theme.elevatedBg}
+            p={{ base: "4", md: "6" }}
+            borderRadius="xl"
+            width={{ base: "92%", sm: "520px" }}
+            maxWidth="520px"
+            borderWidth="1px"
+            borderColor={theme.surfaceBorder}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <VStack align="stretch" spacing="4">
+              <HStack justify="space-between" align="start">
+                <Box>
+                  <Text fontSize="sm" color={theme.mutedText}>
+                    {t("financialChart.portfolio.modalTitle")}
+                  </Text>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    {t("financialChart.portfolio.modalSubtitle")}
+                  </Text>
+                </Box>
+                <Button size="xs" variant="ghost" onClick={closePortfolioModal}>
+                  {t("financialChart.portfolio.closeModal")}
+                </Button>
+              </HStack>
+
+              <VStack align="stretch" spacing="3">
+                {portfolioDraft.map((allocation, index) => (
+                  <Grid
+                    key={allocation.name}
+                    templateColumns={{ base: "1fr 90px", md: "1fr 120px" }}
+                    gap="3"
+                    alignItems="center"
+                  >
+                    <Text fontSize="sm" color={theme.subText}>
+                      {allocation.name}
+                    </Text>
+                    <Input
+                      type="number"
+                      value={allocation.percentage}
+                      onChange={(event) =>
+                        updatePortfolioDraft(index, event.target.value)
+                      }
+                      bg={theme.inputBg}
+                      borderColor={theme.inputBorder}
+                      fontSize="sm"
+                      textAlign="right"
+                    />
+                  </Grid>
+                ))}
+              </VStack>
+
+              <HStack justify="space-between" align="center">
+                <Text fontSize="xs" color={theme.faintText}>
+                  {t("financialChart.portfolio.totalLabel")}
+                </Text>
+                <Text fontSize="sm" fontWeight="semibold" color={theme.subText}>
+                  {portfolioDraftTotal}%
+                </Text>
+              </HStack>
+
+              <HStack justify="flex-end" spacing="2">
+                <Button size="sm" variant="ghost" onClick={closePortfolioModal}>
+                  {t("financialChart.portfolio.cancelModal")}
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={savePortfolioDraft}
+                  isDisabled={isUpdating}
+                >
+                  {t("financialChart.portfolio.saveModal")}
                 </Button>
               </HStack>
             </VStack>

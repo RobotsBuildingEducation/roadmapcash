@@ -176,6 +176,13 @@ export const translations = {
         note: "This is a starting point designed for diversification and flexibility.",
         customizeButton: "Customize allocation",
         qualityButton: "Check portfolio quality",
+        qualityTitle: "Portfolio quality summary",
+        qualityLoading: "Generating a quality check summary...",
+        modalTitle: "Customize allocation",
+        modalSubtitle: "Update each percentage to fit your preferences.",
+        closeModal: "Close",
+        cancelModal: "Cancel",
+        saveModal: "Save allocation",
       },
       interaction: {
         expenseQuest: "Expense Quest",
@@ -217,6 +224,10 @@ export const translations = {
           "Generate a new recommendation for the expense \"{name}\" that is different from the current one. Keep the expense list the same, but update the recommendation field for \"{name}\".",
         expenseComplete:
           "Add a new, distinct optimization recommendation for the expense \"{name}\". Keep the expense list the same, but update the recommendation field for \"{name}\".",
+        portfolioUpdate:
+          "Update plan.portfolio.allocations to:\n{allocations}\nKeep everything else the same.",
+        portfolioQuality:
+          "Review the investment allocation below and update plan.portfolio.qualitySummary with a concise summary (2-3 sentences) highlighting strengths, risks, and one improvement.\n{allocations}",
       },
     },
     ai: {
@@ -465,6 +476,13 @@ Respond in English.`,
           "Este es un punto de partida pensado para diversificación y flexibilidad.",
         customizeButton: "Personalizar asignación",
         qualityButton: "Evaluar calidad del portafolio",
+        qualityTitle: "Resumen de calidad del portafolio",
+        qualityLoading: "Generando el resumen de calidad...",
+        modalTitle: "Personalizar asignación",
+        modalSubtitle: "Actualiza cada porcentaje según tus preferencias.",
+        closeModal: "Cerrar",
+        cancelModal: "Cancelar",
+        saveModal: "Guardar asignación",
       },
       interaction: {
         expenseQuest: "Misión de gastos",
@@ -506,6 +524,10 @@ Respond in English.`,
           "Genera una nueva recomendación para el gasto \"{name}\" que sea distinta de la actual. Mantén la lista de gastos igual, pero actualiza el campo recommendation para \"{name}\".",
         expenseComplete:
           "Agrega una nueva recomendación de optimización para el gasto \"{name}\". Mantén la lista de gastos igual, pero actualiza el campo recommendation para \"{name}\".",
+        portfolioUpdate:
+          "Actualiza plan.portfolio.allocations a:\n{allocations}\nMantén todo lo demás igual.",
+        portfolioQuality:
+          "Revisa la asignación de inversión a continuación y actualiza plan.portfolio.qualitySummary con un resumen conciso (2-3 oraciones) que destaque fortalezas, riesgos y una mejora.\n{allocations}",
       },
     },
     ai: {

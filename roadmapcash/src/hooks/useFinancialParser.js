@@ -128,6 +128,11 @@ const financialDataSchema = Schema.object({
               }),
               description: "Target investment portfolio allocation",
             }),
+            qualitySummary: Schema.string({
+              description:
+                "Concise quality summary for the investment allocation",
+              nullable: true,
+            }),
           },
           required: ["allocations"],
         }),
@@ -384,6 +389,10 @@ export function useFinancialParser() {
             : basePlan.portfolio?.allocations?.length
               ? basePlan.portfolio.allocations
               : STANDARD_PORTFOLIO),
+        qualitySummary:
+          plan.portfolio?.qualitySummary ||
+          basePlan.portfolio?.qualitySummary ||
+          "",
       },
     };
 
