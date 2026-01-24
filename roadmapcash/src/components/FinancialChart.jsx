@@ -1391,10 +1391,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
   );
 
   const maxValue = Math.max(...data.map((d) => d.optimistic), startingAmount);
-  const minValue = Math.min(
-    ...data.map((d) => d.conservative),
-    startingAmount,
-  );
+  const minValue = Math.min(...data.map((d) => d.conservative), startingAmount);
 
   const getX = (year) => padding.left + (year / years) * innerWidth;
   const valueRange = Math.max(maxValue - minValue, 1);
@@ -1471,11 +1468,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                 strokeDasharray="4,4"
               />
             ))}
-            <path
-              d={buildBandPath()}
-              fill={theme.iconBg}
-              opacity="0.4"
-            />
+            <path d={buildBandPath()} fill={theme.iconBg} opacity="0.4" />
             <path
               d={buildPath("conservative")}
               fill="none"
@@ -1618,8 +1611,11 @@ function ReturnAssumptionsChart({ assumptions, t }) {
                     textAnchor="middle"
                     fill={theme.axisText}
                     fontSize="8"
+                    style={{ fontSize: 6 }}
                   >
-                    {item.name.length > 10 ? `${item.name.slice(0, 9)}…` : item.name}
+                    {item.name.length > 10
+                      ? `${item.name.slice(0, 9)}…`
+                      : item.name}
                   </text>
                   <text
                     x={x + Math.max(barWidth, 18) / 2 + 5}
@@ -1627,6 +1623,7 @@ function ReturnAssumptionsChart({ assumptions, t }) {
                     textAnchor="middle"
                     fill={theme.mutedText}
                     fontSize="8"
+                    style={{ fontSize: 8 }}
                   >
                     {(item.rate * 100).toFixed(1)}%
                   </text>
@@ -2210,7 +2207,11 @@ function MonthlyAllocationMixChart({
       : totalExpenses + monthlyContribution + remaining + 1;
 
   const segments = [
-    { label: t("financialChart.metrics.expenses"), value: totalExpenses, color: COLORS.danger },
+    {
+      label: t("financialChart.metrics.expenses"),
+      value: totalExpenses,
+      color: COLORS.danger,
+    },
     {
       label: t("financialChart.taxPlanner.totalLabel"),
       value: monthlyContribution,
