@@ -231,6 +231,7 @@ const useChartTheme = () => ({
   inputBg: useColorModeValue("white", "gray.800"),
   inputBorder: useColorModeValue("gray.300", "gray.700"),
   tabHoverBg: useColorModeValue("gray.100", "gray.700"),
+  bandFill: useColorModeValue("#10b981", "#4ade80"),
 });
 
 // Plan Header with title and overview
@@ -1450,7 +1451,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                 strokeDasharray="4,4"
               />
             ))}
-            <path d={buildBandPath()} fill={"#b4fff1"} opacity="0.4" />
+            <path d={buildBandPath()} fill={theme.bandFill} opacity="0.25" />
             <path
               d={buildPath("conservative")}
               fill="none"
@@ -1492,8 +1493,9 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   : value >= 1000
                     ? `$${(value / 1000).toFixed(0)}K`
                     : `$${value.toFixed(0)}`;
-              // At year 10, stack labels vertically in a column above the lines
+              // At year 10, stack labels vertically just above the optimistic line
               const isEarlyYear = year === 10;
+              const earlyYearBaseY = getY(dataPoint.optimistic) - 12;
               return (
                 <g key={`value-${year}`}>
                   {/* Optimistic data point */}
@@ -1505,7 +1507,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? 38 : getY(dataPoint.optimistic) - 8}
+                    y={isEarlyYear ? earlyYearBaseY - 24 : getY(dataPoint.optimistic) - 8}
                     textAnchor="middle"
                     fill={COLORS.success}
                     fontWeight="bold"
@@ -1522,7 +1524,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? 50 : getY(dataPoint.base) - 8}
+                    y={isEarlyYear ? earlyYearBaseY - 12 : getY(dataPoint.base) - 8}
                     textAnchor="middle"
                     fill={COLORS.primary}
                     fontWeight="bold"
@@ -1539,7 +1541,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? 62 : getY(dataPoint.conservative) + 14}
+                    y={isEarlyYear ? earlyYearBaseY : getY(dataPoint.conservative) + 14}
                     textAnchor="middle"
                     fill={COLORS.warning}
                     fontWeight="bold"
