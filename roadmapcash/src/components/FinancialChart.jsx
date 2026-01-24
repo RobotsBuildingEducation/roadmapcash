@@ -2675,19 +2675,19 @@ export function FinancialChart({
     );
   }, [expenses, plan]);
 
-  // Sync portfolio allocations from saved data
+  // Sync portfolio allocations from saved data (independent from plan)
   useEffect(() => {
-    if (plan?.portfolio?.allocations?.length) {
-      setPortfolioAllocations(plan.portfolio.allocations);
+    if (data.portfolio?.allocations?.length) {
+      setPortfolioAllocations(data.portfolio.allocations);
     }
-  }, [plan?.portfolio?.allocations]);
+  }, [data.portfolio?.allocations]);
 
-  // Sync tax allocations from saved data
+  // Sync tax allocations from saved data (independent from plan)
   useEffect(() => {
-    if (plan?.taxPlanner?.allocations?.length) {
-      setTaxAllocations(plan.taxPlanner.allocations);
+    if (data.taxPlanner?.allocations?.length) {
+      setTaxAllocations(data.taxPlanner.allocations);
     }
-  }, [plan?.taxPlanner?.allocations]);
+  }, [data.taxPlanner?.allocations]);
 
   useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
@@ -3327,7 +3327,7 @@ export function FinancialChart({
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <InvestmentPortfolio
                   allocations={portfolioAllocations}
-                  qualitySummary={plan?.portfolio?.qualitySummary}
+                  qualitySummary={data.portfolio?.qualitySummary}
                   onCustomize={openPortfolioModal}
                   onSaveQuality={(summary) =>
                     onPortfolioSave?.({ qualitySummary: summary })
@@ -3345,7 +3345,7 @@ export function FinancialChart({
                   allocations={taxAllocations}
                   income={data.income || 0}
                   expenses={expenses}
-                  recommendation={plan?.taxPlanner?.recommendation}
+                  recommendation={data.taxPlanner?.recommendation}
                   onCustomize={openTaxModal}
                   onSaveRecommendation={(rec) =>
                     onTaxPlannerSave?.({ recommendation: rec })

@@ -103,12 +103,9 @@ function App() {
     if (!financialData) return;
     const updated = {
       ...financialData,
-      plan: {
-        ...financialData.plan,
-        portfolio: {
-          ...financialData.plan?.portfolio,
-          ...portfolio,
-        },
+      portfolio: {
+        ...financialData.portfolio,
+        ...portfolio,
       },
     };
     setFinancialData(updated);
@@ -119,12 +116,9 @@ function App() {
     if (!financialData) return;
     const updated = {
       ...financialData,
-      plan: {
-        ...financialData.plan,
-        taxPlanner: {
-          ...financialData.plan?.taxPlanner,
-          ...taxPlanner,
-        },
+      taxPlanner: {
+        ...financialData.taxPlanner,
+        ...taxPlanner,
       },
     };
     setFinancialData(updated);
