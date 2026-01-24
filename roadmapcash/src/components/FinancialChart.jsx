@@ -81,6 +81,18 @@ const STANDARD_TAX_ALLOCATIONS = [
   { name: "HSA", amount: 0 },
 ];
 
+const RETURN_ASSUMPTIONS = [
+  { keywords: ["cash", "money market", "savings"], rate: 0.02 },
+  { keywords: ["bond", "treasury", "fixed income"], rate: 0.04 },
+  { keywords: ["gold", "commodity"], rate: 0.03 },
+  { keywords: ["real estate", "reit"], rate: 0.06 },
+  { keywords: ["bitcoin", "crypto"], rate: 0.12 },
+  {
+    keywords: ["stock", "equity", "spy", "s&p", "index", "berkshire"],
+    rate: 0.08,
+  },
+];
+
 const sanitizePortfolioQualitySummary = (text) => {
   if (!text) return "";
   let cleaned = text.trim();
@@ -163,6 +175,27 @@ const formatCurrency = (amount) => {
   if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
   if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`;
   return `$${amount?.toLocaleString() || 0}`;
+};
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const getAssumedReturnRate = (name) => {
+  if (!name) return 0.06;
+  const lower = name.toLowerCase();
+  const match = RETURN_ASSUMPTIONS.find((entry) =>
+    entry.keywords.some((keyword) => lower.includes(keyword)),
+  );
+  return match ? match.rate : 0.06;
+};
+
+const getEstimatedTaxRate = (annualIncome) => {
+  if (!annualIncome || annualIncome <= 0) return 0.1;
+  if (annualIncome <= 44725) return 0.12;
+  if (annualIncome <= 95375) return 0.22;
+  if (annualIncome <= 182100) return 0.24;
+  if (annualIncome <= 231250) return 0.32;
+  if (annualIncome <= 578125) return 0.35;
+  return 0.37;
 };
 
 const useChartTheme = () => ({
@@ -981,6 +1014,22 @@ function InvestmentPortfolio({
   const theme = useChartTheme();
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
+  const returnAssumptions = useMemo(
+    () =>
+      portfolio.map((item) => ({
+        ...item,
+        rate: getAssumedReturnRate(item.name),
+      })),
+    [portfolio],
+  );
+  const blendedReturn = useMemo(
+    () =>
+      returnAssumptions.reduce(
+        (sum, item) => sum + (item.percentage / 100) * item.rate,
+        0,
+      ),
+    [returnAssumptions],
+  );
 
   // Local state for quality check streaming
   const [qualityText, setQualityText] = useState("");
@@ -1221,6 +1270,14 @@ function InvestmentPortfolio({
           </GridItem>
         </Grid>
 
+        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="4">
+          <GrowthExpectationChart
+            blendedReturn={blendedReturn}
+            t={t}
+          />
+          <ReturnAssumptionsChart assumptions={returnAssumptions} t={t} />
+        </Grid>
+
         <Text fontSize="xs" color={theme.faintText}>
           {t("financialChart.portfolio.note")}
         </Text>
@@ -1286,6 +1343,278 @@ function InvestmentPortfolio({
   );
 }
 
+function GrowthExpectationChart({ blendedReturn, t }) {
+  const theme = useChartTheme();
+  const chartWidth = 320;
+  const chartHeight = 170;
+  const padding = { top: 15, right: 15, bottom: 30, left: 30 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
+  const baseRate = clamp(blendedReturn || 0.06, 0.03, 0.12);
+  const conservativeRate = clamp(baseRate - 0.02, 0.01, baseRate);
+  const optimisticRate = clamp(baseRate + 0.03, baseRate, 0.16);
+  const years = 10;
+
+  const data = useMemo(
+    () =>
+      Array.from({ length: years + 1 }, (_, year) => ({
+        year,
+        conservative: 100 * Math.pow(1 + conservativeRate, year),
+        base: 100 * Math.pow(1 + baseRate, year),
+        optimistic: 100 * Math.pow(1 + optimisticRate, year),
+      })),
+    [baseRate, conservativeRate, optimisticRate],
+  );
+
+  const maxValue = Math.max(...data.map((d) => d.optimistic), 110);
+  const minValue = 100;
+
+  const getX = (year) => padding.left + (year / years) * innerWidth;
+  const getY = (value) =>
+    padding.top + innerHeight - ((value - minValue) / (maxValue - minValue)) * innerHeight;
+
+  const buildPath = (key) =>
+    data
+      .map((point, index) => {
+        const x = getX(point.year);
+        const y = getY(point[key]);
+        return `${index === 0 ? "M" : "L"}${x} ${y}`;
+      })
+      .join(" ");
+
+  const buildBandPath = () => {
+    const topPath = data
+      .map((point, index) => {
+        const x = getX(point.year);
+        const y = getY(point.optimistic);
+        return `${index === 0 ? "M" : "L"}${x} ${y}`;
+      })
+      .join(" ");
+    const bottomPath = [...data]
+      .reverse()
+      .map((point) => {
+        const x = getX(point.year);
+        const y = getY(point.conservative);
+        return `L${x} ${y}`;
+      })
+      .join(" ");
+    return `${topPath} ${bottomPath} Z`;
+  };
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <VStack align="stretch" spacing="3">
+        <Box>
+          <Text
+            fontSize="xs"
+            fontWeight="semibold"
+            color={theme.mutedText}
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            {t("financialChart.portfolio.growthTitle")}
+          </Text>
+          <Text fontSize="xs" color={theme.subText}>
+            {t("financialChart.portfolio.growthSubtitle")}
+          </Text>
+        </Box>
+
+        <Box overflowX="auto">
+          <svg
+            width="100%"
+            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+            preserveAspectRatio="xMidYMid meet"
+            style={{ minWidth: "280px" }}
+          >
+            {[0, 0.5, 1].map((ratio, index) => (
+              <line
+                key={index}
+                x1={padding.left}
+                y1={padding.top + ratio * innerHeight}
+                x2={padding.left + innerWidth}
+                y2={padding.top + ratio * innerHeight}
+                stroke={theme.chartGrid}
+                strokeDasharray="4,4"
+              />
+            ))}
+            <path
+              d={buildBandPath()}
+              fill={theme.iconBg}
+              opacity="0.4"
+            />
+            <path
+              d={buildPath("conservative")}
+              fill="none"
+              stroke={COLORS.warning}
+              strokeWidth="2"
+              strokeDasharray="4,3"
+            />
+            <path
+              d={buildPath("base")}
+              fill="none"
+              stroke={COLORS.primary}
+              strokeWidth="2.5"
+            />
+            <path
+              d={buildPath("optimistic")}
+              fill="none"
+              stroke={COLORS.success}
+              strokeWidth="2"
+            />
+            {[0, 5, 10].map((year) => (
+              <text
+                key={year}
+                x={getX(year)}
+                y={chartHeight - 10}
+                textAnchor="middle"
+                fill={theme.axisText}
+                fontSize="9"
+              >
+                {year}y
+              </text>
+            ))}
+          </svg>
+        </Box>
+
+        <HStack spacing="4" flexWrap="wrap">
+          <HStack spacing="2">
+            <Box w="2" h="2" borderRadius="full" bg={COLORS.warning} />
+            <Text fontSize="2xs" color={theme.subText}>
+              {t("financialChart.portfolio.growthLegendConservative")}
+            </Text>
+          </HStack>
+          <HStack spacing="2">
+            <Box w="2" h="2" borderRadius="full" bg={COLORS.primary} />
+            <Text fontSize="2xs" color={theme.subText}>
+              {t("financialChart.portfolio.growthLegendBase")}
+            </Text>
+          </HStack>
+          <HStack spacing="2">
+            <Box w="2" h="2" borderRadius="full" bg={COLORS.success} />
+            <Text fontSize="2xs" color={theme.subText}>
+              {t("financialChart.portfolio.growthLegendOptimistic")}
+            </Text>
+          </HStack>
+        </HStack>
+
+        <Text fontSize="2xs" color={theme.faintText}>
+          {t("financialChart.portfolio.growthRateLabel")}:{" "}
+          {(baseRate * 100).toFixed(1)}%
+        </Text>
+      </VStack>
+    </Box>
+  );
+}
+
+function ReturnAssumptionsChart({ assumptions, t }) {
+  const theme = useChartTheme();
+  const safeAssumptions = assumptions?.length ? assumptions : [];
+  const maxRate = Math.max(
+    ...safeAssumptions.map((item) => item.rate || 0),
+    0.08,
+  );
+  const chartWidth = 320;
+  const chartHeight = 170;
+  const padding = { top: 10, right: 20, bottom: 30, left: 20 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
+  const barWidth = safeAssumptions.length
+    ? innerWidth / safeAssumptions.length - 10
+    : innerWidth;
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <VStack align="stretch" spacing="3">
+        <Box>
+          <Text
+            fontSize="xs"
+            fontWeight="semibold"
+            color={theme.mutedText}
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            {t("financialChart.portfolio.assumptionsTitle")}
+          </Text>
+          <Text fontSize="xs" color={theme.subText}>
+            {t("financialChart.portfolio.assumptionsSubtitle")}
+          </Text>
+        </Box>
+        <Box overflowX="auto">
+          <svg
+            width="100%"
+            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+            preserveAspectRatio="xMidYMid meet"
+            style={{ minWidth: "280px" }}
+          >
+            {[0, 0.5, 1].map((ratio, index) => (
+              <line
+                key={index}
+                x1={padding.left}
+                y1={padding.top + ratio * innerHeight}
+                x2={padding.left + innerWidth}
+                y2={padding.top + ratio * innerHeight}
+                stroke={theme.chartGrid}
+                strokeDasharray="4,4"
+              />
+            ))}
+            {safeAssumptions.map((item, index) => {
+              const height = (item.rate / maxRate) * innerHeight;
+              const x =
+                padding.left + index * (innerWidth / safeAssumptions.length);
+              const y = padding.top + innerHeight - height;
+              return (
+                <g key={item.name}>
+                  <rect
+                    x={x + 5}
+                    y={y}
+                    width={Math.max(barWidth, 18)}
+                    height={height}
+                    rx="4"
+                    fill={PORTFOLIO_COLORS[index % PORTFOLIO_COLORS.length]}
+                  />
+                  <text
+                    x={x + Math.max(barWidth, 18) / 2 + 5}
+                    y={chartHeight - 10}
+                    textAnchor="middle"
+                    fill={theme.axisText}
+                    fontSize="8"
+                  >
+                    {item.name.length > 10 ? `${item.name.slice(0, 9)}…` : item.name}
+                  </text>
+                  <text
+                    x={x + Math.max(barWidth, 18) / 2 + 5}
+                    y={y - 4}
+                    textAnchor="middle"
+                    fill={theme.mutedText}
+                    fontSize="8"
+                  >
+                    {(item.rate * 100).toFixed(1)}%
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </Box>
+        <Text fontSize="2xs" color={theme.faintText}>
+          {t("financialChart.portfolio.assumptionNote")}
+        </Text>
+      </VStack>
+    </Box>
+  );
+}
+
 // Tax Planner - tax-advantaged account allocations with contribution tracking
 function TaxPlanner({
   allocations,
@@ -1308,6 +1637,12 @@ function TaxPlanner({
   const totalExpenses = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
   const monthlyIncome = income || 0;
   const monthlySavings = monthlyIncome - totalExpenses;
+  const annualIncome = monthlyIncome * 12;
+  const estimatedTaxRate = getEstimatedTaxRate(annualIncome);
+  const maxContribution = Object.values(TAX_ACCOUNT_LIMITS).reduce(
+    (sum, limit) => sum + limit,
+    0,
+  );
 
   // Local state for recommendation streaming
   const [recommendationText, setRecommendationText] = useState("");
@@ -1595,6 +1930,36 @@ Formatting: Write in a professional essay format with 2-3 focused paragraphs. Us
           </GridItem>
         </Grid>
 
+        <Box>
+          <Text
+            fontSize="xs"
+            fontWeight="semibold"
+            color={theme.mutedText}
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            {t("financialChart.taxPlanner.impactTitle")}
+          </Text>
+          <Text fontSize="xs" color={theme.subText}>
+            {t("financialChart.taxPlanner.impactSubtitle")}
+          </Text>
+        </Box>
+
+        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="4">
+          <TaxSavingsProjectionChart
+            totalAllocated={totalAllocated}
+            maxContribution={maxContribution}
+            estimatedTaxRate={estimatedTaxRate}
+            t={t}
+          />
+          <MonthlyAllocationMixChart
+            monthlyIncome={monthlyIncome}
+            totalExpenses={totalExpenses}
+            monthlyContribution={totalAllocated / 12}
+            t={t}
+          />
+        </Grid>
+
         <Text fontSize="xs" color={theme.faintText}>
           {t("financialChart.taxPlanner.note")}
         </Text>
@@ -1655,6 +2020,254 @@ Formatting: Write in a professional essay format with 2-3 focused paragraphs. Us
             )}
           </Box>
         )}
+      </VStack>
+    </Box>
+  );
+}
+
+function TaxSavingsProjectionChart({
+  totalAllocated,
+  maxContribution,
+  estimatedTaxRate,
+  t,
+}) {
+  const theme = useChartTheme();
+  const chartWidth = 320;
+  const chartHeight = 170;
+  const padding = { top: 15, right: 15, bottom: 30, left: 30 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
+  const years = 5;
+  const currentSavings = totalAllocated * estimatedTaxRate;
+  const maxSavings = maxContribution * estimatedTaxRate;
+
+  const data = useMemo(
+    () =>
+      Array.from({ length: years + 1 }, (_, year) => ({
+        year,
+        current: currentSavings * (year + 1),
+        max: maxSavings * (year + 1),
+      })),
+    [currentSavings, maxSavings],
+  );
+
+  const maxValue = Math.max(...data.map((d) => d.max), 1);
+
+  const getX = (year) => padding.left + (year / years) * innerWidth;
+  const getY = (value) =>
+    padding.top + innerHeight - (value / maxValue) * innerHeight;
+
+  const buildPath = (key) =>
+    data
+      .map((point, index) => {
+        const x = getX(point.year);
+        const y = getY(point[key]);
+        return `${index === 0 ? "M" : "L"}${x} ${y}`;
+      })
+      .join(" ");
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <VStack align="stretch" spacing="3">
+        <Box>
+          <Text
+            fontSize="xs"
+            fontWeight="semibold"
+            color={theme.mutedText}
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            {t("financialChart.taxPlanner.savingsProjectionTitle")}
+          </Text>
+          <Text fontSize="xs" color={theme.subText}>
+            {t("financialChart.taxPlanner.savingsProjectionSubtitle")}
+          </Text>
+        </Box>
+        <Box overflowX="auto">
+          <svg
+            width="100%"
+            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+            preserveAspectRatio="xMidYMid meet"
+            style={{ minWidth: "280px" }}
+          >
+            {[0, 0.5, 1].map((ratio, index) => (
+              <line
+                key={index}
+                x1={padding.left}
+                y1={padding.top + ratio * innerHeight}
+                x2={padding.left + innerWidth}
+                y2={padding.top + ratio * innerHeight}
+                stroke={theme.chartGrid}
+                strokeDasharray="4,4"
+              />
+            ))}
+            <path
+              d={buildPath("max")}
+              fill="none"
+              stroke={COLORS.purple}
+              strokeWidth="2"
+            />
+            <path
+              d={buildPath("current")}
+              fill="none"
+              stroke={COLORS.success}
+              strokeWidth="2"
+            />
+            {[0, 2, 5].map((year) => (
+              <text
+                key={year}
+                x={getX(year)}
+                y={chartHeight - 10}
+                textAnchor="middle"
+                fill={theme.axisText}
+                fontSize="9"
+              >
+                {year}y
+              </text>
+            ))}
+          </svg>
+        </Box>
+        <Grid templateColumns="repeat(2, minmax(0, 1fr))" gap="3">
+          <Box>
+            <Text fontSize="2xs" color={theme.faintText}>
+              {t("financialChart.taxPlanner.estimatedTaxRateLabel")}
+            </Text>
+            <Text fontSize="sm" fontWeight="bold" color={theme.highlightText}>
+              {(estimatedTaxRate * 100).toFixed(0)}%
+            </Text>
+          </Box>
+          <Box>
+            <Text fontSize="2xs" color={theme.faintText}>
+              {t("financialChart.taxPlanner.estimatedAnnualSavingsLabel")}
+            </Text>
+            <Text fontSize="sm" fontWeight="bold" color="green.400">
+              {formatCurrency(currentSavings)}
+            </Text>
+          </Box>
+        </Grid>
+        <Text fontSize="2xs" color={theme.faintText}>
+          {t("financialChart.taxPlanner.maxContributionLabel")}:{" "}
+          {formatCurrency(maxContribution)}
+        </Text>
+      </VStack>
+    </Box>
+  );
+}
+
+function MonthlyAllocationMixChart({
+  monthlyIncome,
+  totalExpenses,
+  monthlyContribution,
+  t,
+}) {
+  const theme = useChartTheme();
+  const chartWidth = 320;
+  const chartHeight = 150;
+  const padding = { top: 20, right: 20, bottom: 30, left: 20 };
+  const innerWidth = chartWidth - padding.left - padding.right;
+  const barHeight = 28;
+  const remaining = Math.max(
+    monthlyIncome - totalExpenses - monthlyContribution,
+    0,
+  );
+  const total =
+    monthlyIncome > 0
+      ? monthlyIncome
+      : totalExpenses + monthlyContribution + remaining + 1;
+
+  const segments = [
+    { label: t("financialChart.metrics.expenses"), value: totalExpenses, color: COLORS.danger },
+    {
+      label: t("financialChart.taxPlanner.totalLabel"),
+      value: monthlyContribution,
+      color: COLORS.primary,
+    },
+    {
+      label: t("financialChart.metrics.youSave"),
+      value: remaining,
+      color: COLORS.success,
+    },
+  ];
+
+  let xOffset = padding.left;
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <VStack align="stretch" spacing="3">
+        <Box>
+          <Text
+            fontSize="xs"
+            fontWeight="semibold"
+            color={theme.mutedText}
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            {t("financialChart.taxPlanner.capacityTitle")}
+          </Text>
+          <Text fontSize="xs" color={theme.subText}>
+            {t("financialChart.taxPlanner.capacitySubtitle")}
+          </Text>
+        </Box>
+        <Box overflowX="auto">
+          <svg
+            width="100%"
+            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+            preserveAspectRatio="xMidYMid meet"
+            style={{ minWidth: "280px" }}
+          >
+            <rect
+              x={padding.left}
+              y={padding.top}
+              width={innerWidth}
+              height={barHeight}
+              fill={theme.barBg}
+              rx="6"
+            />
+            {segments.map((segment) => {
+              const width = (segment.value / total) * innerWidth;
+              const rect = (
+                <rect
+                  key={segment.label}
+                  x={xOffset}
+                  y={padding.top}
+                  width={width}
+                  height={barHeight}
+                  fill={segment.color}
+                  rx="6"
+                />
+              );
+              xOffset += width;
+              return rect;
+            })}
+          </svg>
+        </Box>
+        <VStack align="stretch" spacing="2">
+          {segments.map((segment) => (
+            <HStack key={segment.label} justify="space-between">
+              <HStack spacing="2">
+                <Box w="2" h="2" borderRadius="full" bg={segment.color} />
+                <Text fontSize="2xs" color={theme.subText}>
+                  {segment.label}
+                </Text>
+              </HStack>
+              <Text fontSize="2xs" color={theme.mutedText}>
+                {formatCurrency(segment.value)}
+              </Text>
+            </HStack>
+          ))}
+        </VStack>
       </VStack>
     </Box>
   );

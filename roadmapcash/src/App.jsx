@@ -122,7 +122,7 @@ function App() {
       },
     };
     setFinancialData(updated);
-    await saveRoadmap(userInput, updated, "Tax planner update");
+    await saveRoadmap(userInput, updated, "Tax optimizer update");
   };
 
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
