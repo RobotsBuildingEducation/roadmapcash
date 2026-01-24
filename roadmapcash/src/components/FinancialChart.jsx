@@ -1295,14 +1295,14 @@ function InvestmentPortfolio({
           </Text>
         </Box>
 
-        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="4">
+        <VStack spacing="4" align="stretch">
           <GrowthExpectationChart
             blendedReturn={blendedReturn}
             investedAmount={investedAmount}
             t={t}
           />
           <ReturnAssumptionsChart assumptions={returnAssumptions} t={t} />
-        </Grid>
+        </VStack>
 
         <Text fontSize="xs" color={theme.faintText}>
           {t("financialChart.portfolio.note")}
@@ -1371,8 +1371,8 @@ function InvestmentPortfolio({
 
 function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
   const theme = useChartTheme();
-  const chartWidth = 320;
-  const chartHeight = 170;
+  const chartWidth = 600;
+  const chartHeight = 200;
   const padding = { top: 15, right: 15, bottom: 30, left: 30 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
@@ -1503,35 +1503,43 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                 {year}y
               </text>
             ))}
-            {/* Value labels at key years */}
+            {/* Value labels at key years for all scenarios */}
             {[10, 20, 30].map((year) => {
               const dataPoint = data[year];
               if (!dataPoint) return null;
-              const value = dataPoint.base;
-              const formattedValue =
+              const formatValue = (value) =>
                 value >= 1000000
                   ? `$${(value / 1000000).toFixed(1)}M`
                   : value >= 1000
                     ? `$${(value / 1000).toFixed(0)}K`
                     : `$${value.toFixed(0)}`;
+              const scenarios = [
+                { key: "optimistic", color: COLORS.success, value: dataPoint.optimistic, yOffset: -8 },
+                { key: "base", color: COLORS.primary, value: dataPoint.base, yOffset: -8 },
+                { key: "conservative", color: COLORS.warning, value: dataPoint.conservative, yOffset: 14 },
+              ];
               return (
                 <g key={`value-${year}`}>
-                  <circle
-                    cx={getX(year)}
-                    cy={getY(value)}
-                    r="3"
-                    fill={COLORS.primary}
-                  />
-                  <text
-                    x={getX(year)}
-                    y={getY(value) - 8}
-                    textAnchor="middle"
-                    fill={theme.mutedText}
-                    fontWeight="bold"
-                    style={{ fontSize: 8 }}
-                  >
-                    {formattedValue}
-                  </text>
+                  {scenarios.map((scenario) => (
+                    <g key={`${scenario.key}-${year}`}>
+                      <circle
+                        cx={getX(year)}
+                        cy={getY(scenario.value)}
+                        r="3"
+                        fill={scenario.color}
+                      />
+                      <text
+                        x={getX(year)}
+                        y={getY(scenario.value) + scenario.yOffset}
+                        textAnchor="middle"
+                        fill={scenario.color}
+                        fontSize="8"
+                        fontWeight="bold"
+                      >
+                        {formatValue(scenario.value)}
+                      </text>
+                    </g>
+                  ))}
                 </g>
               );
             })}
@@ -1575,8 +1583,8 @@ function ReturnAssumptionsChart({ assumptions, t }) {
     ...safeAssumptions.map((item) => item.rate || 0),
     0.08,
   );
-  const chartWidth = 320;
-  const chartHeight = 170;
+  const chartWidth = 600;
+  const chartHeight = 200;
   const padding = { top: 10, right: 20, bottom: 30, left: 20 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
