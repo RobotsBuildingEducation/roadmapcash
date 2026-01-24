@@ -173,7 +173,7 @@ export const translations = {
           "Start with this standardized allocation and adjust it over time.",
         allocationChart: "Allocation chart",
         breakdownTitle: "Target allocation",
-        totalLabel: "Target mix",
+        totalLabel: "Total",
         note: "This is a starting point designed for diversification and flexibility.",
         customizeButton: "Customize allocation",
         qualityButton: "Check portfolio quality",
@@ -185,6 +185,7 @@ export const translations = {
         cancelModal: "Cancel",
         saveModal: "Save allocation",
         assetPlaceholder: "Asset name",
+        addAllocation: "Add allocation",
         growthTitle: "Growth expectations",
         growthSubtitle:
           "Projected portfolio index over 30 years using conservative, base, and optimistic assumptions.",
@@ -206,14 +207,15 @@ export const translations = {
           "Track your tax-advantaged account contributions and maximize your tax benefits.",
         allocationChart: "Contribution Distribution",
         utilizationTitle: "Annual Contribution Progress",
-        totalLabel: "Annual Total",
+        totalLabel: "Total",
         ofLimit: "of limit",
         note: "Contribution limits are for 2024. Limits may be higher if you're 50+ (catch-up contributions).",
         customizeButton: "Edit contributions",
         recommendButton: "Get recommendations",
         recommendationTitle: "Tax Strategy Recommendations",
         modalTitle: "Edit Tax Contributions",
-        modalSubtitle: "Enter your annual contribution amounts for each account.",
+        modalSubtitle:
+          "Enter your annual contribution amounts for each account.",
         limitLabel: "Limit: {amount}",
         totalContributions: "Total Annual Contributions",
         closeModal: "Close",
@@ -257,21 +259,21 @@ export const translations = {
         updateSuffix:
           "Recalculate recommendations, monthly budget, potential savings, and update the plan accordingly.",
         strategyRemix:
-          "Replace the savings strategy titled \"{title}\" with a brand new, different strategy. Keep the plan.strategies format with title, description, impact, and difficulty.",
+          'Replace the savings strategy titled "{title}" with a brand new, different strategy. Keep the plan.strategies format with title, description, impact, and difficulty.',
         strategyComplete:
-          "Add a new savings strategy that builds on completing \"{title}\". Keep the plan.strategies format with title, description, impact, and difficulty.",
+          'Add a new savings strategy that builds on completing "{title}". Keep the plan.strategies format with title, description, impact, and difficulty.',
         actionRemix:
-          "Replace the action item \"{action}\" with a new, different action item. Keep the plan.actionItems format with action, timeframe, and category.",
+          'Replace the action item "{action}" with a new, different action item. Keep the plan.actionItems format with action, timeframe, and category.',
         actionComplete:
-          "Add a new action item that follows from completing \"{action}\". Keep the plan.actionItems format with action, timeframe, and category.",
+          'Add a new action item that follows from completing "{action}". Keep the plan.actionItems format with action, timeframe, and category.',
         weeklyRemix:
           "Replace the weekly check-in with a new prompt that encourages reflection and progress. Keep the plan.weeklyCheckIn as a single sentence.",
         weeklyComplete:
-          "Add a new weekly check-in prompt that builds on completing \"{text}\". Keep the plan.weeklyCheckIn as a single sentence.",
+          'Add a new weekly check-in prompt that builds on completing "{text}". Keep the plan.weeklyCheckIn as a single sentence.',
         expenseRemix:
-          "Generate a new recommendation for the expense \"{name}\" that is different from the current one. Keep the expense list the same, but update the recommendation field for \"{name}\".",
+          'Generate a new recommendation for the expense "{name}" that is different from the current one. Keep the expense list the same, but update the recommendation field for "{name}".',
         expenseComplete:
-          "Add a new, distinct optimization recommendation for the expense \"{name}\". Keep the expense list the same, but update the recommendation field for \"{name}\".",
+          'Add a new, distinct optimization recommendation for the expense "{name}". Keep the expense list the same, but update the recommendation field for "{name}".',
         portfolioQuality:
           "Review the investment allocation below and return only a concise 2-3 sentence summary highlighting strengths, risks, and one improvement. Do not include keys, labels, or quotes.\n{allocations}",
       },
@@ -518,9 +520,8 @@ Respond in English.`,
           "Comienza con esta asignación estándar y ajústala con el tiempo.",
         allocationChart: "Gráfico de asignación",
         breakdownTitle: "Asignación objetivo",
-        totalLabel: "Mezcla objetivo",
-        note:
-          "Este es un punto de partida pensado para diversificación y flexibilidad.",
+        totalLabel: "Total",
+        note: "Este es un punto de partida pensado para diversificación y flexibilidad.",
         customizeButton: "Personalizar asignación",
         qualityButton: "Evaluar calidad del portafolio",
         qualityTitle: "Resumen de calidad del portafolio",
@@ -531,6 +532,7 @@ Respond in English.`,
         cancelModal: "Cancelar",
         saveModal: "Guardar asignación",
         assetPlaceholder: "Nombre del activo",
+        addAllocation: "Agregar asignación",
         growthTitle: "Expectativas de crecimiento",
         growthSubtitle:
           "Índice proyectado de la cartera a 30 años con supuestos conservador, base y optimista.",
@@ -553,14 +555,15 @@ Respond in English.`,
           "Rastrea tus contribuciones a cuentas con ventajas fiscales y maximiza tus beneficios.",
         allocationChart: "Distribución de Contribuciones",
         utilizationTitle: "Progreso de Contribución Anual",
-        totalLabel: "Total Anual",
+        totalLabel: "Total",
         ofLimit: "del límite",
         note: "Los límites de contribución son para 2024. Los límites pueden ser más altos si tienes 50+ años (contribuciones de recuperación).",
         customizeButton: "Editar contribuciones",
         recommendButton: "Obtener recomendaciones",
         recommendationTitle: "Recomendaciones de Estrategia Fiscal",
         modalTitle: "Editar Contribuciones Fiscales",
-        modalSubtitle: "Ingresa tus montos de contribución anual para cada cuenta.",
+        modalSubtitle:
+          "Ingresa tus montos de contribución anual para cada cuenta.",
         limitLabel: "Límite: {amount}",
         totalContributions: "Contribuciones Anuales Totales",
         closeModal: "Cerrar",
@@ -604,21 +607,21 @@ Respond in English.`,
         updateSuffix:
           "Recalcula recomendaciones, presupuesto mensual, ahorro potencial y actualiza el plan en consecuencia.",
         strategyRemix:
-          "Reemplaza la estrategia de ahorro titulada \"{title}\" con una estrategia nueva y diferente. Mantén el formato de plan.strategies con título, descripción, impacto y dificultad.",
+          'Reemplaza la estrategia de ahorro titulada "{title}" con una estrategia nueva y diferente. Mantén el formato de plan.strategies con título, descripción, impacto y dificultad.',
         strategyComplete:
-          "Agrega una nueva estrategia de ahorro que continúe al completar \"{title}\". Mantén el formato de plan.strategies con título, descripción, impacto y dificultad.",
+          'Agrega una nueva estrategia de ahorro que continúe al completar "{title}". Mantén el formato de plan.strategies con título, descripción, impacto y dificultad.',
         actionRemix:
-          "Reemplaza la acción \"{action}\" con una acción nueva y diferente. Mantén el formato de plan.actionItems con acción, plazo y categoría.",
+          'Reemplaza la acción "{action}" con una acción nueva y diferente. Mantén el formato de plan.actionItems con acción, plazo y categoría.',
         actionComplete:
-          "Agrega una nueva acción que siga a completar \"{action}\". Mantén el formato de plan.actionItems con acción, plazo y categoría.",
+          'Agrega una nueva acción que siga a completar "{action}". Mantén el formato de plan.actionItems con acción, plazo y categoría.',
         weeklyRemix:
           "Reemplaza el check-in semanal con un nuevo mensaje que fomente reflexión y progreso. Mantén plan.weeklyCheckIn como una sola oración.",
         weeklyComplete:
-          "Agrega un nuevo check-in semanal que se base en completar \"{text}\". Mantén plan.weeklyCheckIn como una sola oración.",
+          'Agrega un nuevo check-in semanal que se base en completar "{text}". Mantén plan.weeklyCheckIn como una sola oración.',
         expenseRemix:
-          "Genera una nueva recomendación para el gasto \"{name}\" que sea distinta de la actual. Mantén la lista de gastos igual, pero actualiza el campo recommendation para \"{name}\".",
+          'Genera una nueva recomendación para el gasto "{name}" que sea distinta de la actual. Mantén la lista de gastos igual, pero actualiza el campo recommendation para "{name}".',
         expenseComplete:
-          "Agrega una nueva recomendación de optimización para el gasto \"{name}\". Mantén la lista de gastos igual, pero actualiza el campo recommendation para \"{name}\".",
+          'Agrega una nueva recomendación de optimización para el gasto "{name}". Mantén la lista de gastos igual, pero actualiza el campo recommendation para "{name}".',
         portfolioQuality:
           "Revisa la asignación de inversión a continuación y devuelve solo un resumen conciso de 2-3 oraciones que destaque fortalezas, riesgos y una mejora. No incluyas claves, etiquetas ni comillas.\n{allocations}",
       },
@@ -676,8 +679,7 @@ Responde en español.`,
       planTitleFallback: "Tu hoja de ruta financiera",
       overviewFallback:
         "Analicemos tus finanzas y creemos un plan para alcanzar tus metas.",
-      weeklyCheckInFallback:
-        "Revisa tus gastos y el progreso hacia tu meta.",
+      weeklyCheckInFallback: "Revisa tus gastos y el progreso hacia tu meta.",
       motivationalNoteFallback:
         "Has dado el primer paso creando un plan. ¡Sé constante!",
     },
