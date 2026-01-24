@@ -1507,7 +1507,11 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? earlyYearBaseY - 24 : getY(dataPoint.optimistic) - 8}
+                    y={
+                      isEarlyYear
+                        ? earlyYearBaseY - 24
+                        : getY(dataPoint.optimistic) - 8
+                    }
                     textAnchor="middle"
                     fill={COLORS.success}
                     fontWeight="bold"
@@ -1524,7 +1528,11 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? earlyYearBaseY - 12 : getY(dataPoint.base) - 8}
+                    y={
+                      isEarlyYear
+                        ? earlyYearBaseY - 12
+                        : getY(dataPoint.base) - 8
+                    }
                     textAnchor="middle"
                     fill={COLORS.primary}
                     fontWeight="bold"
@@ -1541,7 +1549,11 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? earlyYearBaseY : getY(dataPoint.conservative) + 14}
+                    y={
+                      isEarlyYear
+                        ? earlyYearBaseY
+                        : getY(dataPoint.conservative) + 14
+                    }
                     textAnchor="middle"
                     fill={COLORS.warning}
                     fontWeight="bold"
@@ -3683,7 +3695,10 @@ export function FinancialChart({
     setPortfolioDraft((current) =>
       current.map((allocation, currentIndex) =>
         currentIndex === index
-          ? { ...allocation, percentage: value === "" ? "" : Number(value) || 0 }
+          ? {
+              ...allocation,
+              percentage: value === "" ? "" : Number(value) || 0,
+            }
           : allocation,
       ),
     );
@@ -4373,7 +4388,12 @@ export function FinancialChart({
               </HStack>
 
               <Box>
-                <Text fontSize="xs" fontWeight="semibold" color={theme.mutedText} mb="1">
+                <Text
+                  fontSize="xs"
+                  fontWeight="semibold"
+                  color={theme.mutedText}
+                  mb="1"
+                >
                   {t("financialChart.portfolio.investedAmountLabel")}
                 </Text>
                 <Input
@@ -4381,7 +4401,11 @@ export function FinancialChart({
                   value={investedAmountDraft}
                   min={0}
                   onChange={(event) =>
-                    setInvestedAmountDraft(event.target.value === "" ? "" : Number(event.target.value))
+                    setInvestedAmountDraft(
+                      event.target.value === ""
+                        ? ""
+                        : Number(event.target.value),
+                    )
                   }
                   bg={theme.inputBg}
                   borderColor={theme.inputBorder}
