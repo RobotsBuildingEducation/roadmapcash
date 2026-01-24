@@ -103,16 +103,26 @@ function App() {
     if (!financialData) return;
     const updated = {
       ...financialData,
-      plan: {
-        ...financialData.plan,
-        portfolio: {
-          ...financialData.plan?.portfolio,
-          ...portfolio,
-        },
+      portfolio: {
+        ...financialData.portfolio,
+        ...portfolio,
       },
     };
     setFinancialData(updated);
     await saveRoadmap(userInput, updated, "Portfolio update");
+  };
+
+  const handleTaxPlannerSave = async (taxPlanner) => {
+    if (!financialData) return;
+    const updated = {
+      ...financialData,
+      taxPlanner: {
+        ...financialData.taxPlanner,
+        ...taxPlanner,
+      },
+    };
+    setFinancialData(updated);
+    await saveRoadmap(userInput, updated, "Tax planner update");
   };
 
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
@@ -299,6 +309,7 @@ function App() {
                 onUpdate={handleUpdate}
                 onItemUpdate={handleItemUpdate}
                 onPortfolioSave={handlePortfolioSave}
+                onTaxPlannerSave={handleTaxPlannerSave}
                 isUpdating={isUpdating}
               />
             )}

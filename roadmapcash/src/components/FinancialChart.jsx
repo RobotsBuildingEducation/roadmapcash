@@ -66,6 +66,21 @@ const STANDARD_PORTFOLIO = [
   { name: "Bitcoin", percentage: 5 },
 ];
 
+// Tax-advantaged account contribution limits (2024)
+const TAX_ACCOUNT_LIMITS = {
+  "401k": 23000,
+  IRA: 7000,
+  HSA: 4150, // Individual coverage; family is $8,300
+};
+
+const TAX_PLANNER_COLORS = ["#6366f1", "#10b981", "#f59e0b"];
+
+const STANDARD_TAX_ALLOCATIONS = [
+  { name: "401k", amount: 0 },
+  { name: "IRA", amount: 0 },
+  { name: "HSA", amount: 0 },
+];
+
 const sanitizePortfolioQualitySummary = (text) => {
   if (!text) return "";
   let cleaned = text.trim();
@@ -1271,6 +1286,380 @@ function InvestmentPortfolio({
   );
 }
 
+// Tax Planner - tax-advantaged account allocations with contribution tracking
+function TaxPlanner({
+  allocations,
+  income,
+  expenses,
+  recommendation,
+  onCustomize,
+  onSaveRecommendation,
+  isUpdating,
+  t,
+}) {
+  const theme = useChartTheme();
+  const taxAccounts = allocations?.length
+    ? allocations
+    : STANDARD_TAX_ALLOCATIONS;
+  const totalAllocated = taxAccounts.reduce(
+    (sum, item) => sum + (item.amount || 0),
+    0,
+  );
+  const totalExpenses = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
+  const monthlyIncome = income || 0;
+  const monthlySavings = monthlyIncome - totalExpenses;
+
+  // Local state for recommendation streaming
+  const [recommendationText, setRecommendationText] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  // Use saved recommendation if available and not currently streaming
+  const displayText =
+    isStreaming || recommendationText ? recommendationText : recommendation;
+
+  const handleGetRecommendation = async () => {
+    setRecommendationText("");
+    setIsStreaming(true);
+
+    const allocationSummary = taxAccounts
+      .map(
+        (a) =>
+          `${a.name}: $${a.amount.toLocaleString()} of $${TAX_ACCOUNT_LIMITS[a.name]?.toLocaleString() || "N/A"} limit (${TAX_ACCOUNT_LIMITS[a.name] ? Math.round((a.amount / TAX_ACCOUNT_LIMITS[a.name]) * 100) : 0}%)`,
+      )
+      .join("\n");
+
+    const prompt = `Review this tax-advantaged account allocation and provide personalized recommendations:
+
+Monthly Income: $${monthlyIncome.toLocaleString()}
+Monthly Expenses: $${totalExpenses.toLocaleString()}
+Monthly Savings Available: $${Math.max(0, monthlySavings).toLocaleString()}
+
+Current Tax-Advantaged Contributions (Annual):
+${allocationSummary}
+
+Total Annual Contribution: $${totalAllocated.toLocaleString()}
+
+Consider:
+1. Whether they're maximizing tax benefits based on their income level
+2. The order of priority for contributions (employer match, HSA triple tax advantage, etc.)
+3. Their available monthly savings and whether the allocations are realistic
+4. Specific dollar amounts they could increase contributions by
+5. Any tax strategies specific to their situation
+
+Formatting: Write in a professional essay format with 2-3 focused paragraphs. Use a professional title with ### HeaderSize. Be specific with numbers and actionable advice.`;
+
+    const result = await simplemodel.generateContentStream(prompt);
+
+    let fullText = "";
+    for await (const chunk of result.stream) {
+      const chunkText = typeof chunk.text === "function" ? chunk.text() : "";
+      if (!chunkText) continue;
+      fullText += chunkText;
+      setRecommendationText(fullText);
+    }
+
+    setIsStreaming(false);
+
+    if (onSaveRecommendation && fullText) {
+      onSaveRecommendation(fullText);
+    }
+  };
+
+  const segments = useMemo(() => {
+    const result = [];
+    let currentAngle = -90;
+    const total = totalAllocated || 1;
+
+    taxAccounts.forEach((item, index) => {
+      const percentage = (item.amount / total) * 100;
+      const angle = (percentage / 100) * 360;
+      result.push({
+        ...item,
+        percentage,
+        startAngle: currentAngle,
+        endAngle: currentAngle + angle,
+        color: TAX_PLANNER_COLORS[index % TAX_PLANNER_COLORS.length],
+        limit: TAX_ACCOUNT_LIMITS[item.name] || 0,
+        utilizationPercent: TAX_ACCOUNT_LIMITS[item.name]
+          ? Math.round((item.amount / TAX_ACCOUNT_LIMITS[item.name]) * 100)
+          : 0,
+      });
+      currentAngle += angle;
+    });
+
+    return result;
+  }, [taxAccounts, totalAllocated]);
+
+  const describeArc = (cx, cy, radius, startAngle, endAngle) => {
+    const start = polarToCartesian(cx, cy, radius, endAngle);
+    const end = polarToCartesian(cx, cy, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+      "M",
+      start.x,
+      start.y,
+      "A",
+      radius,
+      radius,
+      0,
+      largeArcFlag,
+      0,
+      end.x,
+      end.y,
+    ].join(" ");
+  };
+
+  const polarToCartesian = (cx, cy, radius, angle) => {
+    const rad = (angle * Math.PI) / 180;
+    return {
+      x: cx + radius * Math.cos(rad),
+      y: cy + radius * Math.sin(rad),
+    };
+  };
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <VStack align="stretch" spacing={{ base: "3", md: "4" }}>
+        <Box>
+          <Text
+            fontSize={{ base: "xs", md: "sm" }}
+            fontWeight="semibold"
+            color={theme.mutedText}
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            {t("financialChart.taxPlanner.title")}
+          </Text>
+          <Text fontSize={{ base: "xs", md: "sm" }} color={theme.subText}>
+            {t("financialChart.taxPlanner.subtitle")}
+          </Text>
+        </Box>
+
+        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="4">
+          <GridItem>
+            <VStack align="center" spacing="3">
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                color={theme.mutedText}
+                textTransform="uppercase"
+                letterSpacing="wide"
+              >
+                {t("financialChart.taxPlanner.allocationChart")}
+              </Text>
+              <Box position="relative">
+                <svg width="160" height="160" viewBox="0 0 160 160">
+                  {totalAllocated > 0 ? (
+                    segments.map((segment, index) => (
+                      <path
+                        key={`${segment.name}-${index}`}
+                        d={describeArc(
+                          80,
+                          80,
+                          60,
+                          segment.startAngle,
+                          segment.endAngle - 0.5,
+                        )}
+                        fill="none"
+                        stroke={segment.color}
+                        strokeWidth="22"
+                        strokeLinecap="round"
+                      />
+                    ))
+                  ) : (
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="60"
+                      fill="none"
+                      stroke={theme.barBg}
+                      strokeWidth="22"
+                    />
+                  )}
+                  <circle cx="80" cy="80" r="45" fill={theme.donutBg} />
+                  <text
+                    x="80"
+                    y="74"
+                    textAnchor="middle"
+                    fill={theme.headerTitle}
+                    fontSize="16"
+                    fontWeight="bold"
+                  >
+                    {formatCurrency(totalAllocated)}
+                  </text>
+                  <text
+                    x="80"
+                    y="94"
+                    textAnchor="middle"
+                    fill={theme.donutLabel}
+                    fontSize="10"
+                  >
+                    {t("financialChart.taxPlanner.totalLabel")}
+                  </text>
+                </svg>
+              </Box>
+              <HStack spacing="2" flexWrap="wrap" justify="center">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  borderColor={theme.surfaceBorder}
+                  onClick={onCustomize}
+                  isDisabled={!onCustomize || isUpdating}
+                >
+                  {t("financialChart.taxPlanner.customizeButton")}
+                </Button>
+                <Button
+                  size="xs"
+                  colorScheme="blue"
+                  variant="ghost"
+                  onClick={handleGetRecommendation}
+                  isDisabled={isStreaming}
+                >
+                  {t("financialChart.taxPlanner.recommendButton")}
+                </Button>
+              </HStack>
+            </VStack>
+          </GridItem>
+          <GridItem>
+            <VStack align="stretch" spacing="3">
+              <Text
+                fontSize="xs"
+                fontWeight="semibold"
+                color={theme.mutedText}
+                textTransform="uppercase"
+                letterSpacing="wide"
+              >
+                {t("financialChart.taxPlanner.utilizationTitle")}
+              </Text>
+              {segments.map((segment) => (
+                <VStack key={segment.name} align="stretch" spacing="1">
+                  <HStack justify="space-between">
+                    <HStack spacing="2" minW="0">
+                      <Box
+                        w="3"
+                        h="3"
+                        borderRadius="full"
+                        bg={segment.color}
+                        flexShrink="0"
+                      />
+                      <Text
+                        fontSize={{ base: "xs", md: "sm" }}
+                        color={theme.subText}
+                        isTruncated
+                      >
+                        {segment.name}
+                      </Text>
+                    </HStack>
+                    <Text
+                      fontSize={{ base: "xs", md: "sm" }}
+                      color={theme.mutedText}
+                      fontWeight="medium"
+                    >
+                      {formatCurrency(segment.amount)} /{" "}
+                      {formatCurrency(segment.limit)}
+                    </Text>
+                  </HStack>
+                  <Box
+                    h="2"
+                    bg={theme.barBg}
+                    borderRadius="full"
+                    overflow="hidden"
+                  >
+                    <Box
+                      h="100%"
+                      w={`${Math.min(segment.utilizationPercent, 100)}%`}
+                      bg={segment.color}
+                    />
+                  </Box>
+                  <Text
+                    fontSize="2xs"
+                    color={
+                      segment.utilizationPercent >= 100
+                        ? "green.400"
+                        : theme.faintText
+                    }
+                    textAlign="right"
+                  >
+                    {segment.utilizationPercent}%{" "}
+                    {t("financialChart.taxPlanner.ofLimit")}
+                  </Text>
+                </VStack>
+              ))}
+            </VStack>
+          </GridItem>
+        </Grid>
+
+        <Text fontSize="xs" color={theme.faintText}>
+          {t("financialChart.taxPlanner.note")}
+        </Text>
+
+        {(displayText || isStreaming) && (
+          <Box
+            bg={theme.insetBg}
+            borderRadius="lg"
+            p="3"
+            borderWidth="1px"
+            borderColor={theme.insetBorder}
+          >
+            <Text fontSize="2xs" color={theme.faintText} mb="1">
+              {t("financialChart.taxPlanner.recommendationTitle")}
+            </Text>
+            {displayText ? (
+              <ReactMarkdown
+                components={{
+                  h3: (props) => (
+                    <Text
+                      fontFamily="ui-serif"
+                      fontWeight={"bold"}
+                      fontSize="xl"
+                      color={theme.subText}
+                      mb={"6px"}
+                      {...props}
+                    />
+                  ),
+                  p: (props) => (
+                    <Text
+                      fontSize="sm"
+                      fontFamily="ui-serif"
+                      color={theme.subText}
+                      mb={"14px"}
+                      {...props}
+                    />
+                  ),
+                  ul: (props) => <Box as="ul" pl="4" {...props} />,
+                  ol: (props) => <Box as="ol" pl="4" {...props} />,
+                  li: (props) => (
+                    <Text
+                      as="li"
+                      fontSize="sm"
+                      color={theme.subText}
+                      ml="2"
+                      {...props}
+                    />
+                  ),
+                  strong: (props) => (
+                    <Text as="strong" color={theme.highlightText} {...props} />
+                  ),
+                }}
+              >
+                {displayText}
+              </ReactMarkdown>
+            ) : (
+              <Spinner size="sm" />
+            )}
+          </Box>
+        )}
+      </VStack>
+    </Box>
+  );
+}
+
 // Expense Bar Chart - Horizontal bars comparing expenses
 function ExpenseBarChart({ expenses, income, t }) {
   if (!expenses || expenses.length === 0) return null;
@@ -2220,6 +2609,7 @@ export function FinancialChart({
   onUpdate,
   onItemUpdate,
   onPortfolioSave,
+  onTaxPlannerSave,
   isUpdating,
 }) {
   const { t } = useI18n();
@@ -2246,6 +2636,12 @@ export function FinancialChart({
   const [portfolioAction, setPortfolioAction] = useState("");
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
   const [portfolioCustomized, setPortfolioCustomized] = useState(false);
+  // Tax planner state
+  const [taxAllocations, setTaxAllocations] = useState(
+    STANDARD_TAX_ALLOCATIONS,
+  );
+  const [taxDraft, setTaxDraft] = useState(STANDARD_TAX_ALLOCATIONS);
+  const [taxModalOpen, setTaxModalOpen] = useState(false);
 
   if (!data) return null;
 
@@ -2296,12 +2692,19 @@ export function FinancialChart({
     );
   }, [expenses, plan]);
 
-  // Sync portfolio allocations from saved data
+  // Sync portfolio allocations from saved data (independent from plan)
   useEffect(() => {
-    if (plan?.portfolio?.allocations?.length) {
-      setPortfolioAllocations(plan.portfolio.allocations);
+    if (data.portfolio?.allocations?.length) {
+      setPortfolioAllocations(data.portfolio.allocations);
     }
-  }, [plan?.portfolio?.allocations]);
+  }, [data.portfolio?.allocations]);
+
+  // Sync tax allocations from saved data (independent from plan)
+  useEffect(() => {
+    if (data.taxPlanner?.allocations?.length) {
+      setTaxAllocations(data.taxPlanner.allocations);
+    }
+  }, [data.taxPlanner?.allocations]);
 
   useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
@@ -2558,6 +2961,39 @@ export function FinancialChart({
     0,
   );
 
+  // Tax planner modal functions
+  const openTaxModal = () => {
+    setTaxDraft(taxAllocations.map((allocation) => ({ ...allocation })));
+    setTaxModalOpen(true);
+  };
+
+  const closeTaxModal = () => {
+    setTaxModalOpen(false);
+  };
+
+  const updateTaxDraft = (index, value) => {
+    setTaxDraft((current) =>
+      current.map((allocation, currentIndex) =>
+        currentIndex === index
+          ? { ...allocation, amount: Number(value) || 0 }
+          : allocation,
+      ),
+    );
+  };
+
+  const saveTaxDraft = () => {
+    setTaxAllocations(taxDraft);
+    setTaxModalOpen(false);
+    if (onTaxPlannerSave) {
+      onTaxPlannerSave({ allocations: taxDraft });
+    }
+  };
+
+  const taxDraftTotal = taxDraft.reduce(
+    (sum, allocation) => sum + (allocation.amount || 0),
+    0,
+  );
+
   return (
     <Box>
       <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
@@ -2808,6 +3244,7 @@ export function FinancialChart({
               t("financialChart.tabs.overview"),
               t("financialChart.tabs.plan"),
               t("financialChart.tabs.portfolio"),
+              t("financialChart.tabs.taxPlanner"),
               t("financialChart.tabs.expenses"),
             ].map((tab, index) => (
               <Button
@@ -2907,7 +3344,7 @@ export function FinancialChart({
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <InvestmentPortfolio
                   allocations={portfolioAllocations}
-                  qualitySummary={plan?.portfolio?.qualitySummary}
+                  qualitySummary={data.portfolio?.qualitySummary}
                   onCustomize={openPortfolioModal}
                   onSaveQuality={(summary) =>
                     onPortfolioSave?.({ qualitySummary: summary })
@@ -2918,8 +3355,26 @@ export function FinancialChart({
               </VStack>
             )}
 
-            {/* Expenses Tab */}
+            {/* Tax Planner Tab */}
             {activeTab === 3 && (
+              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                <TaxPlanner
+                  allocations={taxAllocations}
+                  income={data.income || 0}
+                  expenses={expenses}
+                  recommendation={data.taxPlanner?.recommendation}
+                  onCustomize={openTaxModal}
+                  onSaveRecommendation={(rec) =>
+                    onTaxPlannerSave?.({ recommendation: rec })
+                  }
+                  isUpdating={isUpdating}
+                  t={t}
+                />
+              </VStack>
+            )}
+
+            {/* Expenses Tab */}
+            {activeTab === 4 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <ExpenseAnalysis
                   expenses={interactiveExpenses}
@@ -3149,6 +3604,118 @@ export function FinancialChart({
                   isDisabled={isUpdating}
                 >
                   {t("financialChart.portfolio.saveModal")}
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
+
+      {taxModalOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.700"
+          zIndex="modal"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          onClick={closeTaxModal}
+        >
+          <Box
+            bg={theme.elevatedBg}
+            p={{ base: "4", md: "6" }}
+            borderRadius="xl"
+            width={{ base: "92%", sm: "520px" }}
+            maxWidth="520px"
+            borderWidth="1px"
+            borderColor={theme.surfaceBorder}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <VStack align="stretch" spacing="4">
+              <HStack justify="space-between" align="start">
+                <Box>
+                  <Text fontSize="sm" color={theme.mutedText}>
+                    {t("financialChart.taxPlanner.modalTitle")}
+                  </Text>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    {t("financialChart.taxPlanner.modalSubtitle")}
+                  </Text>
+                </Box>
+                <Button size="xs" variant="ghost" onClick={closeTaxModal}>
+                  {t("financialChart.taxPlanner.closeModal")}
+                </Button>
+              </HStack>
+
+              <VStack align="stretch" spacing="3">
+                {taxDraft.map((allocation, index) => (
+                  <Grid
+                    key={`tax-${allocation.name}-${index}`}
+                    templateColumns={{ base: "1fr 120px", md: "1fr 150px" }}
+                    gap="3"
+                    alignItems="center"
+                  >
+                    <HStack spacing="2">
+                      <Box
+                        w="3"
+                        h="3"
+                        borderRadius="full"
+                        bg={
+                          TAX_PLANNER_COLORS[index % TAX_PLANNER_COLORS.length]
+                        }
+                        flexShrink="0"
+                      />
+                      <VStack align="start" spacing="0">
+                        <Text fontSize="sm" color={theme.subText}>
+                          {allocation.name}
+                        </Text>
+                        <Text fontSize="2xs" color={theme.faintText}>
+                          {t("financialChart.taxPlanner.limitLabel", {
+                            amount: formatCurrency(
+                              TAX_ACCOUNT_LIMITS[allocation.name] || 0,
+                            ),
+                          })}
+                        </Text>
+                      </VStack>
+                    </HStack>
+                    <Input
+                      type="number"
+                      value={allocation.amount}
+                      onChange={(event) =>
+                        updateTaxDraft(index, event.target.value)
+                      }
+                      bg={theme.inputBg}
+                      borderColor={theme.inputBorder}
+                      fontSize="sm"
+                      textAlign="right"
+                    />
+                  </Grid>
+                ))}
+              </VStack>
+
+              <HStack justify="space-between" align="center">
+                <Text fontSize="xs" color={theme.faintText}>
+                  {t("financialChart.taxPlanner.totalContributions")}
+                </Text>
+                <Text fontSize="sm" fontWeight="semibold" color={theme.subText}>
+                  {formatCurrency(taxDraftTotal)}
+                </Text>
+              </HStack>
+
+              <HStack justify="flex-end" spacing="2">
+                <Button size="sm" variant="ghost" onClick={closeTaxModal}>
+                  {t("financialChart.taxPlanner.cancelModal")}
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="blue"
+                  onClick={saveTaxDraft}
+                  isDisabled={isUpdating}
+                >
+                  {t("financialChart.taxPlanner.saveModal")}
                 </Button>
               </HStack>
             </VStack>
