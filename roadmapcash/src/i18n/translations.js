@@ -187,7 +187,7 @@ export const translations = {
         assetPlaceholder: "Asset name",
         growthTitle: "Growth expectations",
         growthSubtitle:
-          "Projected portfolio index over 10 years using conservative, base, and optimistic assumptions.",
+          "Projected portfolio index over 30 years using conservative, base, and optimistic assumptions.",
         assumptionsTitle: "Return assumptions",
         assumptionsSubtitle:
           "Expected annualized return inputs by allocation for the visualization.",
@@ -197,6 +197,8 @@ export const translations = {
         growthRateLabel: "Blended expected return",
         assumptionNote:
           "Assumptions are illustrative and not a guarantee of future performance.",
+        investedAmountLabel: "Total invested",
+        investedAmountHint: "Used to project growth over 5, 15, and 30 years.",
       },
       taxPlanner: {
         title: "Tax Optimizer",
@@ -531,7 +533,7 @@ Respond in English.`,
         assetPlaceholder: "Nombre del activo",
         growthTitle: "Expectativas de crecimiento",
         growthSubtitle:
-          "Índice proyectado de la cartera a 10 años con supuestos conservador, base y optimista.",
+          "Índice proyectado de la cartera a 30 años con supuestos conservador, base y optimista.",
         assumptionsTitle: "Supuestos de rendimiento",
         assumptionsSubtitle:
           "Rendimientos anualizados esperados por asignación para la visualización.",
@@ -541,6 +543,9 @@ Respond in English.`,
         growthRateLabel: "Rendimiento esperado combinado",
         assumptionNote:
           "Los supuestos son ilustrativos y no garantizan rendimientos futuros.",
+        investedAmountLabel: "Total invertido",
+        investedAmountHint:
+          "Se usa para proyectar el crecimiento a 5, 15 y 30 años.",
       },
       taxPlanner: {
         title: "Optimizador Fiscal",

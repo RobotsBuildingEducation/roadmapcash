@@ -1014,6 +1014,7 @@ function InvestmentPortfolio({
   const theme = useChartTheme();
   const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
+  const [investedAmount, setInvestedAmount] = useState(10000);
   const returnAssumptions = useMemo(
     () =>
       portfolio.map((item) => ({
@@ -1270,9 +1271,31 @@ function InvestmentPortfolio({
           </GridItem>
         </Grid>
 
+        <Box>
+          <Text fontSize="xs" fontWeight="semibold" color={theme.mutedText}>
+            {t("financialChart.portfolio.investedAmountLabel")}
+          </Text>
+          <Input
+            type="number"
+            value={investedAmount}
+            min={0}
+            onChange={(event) =>
+              setInvestedAmount(Number(event.target.value || 0))
+            }
+            bg={theme.inputBg}
+            borderColor={theme.inputBorder}
+            fontSize="sm"
+            maxW="240px"
+          />
+          <Text fontSize="2xs" color={theme.faintText} mt="1">
+            {t("financialChart.portfolio.investedAmountHint")}
+          </Text>
+        </Box>
+
         <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="4">
           <GrowthExpectationChart
             blendedReturn={blendedReturn}
+            investedAmount={investedAmount}
             t={t}
           />
           <ReturnAssumptionsChart assumptions={returnAssumptions} t={t} />
@@ -1343,7 +1366,7 @@ function InvestmentPortfolio({
   );
 }
 
-function GrowthExpectationChart({ blendedReturn, t }) {
+function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
   const theme = useChartTheme();
   const chartWidth = 320;
   const chartHeight = 170;
@@ -1353,25 +1376,30 @@ function GrowthExpectationChart({ blendedReturn, t }) {
   const baseRate = clamp(blendedReturn || 0.06, 0.03, 0.12);
   const conservativeRate = clamp(baseRate - 0.02, 0.01, baseRate);
   const optimisticRate = clamp(baseRate + 0.03, baseRate, 0.16);
-  const years = 10;
+  const years = 30;
+  const startingAmount = Math.max(investedAmount || 0, 0);
 
   const data = useMemo(
     () =>
       Array.from({ length: years + 1 }, (_, year) => ({
         year,
-        conservative: 100 * Math.pow(1 + conservativeRate, year),
-        base: 100 * Math.pow(1 + baseRate, year),
-        optimistic: 100 * Math.pow(1 + optimisticRate, year),
+        conservative: startingAmount * Math.pow(1 + conservativeRate, year),
+        base: startingAmount * Math.pow(1 + baseRate, year),
+        optimistic: startingAmount * Math.pow(1 + optimisticRate, year),
       })),
-    [baseRate, conservativeRate, optimisticRate],
+    [baseRate, conservativeRate, optimisticRate, startingAmount],
   );
 
-  const maxValue = Math.max(...data.map((d) => d.optimistic), 110);
-  const minValue = 100;
+  const maxValue = Math.max(...data.map((d) => d.optimistic), startingAmount);
+  const minValue = Math.min(
+    ...data.map((d) => d.conservative),
+    startingAmount,
+  );
 
   const getX = (year) => padding.left + (year / years) * innerWidth;
+  const valueRange = Math.max(maxValue - minValue, 1);
   const getY = (value) =>
-    padding.top + innerHeight - ((value - minValue) / (maxValue - minValue)) * innerHeight;
+    padding.top + innerHeight - ((value - minValue) / valueRange) * innerHeight;
 
   const buildPath = (key) =>
     data
@@ -1467,7 +1495,7 @@ function GrowthExpectationChart({ blendedReturn, t }) {
               stroke={COLORS.success}
               strokeWidth="2"
             />
-            {[0, 5, 10].map((year) => (
+            {[0, 5, 15, 30].map((year) => (
               <text
                 key={year}
                 x={getX(year)}
