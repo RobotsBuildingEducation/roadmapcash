@@ -14,6 +14,8 @@ import {
   NativeSelect,
   Textarea,
   Spinner,
+  Accordion,
+  Icon,
 } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { useColorModeValue } from "@/components/ui/color-mode";
@@ -3774,16 +3776,23 @@ export function FinancialChart({
         />
 
         {/* Interactive Updates */}
-        <Box
+        <Accordion.Root
+          collapsible
+          variant="plain"
           bg={theme.elevatedBg}
           borderRadius="xl"
           borderWidth="1px"
           borderColor={theme.elevatedBorder}
-          p={{ base: "4", md: "5" }}
         >
-          <VStack align="stretch" spacing="4">
-            <HStack justify="space-between" flexWrap="wrap" gap="2">
-              <Box>
+          <Accordion.Item value="update-data">
+            <Accordion.ItemTrigger
+              px={{ base: "4", md: "5" }}
+              py={{ base: "3", md: "4" }}
+              cursor="pointer"
+              _hover={{ bg: theme.insetBg }}
+              borderRadius="xl"
+            >
+              <Box flex="1" textAlign="left">
                 <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
                   {t("financialChart.updateSection.title")}
                 </Text>
@@ -3794,9 +3803,11 @@ export function FinancialChart({
                   {t("financialChart.updateSection.subtitle")}
                 </Text>
               </Box>
-            </HStack>
-
-            <Box
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent px={{ base: "4", md: "5" }} pb={{ base: "4", md: "5" }}>
+              <VStack align="stretch" spacing="4">
+                <Box
               p="3"
               bg={theme.insetBg}
               borderRadius="lg"
@@ -3975,8 +3986,10 @@ export function FinancialChart({
                 minH="90px"
               />
             </Box>
-          </VStack>
-        </Box>
+              </VStack>
+            </Accordion.ItemContent>
+          </Accordion.Item>
+        </Accordion.Root>
 
         {/* Key Metrics */}
         <MetricsSummary
