@@ -185,6 +185,7 @@ export const translations = {
         cancelModal: "Cancel",
         saveModal: "Save allocation",
         assetPlaceholder: "Asset name",
+        addAllocation: "Add allocation",
         growthTitle: "Growth expectations",
         growthSubtitle:
           "Projected portfolio index over 30 years using conservative, base, and optimistic assumptions.",
@@ -531,6 +532,7 @@ Respond in English.`,
         cancelModal: "Cancelar",
         saveModal: "Guardar asignación",
         assetPlaceholder: "Nombre del activo",
+        addAllocation: "Agregar asignación",
         growthTitle: "Expectativas de crecimiento",
         growthSubtitle:
           "Índice proyectado de la cartera a 30 años con supuestos conservador, base y optimista.",

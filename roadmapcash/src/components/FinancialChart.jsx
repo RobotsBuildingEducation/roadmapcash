@@ -1283,7 +1283,7 @@ function InvestmentPortfolio({
             value={investedAmount}
             min={0}
             onChange={(event) =>
-              setInvestedAmount(Number(event.target.value || 0))
+              setInvestedAmount(event.target.value === "" ? "" : Number(event.target.value))
             }
             bg={theme.inputBg}
             borderColor={theme.inputBorder}
@@ -1503,12 +1503,11 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                 {year}y
               </text>
             ))}
-            {/* Value labels at key years */}
+            {/* Value labels at key years for all scenarios */}
             {[10, 20, 30].map((year) => {
               const dataPoint = data[year];
               if (!dataPoint) return null;
-              const value = dataPoint.base;
-              const formattedValue =
+              const formatValue = (value) =>
                 value >= 1000000
                   ? `$${(value / 1000000).toFixed(1)}M`
                   : value >= 1000
@@ -1516,21 +1515,56 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                     : `$${value.toFixed(0)}`;
               return (
                 <g key={`value-${year}`}>
+                  {/* Optimistic data point */}
                   <circle
                     cx={getX(year)}
-                    cy={getY(value)}
+                    cy={getY(dataPoint.optimistic)}
+                    r="3"
+                    fill={COLORS.success}
+                  />
+                  <text
+                    x={getX(year)}
+                    y={getY(dataPoint.optimistic) - 8}
+                    textAnchor="middle"
+                    fill={COLORS.success}
+                    fontWeight="bold"
+                    style={{ fontSize: 8 }}
+                  >
+                    {formatValue(dataPoint.optimistic)}
+                  </text>
+                  {/* Base data point */}
+                  <circle
+                    cx={getX(year)}
+                    cy={getY(dataPoint.base)}
                     r="3"
                     fill={COLORS.primary}
                   />
                   <text
                     x={getX(year)}
-                    y={getY(value) - 8}
+                    y={getY(dataPoint.base) - 8}
                     textAnchor="middle"
-                    fill={theme.mutedText}
+                    fill={COLORS.primary}
                     fontWeight="bold"
                     style={{ fontSize: 8 }}
                   >
-                    {formattedValue}
+                    {formatValue(dataPoint.base)}
+                  </text>
+                  {/* Conservative data point */}
+                  <circle
+                    cx={getX(year)}
+                    cy={getY(dataPoint.conservative)}
+                    r="3"
+                    fill={COLORS.warning}
+                  />
+                  <text
+                    x={getX(year)}
+                    y={getY(dataPoint.conservative) + 14}
+                    textAnchor="middle"
+                    fill={COLORS.warning}
+                    fontWeight="bold"
+                    style={{ fontSize: 8 }}
+                  >
+                    {formatValue(dataPoint.conservative)}
                   </text>
                 </g>
               );
@@ -3609,10 +3643,18 @@ export function FinancialChart({
     setPortfolioDraft((current) =>
       current.map((allocation, currentIndex) =>
         currentIndex === index
-          ? { ...allocation, percentage: Number(value) || 0 }
+          ? { ...allocation, percentage: value === "" ? "" : Number(value) || 0 }
           : allocation,
       ),
     );
+  };
+
+  const addPortfolioAllocation = () => {
+    setPortfolioDraft((current) => [...current, { name: "", percentage: 0 }]);
+  };
+
+  const removePortfolioAllocation = (index) => {
+    setPortfolioDraft((current) => current.filter((_, i) => i !== index));
   };
 
   const savePortfolioDraft = () => {
@@ -3625,7 +3667,7 @@ export function FinancialChart({
   };
 
   const portfolioDraftTotal = portfolioDraft.reduce(
-    (sum, allocation) => sum + allocation.percentage,
+    (sum, allocation) => sum + (Number(allocation.percentage) || 0),
     0,
   );
 
@@ -3643,7 +3685,7 @@ export function FinancialChart({
     setTaxDraft((current) =>
       current.map((allocation, currentIndex) =>
         currentIndex === index
-          ? { ...allocation, amount: Number(value) || 0 }
+          ? { ...allocation, amount: value === "" ? "" : Number(value) || 0 }
           : allocation,
       ),
     );
@@ -4213,43 +4255,67 @@ export function FinancialChart({
 
               <VStack align="stretch" spacing="3">
                 {portfolioDraft.map((allocation, index) => (
-                  <Grid
+                  <HStack
                     key={`portfolio-${index}`}
-                    templateColumns={{ base: "1fr 90px", md: "1fr 120px" }}
-                    gap="3"
+                    spacing="2"
                     alignItems="center"
                   >
-                    <Input
-                      value={allocation.name}
-                      onChange={(event) =>
-                        setPortfolioDraft((current) =>
-                          current.map((item, currentIndex) =>
-                            currentIndex === index
-                              ? { ...item, name: event.target.value }
-                              : item,
-                          ),
-                        )
-                      }
-                      placeholder={t(
-                        "financialChart.portfolio.assetPlaceholder",
-                      )}
-                      bg={theme.inputBg}
-                      borderColor={theme.inputBorder}
-                      fontSize="sm"
-                    />
-                    <Input
-                      type="number"
-                      value={allocation.percentage}
-                      onChange={(event) =>
-                        updatePortfolioDraft(index, event.target.value)
-                      }
-                      bg={theme.inputBg}
-                      borderColor={theme.inputBorder}
-                      fontSize="sm"
-                      textAlign="right"
-                    />
-                  </Grid>
+                    <Grid
+                      flex="1"
+                      templateColumns={{ base: "1fr 80px", md: "1fr 100px" }}
+                      gap="2"
+                      alignItems="center"
+                    >
+                      <Input
+                        value={allocation.name}
+                        onChange={(event) =>
+                          setPortfolioDraft((current) =>
+                            current.map((item, currentIndex) =>
+                              currentIndex === index
+                                ? { ...item, name: event.target.value }
+                                : item,
+                            ),
+                          )
+                        }
+                        placeholder={t(
+                          "financialChart.portfolio.assetPlaceholder",
+                        )}
+                        bg={theme.inputBg}
+                        borderColor={theme.inputBorder}
+                        fontSize="sm"
+                      />
+                      <Input
+                        type="number"
+                        value={allocation.percentage}
+                        onChange={(event) =>
+                          updatePortfolioDraft(index, event.target.value)
+                        }
+                        bg={theme.inputBg}
+                        borderColor={theme.inputBorder}
+                        fontSize="sm"
+                        textAlign="right"
+                      />
+                    </Grid>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      colorScheme="red"
+                      onClick={() => removePortfolioAllocation(index)}
+                      px="2"
+                      minW="auto"
+                    >
+                      ✕
+                    </Button>
+                  </HStack>
                 ))}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={addPortfolioAllocation}
+                  w="full"
+                >
+                  + {t("financialChart.portfolio.addAllocation")}
+                </Button>
               </VStack>
 
               <HStack justify="space-between" align="center">
