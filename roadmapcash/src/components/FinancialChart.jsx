@@ -1295,14 +1295,14 @@ function InvestmentPortfolio({
           </Text>
         </Box>
 
-        <Grid templateColumns={{ base: "1fr", lg: "1fr 1fr" }} gap="4">
+        <VStack align="stretch" spacing="4">
           <GrowthExpectationChart
             blendedReturn={blendedReturn}
             investedAmount={investedAmount}
             t={t}
           />
           <ReturnAssumptionsChart assumptions={returnAssumptions} t={t} />
-        </Grid>
+        </VStack>
 
         <Text fontSize="xs" color={theme.faintText}>
           {t("financialChart.portfolio.note")}
@@ -1513,6 +1513,11 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   : value >= 1000
                     ? `$${(value / 1000).toFixed(0)}K`
                     : `$${value.toFixed(0)}`;
+              // Use horizontal offsets at year 10 to avoid label overlap
+              const isEarlyYear = year === 10;
+              const optXOffset = isEarlyYear ? 18 : 0;
+              const baseXOffset = 0;
+              const consXOffset = isEarlyYear ? 18 : 0;
               return (
                 <g key={`value-${year}`}>
                   {/* Optimistic data point */}
@@ -1523,9 +1528,9 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                     fill={COLORS.success}
                   />
                   <text
-                    x={getX(year)}
+                    x={getX(year) + optXOffset}
                     y={getY(dataPoint.optimistic) - 8}
-                    textAnchor="middle"
+                    textAnchor={isEarlyYear ? "start" : "middle"}
                     fill={COLORS.success}
                     fontWeight="bold"
                     style={{ fontSize: 8 }}
@@ -1540,7 +1545,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                     fill={COLORS.primary}
                   />
                   <text
-                    x={getX(year)}
+                    x={getX(year) + baseXOffset}
                     y={getY(dataPoint.base) - 8}
                     textAnchor="middle"
                     fill={COLORS.primary}
@@ -1557,9 +1562,9 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                     fill={COLORS.warning}
                   />
                   <text
-                    x={getX(year)}
+                    x={getX(year) + consXOffset}
                     y={getY(dataPoint.conservative) + 14}
-                    textAnchor="middle"
+                    textAnchor={isEarlyYear ? "start" : "middle"}
                     fill={COLORS.warning}
                     fontWeight="bold"
                     style={{ fontSize: 8 }}
