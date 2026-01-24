@@ -1471,7 +1471,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                 strokeDasharray="4,4"
               />
             ))}
-            <path d={buildBandPath()} fill={theme.iconBg} opacity="0.4" />
+            <path d={buildBandPath()} fill={"#b4fff1"} opacity="0.4" />
             <path
               d={buildPath("conservative")}
               fill="none"
@@ -1498,7 +1498,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                 y={chartHeight - 10}
                 textAnchor="middle"
                 fill={theme.axisText}
-                fontSize="9"
+                style={{ fontSize: 12 }}
               >
                 {year}y
               </text>
@@ -1527,8 +1527,8 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                     y={getY(value) - 8}
                     textAnchor="middle"
                     fill={theme.mutedText}
-                    fontSize="8"
                     fontWeight="bold"
+                    style={{ fontSize: 8 }}
                   >
                     {formattedValue}
                   </text>
@@ -1645,7 +1645,6 @@ function ReturnAssumptionsChart({ assumptions, t }) {
                     y={chartHeight - 10}
                     textAnchor="middle"
                     fill={theme.axisText}
-                    fontSize="8"
                     style={{ fontSize: 6 }}
                   >
                     {item.name.length > 10
@@ -1657,7 +1656,6 @@ function ReturnAssumptionsChart({ assumptions, t }) {
                     y={y - 4}
                     textAnchor="middle"
                     fill={theme.mutedText}
-                    fontSize="8"
                     style={{ fontSize: 8 }}
                   >
                     {(item.rate * 100).toFixed(1)}%
@@ -2458,7 +2456,6 @@ function ExpenseBarChart({ expenses, income, t }) {
                   y={y + barHeight / 2 + 3}
                   textAnchor="end"
                   fill={theme.chartLabel}
-                  fontSize="9"
                   fontWeight="500"
                   style={{ fontSize: "6px" }}
                 >
@@ -2494,7 +2491,6 @@ function ExpenseBarChart({ expenses, income, t }) {
                   y={y + barHeight / 2 + 3}
                   textAnchor="start"
                   fill={theme.donutLabel}
-                  fontSize="9"
                   fontWeight="600"
                   style={{ fontSize: "9px" }}
                 >
@@ -2517,7 +2513,6 @@ function ExpenseBarChart({ expenses, income, t }) {
                 }
                 textAnchor="end"
                 fill="#10b981"
-                fontSize="9px"
                 fontWeight="600"
                 style={{ fontSize: "6px" }}
               >
@@ -2556,7 +2551,6 @@ function ExpenseBarChart({ expenses, income, t }) {
                 }
                 textAnchor="start"
                 fill="#10b981"
-                fontSize="9"
                 fontWeight="600"
                 style={{ fontSize: "9px" }}
               >
@@ -2573,7 +2567,6 @@ function ExpenseBarChart({ expenses, income, t }) {
               y={chartHeight - 6}
               textAnchor="middle"
               fill={theme.axisText}
-              fontSize="8"
               style={{ fontSize: "9px" }}
             >
               {formatCurrency(maxAmount * ratio)}
@@ -2780,7 +2773,6 @@ function MonthlyChart({
               x={padding.left + 5}
               y={goalY - 5}
               fill="#f59e0b"
-              fontSize="10"
               fontWeight="bold"
               style={{ fontSize: "9px" }}
             >
@@ -2836,7 +2828,6 @@ function MonthlyChart({
               y={chartHeight - 5}
               textAnchor="middle"
               fill={theme.donutLabel}
-              fontSize="10"
               style={{ fontSize: "9px" }}
             >
               {d.label}
