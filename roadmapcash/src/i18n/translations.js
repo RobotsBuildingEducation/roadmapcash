@@ -198,7 +198,7 @@ export const translations = {
         assumptionNote:
           "Assumptions are illustrative and not a guarantee of future performance.",
         investedAmountLabel: "Total invested",
-        investedAmountHint: "Used to project growth over 5, 15, and 30 years.",
+        investedAmountHint: "Used to project growth over 10, 20, and 30 years.",
       },
       taxPlanner: {
         title: "Tax Optimizer",
@@ -545,7 +545,7 @@ Respond in English.`,
           "Los supuestos son ilustrativos y no garantizan rendimientos futuros.",
         investedAmountLabel: "Total invertido",
         investedAmountHint:
-          "Se usa para proyectar el crecimiento a 5, 15 y 30 años.",
+          "Se usa para proyectar el crecimiento a 10, 20 y 30 años.",
       },
       taxPlanner: {
         title: "Optimizador Fiscal",

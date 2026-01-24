@@ -1012,7 +1012,10 @@ function InvestmentPortfolio({
   t,
 }) {
   const theme = useChartTheme();
-  const portfolio = allocations?.length ? allocations : STANDARD_PORTFOLIO;
+  const portfolio = useMemo(
+    () => (allocations?.length ? allocations : STANDARD_PORTFOLIO),
+    [allocations],
+  );
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
   const [investedAmount, setInvestedAmount] = useState(10000);
   const returnAssumptions = useMemo(
@@ -1488,7 +1491,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
               stroke={COLORS.success}
               strokeWidth="2"
             />
-            {[0, 5, 15, 30].map((year) => (
+            {[0, 10, 20, 30].map((year) => (
               <text
                 key={year}
                 x={getX(year)}
@@ -1500,6 +1503,38 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                 {year}y
               </text>
             ))}
+            {/* Value labels at key years */}
+            {[10, 20, 30].map((year) => {
+              const dataPoint = data[year];
+              if (!dataPoint) return null;
+              const value = dataPoint.base;
+              const formattedValue =
+                value >= 1000000
+                  ? `$${(value / 1000000).toFixed(1)}M`
+                  : value >= 1000
+                    ? `$${(value / 1000).toFixed(0)}K`
+                    : `$${value.toFixed(0)}`;
+              return (
+                <g key={`value-${year}`}>
+                  <circle
+                    cx={getX(year)}
+                    cy={getY(value)}
+                    r="3"
+                    fill={COLORS.primary}
+                  />
+                  <text
+                    x={getX(year)}
+                    y={getY(value) - 8}
+                    textAnchor="middle"
+                    fill={theme.mutedText}
+                    fontSize="8"
+                    fontWeight="bold"
+                  >
+                    {formattedValue}
+                  </text>
+                </g>
+              );
+            })}
           </svg>
         </Box>
 
