@@ -1005,6 +1005,7 @@ function OverviewChart({ income, expenses, t }) {
 // Investment Portfolio - standard allocation with charts
 function InvestmentPortfolio({
   allocations,
+  investedAmount,
   qualitySummary,
   onCustomize,
   onSaveQuality,
@@ -1017,7 +1018,6 @@ function InvestmentPortfolio({
     [allocations],
   );
   const total = portfolio.reduce((sum, item) => sum + item.percentage, 0);
-  const [investedAmount, setInvestedAmount] = useState(10000);
   const returnAssumptions = useMemo(
     () =>
       portfolio.map((item) => ({
@@ -1274,27 +1274,6 @@ function InvestmentPortfolio({
           </GridItem>
         </Grid>
 
-        <Box>
-          <Text fontSize="xs" fontWeight="semibold" color={theme.mutedText}>
-            {t("financialChart.portfolio.investedAmountLabel")}
-          </Text>
-          <Input
-            type="number"
-            value={investedAmount}
-            min={0}
-            onChange={(event) =>
-              setInvestedAmount(event.target.value === "" ? "" : Number(event.target.value))
-            }
-            bg={theme.inputBg}
-            borderColor={theme.inputBorder}
-            fontSize="sm"
-            maxW="240px"
-          />
-          <Text fontSize="2xs" color={theme.faintText} mt="1">
-            {t("financialChart.portfolio.investedAmountHint")}
-          </Text>
-        </Box>
-
         <VStack align="stretch" spacing="4">
           <GrowthExpectationChart
             blendedReturn={blendedReturn}
@@ -1526,7 +1505,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? 12 : getY(dataPoint.optimistic) - 8}
+                    y={isEarlyYear ? 38 : getY(dataPoint.optimistic) - 8}
                     textAnchor="middle"
                     fill={COLORS.success}
                     fontWeight="bold"
@@ -1543,7 +1522,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? 24 : getY(dataPoint.base) - 8}
+                    y={isEarlyYear ? 50 : getY(dataPoint.base) - 8}
                     textAnchor="middle"
                     fill={COLORS.primary}
                     fontWeight="bold"
@@ -1560,7 +1539,7 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   />
                   <text
                     x={getX(year)}
-                    y={isEarlyYear ? 36 : getY(dataPoint.conservative) + 14}
+                    y={isEarlyYear ? 62 : getY(dataPoint.conservative) + 14}
                     textAnchor="middle"
                     fill={COLORS.warning}
                     fontWeight="bold"
@@ -3391,6 +3370,8 @@ export function FinancialChart({
   const [portfolioAction, setPortfolioAction] = useState("");
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
   const [portfolioCustomized, setPortfolioCustomized] = useState(false);
+  const [investedAmount, setInvestedAmount] = useState(10000);
+  const [investedAmountDraft, setInvestedAmountDraft] = useState(10000);
   // Tax planner state
   const [taxAllocations, setTaxAllocations] = useState(
     STANDARD_TAX_ALLOCATIONS,
@@ -3452,7 +3433,10 @@ export function FinancialChart({
     if (data.portfolio?.allocations?.length) {
       setPortfolioAllocations(data.portfolio.allocations);
     }
-  }, [data.portfolio?.allocations]);
+    if (data.portfolio?.investedAmount !== undefined) {
+      setInvestedAmount(data.portfolio.investedAmount);
+    }
+  }, [data.portfolio?.allocations, data.portfolio?.investedAmount]);
 
   // Sync tax allocations from saved data (independent from plan)
   useEffect(() => {
@@ -3685,6 +3669,7 @@ export function FinancialChart({
     setPortfolioDraft(
       portfolioAllocations.map((allocation) => ({ ...allocation })),
     );
+    setInvestedAmountDraft(investedAmount);
     setPortfolioModalOpen(true);
   };
 
@@ -3712,10 +3697,14 @@ export function FinancialChart({
 
   const savePortfolioDraft = () => {
     setPortfolioAllocations(portfolioDraft);
+    setInvestedAmount(Number(investedAmountDraft) || 10000);
     setPortfolioCustomized(true);
     setPortfolioModalOpen(false);
     if (onPortfolioSave) {
-      onPortfolioSave({ allocations: portfolioDraft });
+      onPortfolioSave({
+        allocations: portfolioDraft,
+        investedAmount: Number(investedAmountDraft) || 10000,
+      });
     }
   };
 
@@ -4107,6 +4096,7 @@ export function FinancialChart({
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <InvestmentPortfolio
                   allocations={portfolioAllocations}
+                  investedAmount={investedAmount}
                   qualitySummary={data.portfolio?.qualitySummary}
                   onCustomize={openPortfolioModal}
                   onSaveQuality={(summary) =>
@@ -4379,6 +4369,26 @@ export function FinancialChart({
                   {portfolioDraftTotal}%
                 </Text>
               </HStack>
+
+              <Box>
+                <Text fontSize="xs" fontWeight="semibold" color={theme.mutedText} mb="1">
+                  {t("financialChart.portfolio.investedAmountLabel")}
+                </Text>
+                <Input
+                  type="number"
+                  value={investedAmountDraft}
+                  min={0}
+                  onChange={(event) =>
+                    setInvestedAmountDraft(event.target.value === "" ? "" : Number(event.target.value))
+                  }
+                  bg={theme.inputBg}
+                  borderColor={theme.inputBorder}
+                  fontSize="sm"
+                />
+                <Text fontSize="2xs" color={theme.faintText} mt="1">
+                  {t("financialChart.portfolio.investedAmountHint")}
+                </Text>
+              </Box>
 
               <HStack justify="flex-end" spacing="2">
                 <Button size="sm" variant="ghost" onClick={closePortfolioModal}>
