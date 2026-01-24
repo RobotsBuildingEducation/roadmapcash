@@ -1513,11 +1513,8 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                   : value >= 1000
                     ? `$${(value / 1000).toFixed(0)}K`
                     : `$${value.toFixed(0)}`;
-              // Use horizontal offsets at year 10 to avoid label overlap
+              // At year 10, stack labels vertically in a column above the lines
               const isEarlyYear = year === 10;
-              const optXOffset = isEarlyYear ? 18 : 0;
-              const baseXOffset = 0;
-              const consXOffset = isEarlyYear ? 18 : 0;
               return (
                 <g key={`value-${year}`}>
                   {/* Optimistic data point */}
@@ -1528,9 +1525,9 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                     fill={COLORS.success}
                   />
                   <text
-                    x={getX(year) + optXOffset}
-                    y={getY(dataPoint.optimistic) - 8}
-                    textAnchor={isEarlyYear ? "start" : "middle"}
+                    x={getX(year)}
+                    y={isEarlyYear ? 12 : getY(dataPoint.optimistic) - 8}
+                    textAnchor="middle"
                     fill={COLORS.success}
                     fontWeight="bold"
                     style={{ fontSize: 8 }}
@@ -1545,8 +1542,8 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                     fill={COLORS.primary}
                   />
                   <text
-                    x={getX(year) + baseXOffset}
-                    y={getY(dataPoint.base) - 8}
+                    x={getX(year)}
+                    y={isEarlyYear ? 24 : getY(dataPoint.base) - 8}
                     textAnchor="middle"
                     fill={COLORS.primary}
                     fontWeight="bold"
@@ -1562,9 +1559,9 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
                     fill={COLORS.warning}
                   />
                   <text
-                    x={getX(year) + consXOffset}
-                    y={getY(dataPoint.conservative) + 14}
-                    textAnchor={isEarlyYear ? "start" : "middle"}
+                    x={getX(year)}
+                    y={isEarlyYear ? 36 : getY(dataPoint.conservative) + 14}
+                    textAnchor="middle"
                     fill={COLORS.warning}
                     fontWeight="bold"
                     style={{ fontSize: 8 }}
@@ -2228,6 +2225,57 @@ function TaxSavingsProjectionChart({
                 {year}y
               </text>
             ))}
+            {/* Data points at key years */}
+            {[0, 2, 5].map((year) => {
+              const dataPoint = data[year];
+              if (!dataPoint) return null;
+              const formatValue = (value) =>
+                value >= 1000000
+                  ? `$${(value / 1000000).toFixed(1)}M`
+                  : value >= 1000
+                    ? `$${(value / 1000).toFixed(1)}K`
+                    : `$${Math.round(value)}`;
+              // Stack labels vertically at year 0 to avoid overlap
+              const isFirstYear = year === 0;
+              return (
+                <g key={`value-${year}`}>
+                  {/* Max savings data point */}
+                  <circle
+                    cx={getX(year)}
+                    cy={getY(dataPoint.max)}
+                    r="3"
+                    fill={COLORS.purple}
+                  />
+                  <text
+                    x={getX(year)}
+                    y={isFirstYear ? 8 : getY(dataPoint.max) - 8}
+                    textAnchor="middle"
+                    fill={COLORS.purple}
+                    fontWeight="bold"
+                    style={{ fontSize: 8 }}
+                  >
+                    {formatValue(dataPoint.max)}
+                  </text>
+                  {/* Current savings data point */}
+                  <circle
+                    cx={getX(year)}
+                    cy={getY(dataPoint.current)}
+                    r="3"
+                    fill={COLORS.success}
+                  />
+                  <text
+                    x={getX(year)}
+                    y={isFirstYear ? 20 : getY(dataPoint.current) + 14}
+                    textAnchor="middle"
+                    fill={COLORS.success}
+                    fontWeight="bold"
+                    style={{ fontSize: 8 }}
+                  >
+                    {formatValue(dataPoint.current)}
+                  </text>
+                </g>
+              );
+            })}
           </svg>
         </Box>
         <Grid templateColumns="repeat(2, minmax(0, 1fr))" gap="3">
