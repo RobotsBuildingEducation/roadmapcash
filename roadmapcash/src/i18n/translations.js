@@ -164,7 +164,7 @@ export const translations = {
         overview: "Overview",
         plan: "Your Plan",
         portfolio: "Investments",
-        taxPlanner: "Tax Planner",
+        taxPlanner: "Tax Optimizer",
         expenses: "Expenses",
       },
       portfolio: {
@@ -185,9 +185,23 @@ export const translations = {
         cancelModal: "Cancel",
         saveModal: "Save allocation",
         assetPlaceholder: "Asset name",
+        growthTitle: "Growth expectations",
+        growthSubtitle:
+          "Projected portfolio index over 30 years using conservative, base, and optimistic assumptions.",
+        assumptionsTitle: "Return assumptions",
+        assumptionsSubtitle:
+          "Expected annualized return inputs by allocation for the visualization.",
+        growthLegendConservative: "Conservative",
+        growthLegendBase: "Base case",
+        growthLegendOptimistic: "Optimistic",
+        growthRateLabel: "Blended expected return",
+        assumptionNote:
+          "Assumptions are illustrative and not a guarantee of future performance.",
+        investedAmountLabel: "Total invested",
+        investedAmountHint: "Used to project growth over 5, 15, and 30 years.",
       },
       taxPlanner: {
-        title: "Tax Planner",
+        title: "Tax Optimizer",
         subtitle:
           "Track your tax-advantaged account contributions and maximize your tax benefits.",
         allocationChart: "Contribution Distribution",
@@ -205,6 +219,18 @@ export const translations = {
         closeModal: "Close",
         cancelModal: "Cancel",
         saveModal: "Save contributions",
+        impactTitle: "Tax impact",
+        impactSubtitle:
+          "Estimated annual tax savings and long-term contribution potential.",
+        savingsProjectionTitle: "Tax savings projection",
+        savingsProjectionSubtitle:
+          "Projected annual tax savings based on current vs. max contributions.",
+        capacityTitle: "Monthly allocation mix",
+        capacitySubtitle:
+          "How income, expenses, and planned tax contributions stack up each month.",
+        estimatedTaxRateLabel: "Estimated tax rate",
+        estimatedAnnualSavingsLabel: "Estimated annual tax savings",
+        maxContributionLabel: "Max contribution capacity",
       },
       interaction: {
         expenseQuest: "Expense Quest",
@@ -483,7 +509,7 @@ Respond in English.`,
         overview: "Resumen",
         plan: "Tu plan",
         portfolio: "Inversiones",
-        taxPlanner: "Planificador Fiscal",
+        taxPlanner: "Optimizador Fiscal",
         expenses: "Gastos",
       },
       portfolio: {
@@ -505,9 +531,24 @@ Respond in English.`,
         cancelModal: "Cancelar",
         saveModal: "Guardar asignación",
         assetPlaceholder: "Nombre del activo",
+        growthTitle: "Expectativas de crecimiento",
+        growthSubtitle:
+          "Índice proyectado de la cartera a 30 años con supuestos conservador, base y optimista.",
+        assumptionsTitle: "Supuestos de rendimiento",
+        assumptionsSubtitle:
+          "Rendimientos anualizados esperados por asignación para la visualización.",
+        growthLegendConservative: "Conservador",
+        growthLegendBase: "Caso base",
+        growthLegendOptimistic: "Optimista",
+        growthRateLabel: "Rendimiento esperado combinado",
+        assumptionNote:
+          "Los supuestos son ilustrativos y no garantizan rendimientos futuros.",
+        investedAmountLabel: "Total invertido",
+        investedAmountHint:
+          "Se usa para proyectar el crecimiento a 5, 15 y 30 años.",
       },
       taxPlanner: {
-        title: "Planificador Fiscal",
+        title: "Optimizador Fiscal",
         subtitle:
           "Rastrea tus contribuciones a cuentas con ventajas fiscales y maximiza tus beneficios.",
         allocationChart: "Distribución de Contribuciones",
@@ -525,6 +566,18 @@ Respond in English.`,
         closeModal: "Cerrar",
         cancelModal: "Cancelar",
         saveModal: "Guardar contribuciones",
+        impactTitle: "Impacto fiscal",
+        impactSubtitle:
+          "Ahorro fiscal anual estimado y potencial de aportación a largo plazo.",
+        savingsProjectionTitle: "Proyección de ahorro fiscal",
+        savingsProjectionSubtitle:
+          "Ahorro fiscal anual estimado con aportaciones actuales vs. máximas.",
+        capacityTitle: "Mix de asignación mensual",
+        capacitySubtitle:
+          "Cómo se combinan ingresos, gastos y aportaciones fiscales cada mes.",
+        estimatedTaxRateLabel: "Tasa fiscal estimada",
+        estimatedAnnualSavingsLabel: "Ahorro fiscal anual estimado",
+        maxContributionLabel: "Capacidad máxima de aportación",
       },
       interaction: {
         expenseQuest: "Misión de gastos",
