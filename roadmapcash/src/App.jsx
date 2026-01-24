@@ -115,6 +115,22 @@ function App() {
     await saveRoadmap(userInput, updated, "Portfolio update");
   };
 
+  const handleTaxPlannerSave = async (taxPlanner) => {
+    if (!financialData) return;
+    const updated = {
+      ...financialData,
+      plan: {
+        ...financialData.plan,
+        taxPlanner: {
+          ...financialData.plan?.taxPlanner,
+          ...taxPlanner,
+        },
+      },
+    };
+    setFinancialData(updated);
+    await saveRoadmap(userInput, updated, "Tax planner update");
+  };
+
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
 
   useEffect(() => {
@@ -299,6 +315,7 @@ function App() {
                 onUpdate={handleUpdate}
                 onItemUpdate={handleItemUpdate}
                 onPortfolioSave={handlePortfolioSave}
+                onTaxPlannerSave={handleTaxPlannerSave}
                 isUpdating={isUpdating}
               />
             )}
