@@ -1298,8 +1298,13 @@ function TaxPlanner({
   t,
 }) {
   const theme = useChartTheme();
-  const taxAccounts = allocations?.length ? allocations : STANDARD_TAX_ALLOCATIONS;
-  const totalAllocated = taxAccounts.reduce((sum, item) => sum + (item.amount || 0), 0);
+  const taxAccounts = allocations?.length
+    ? allocations
+    : STANDARD_TAX_ALLOCATIONS;
+  const totalAllocated = taxAccounts.reduce(
+    (sum, item) => sum + (item.amount || 0),
+    0,
+  );
   const totalExpenses = expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
   const monthlyIncome = income || 0;
   const monthlySavings = monthlyIncome - totalExpenses;
@@ -1309,14 +1314,18 @@ function TaxPlanner({
   const [isStreaming, setIsStreaming] = useState(false);
 
   // Use saved recommendation if available and not currently streaming
-  const displayText = isStreaming || recommendationText ? recommendationText : recommendation;
+  const displayText =
+    isStreaming || recommendationText ? recommendationText : recommendation;
 
   const handleGetRecommendation = async () => {
     setRecommendationText("");
     setIsStreaming(true);
 
     const allocationSummary = taxAccounts
-      .map((a) => `${a.name}: $${a.amount.toLocaleString()} of $${TAX_ACCOUNT_LIMITS[a.name]?.toLocaleString() || "N/A"} limit (${TAX_ACCOUNT_LIMITS[a.name] ? Math.round((a.amount / TAX_ACCOUNT_LIMITS[a.name]) * 100) : 0}%)`)
+      .map(
+        (a) =>
+          `${a.name}: $${a.amount.toLocaleString()} of $${TAX_ACCOUNT_LIMITS[a.name]?.toLocaleString() || "N/A"} limit (${TAX_ACCOUNT_LIMITS[a.name] ? Math.round((a.amount / TAX_ACCOUNT_LIMITS[a.name]) * 100) : 0}%)`,
+      )
       .join("\n");
 
     const prompt = `Review this tax-advantaged account allocation and provide personalized recommendations:
@@ -1455,7 +1464,7 @@ Formatting: Write in a professional essay format with 2-3 focused paragraphs. Us
                           80,
                           60,
                           segment.startAngle,
-                          segment.endAngle - 0.5
+                          segment.endAngle - 0.5,
                         )}
                         fill="none"
                         stroke={segment.color}
@@ -1552,7 +1561,8 @@ Formatting: Write in a professional essay format with 2-3 focused paragraphs. Us
                       color={theme.mutedText}
                       fontWeight="medium"
                     >
-                      {formatCurrency(segment.amount)} / {formatCurrency(segment.limit)}
+                      {formatCurrency(segment.amount)} /{" "}
+                      {formatCurrency(segment.limit)}
                     </Text>
                   </HStack>
                   <Box
@@ -1569,10 +1579,15 @@ Formatting: Write in a professional essay format with 2-3 focused paragraphs. Us
                   </Box>
                   <Text
                     fontSize="2xs"
-                    color={segment.utilizationPercent >= 100 ? "green.400" : theme.faintText}
+                    color={
+                      segment.utilizationPercent >= 100
+                        ? "green.400"
+                        : theme.faintText
+                    }
                     textAlign="right"
                   >
-                    {segment.utilizationPercent}% {t("financialChart.taxPlanner.ofLimit")}
+                    {segment.utilizationPercent}%{" "}
+                    {t("financialChart.taxPlanner.ofLimit")}
                   </Text>
                 </VStack>
               ))}
@@ -2622,7 +2637,9 @@ export function FinancialChart({
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
   const [portfolioCustomized, setPortfolioCustomized] = useState(false);
   // Tax planner state
-  const [taxAllocations, setTaxAllocations] = useState(STANDARD_TAX_ALLOCATIONS);
+  const [taxAllocations, setTaxAllocations] = useState(
+    STANDARD_TAX_ALLOCATIONS,
+  );
   const [taxDraft, setTaxDraft] = useState(STANDARD_TAX_ALLOCATIONS);
   const [taxModalOpen, setTaxModalOpen] = useState(false);
 
@@ -3646,7 +3663,9 @@ export function FinancialChart({
                         w="3"
                         h="3"
                         borderRadius="full"
-                        bg={TAX_PLANNER_COLORS[index % TAX_PLANNER_COLORS.length]}
+                        bg={
+                          TAX_PLANNER_COLORS[index % TAX_PLANNER_COLORS.length]
+                        }
                         flexShrink="0"
                       />
                       <VStack align="start" spacing="0">
@@ -3655,7 +3674,9 @@ export function FinancialChart({
                         </Text>
                         <Text fontSize="2xs" color={theme.faintText}>
                           {t("financialChart.taxPlanner.limitLabel", {
-                            amount: formatCurrency(TAX_ACCOUNT_LIMITS[allocation.name] || 0),
+                            amount: formatCurrency(
+                              TAX_ACCOUNT_LIMITS[allocation.name] || 0,
+                            ),
                           })}
                         </Text>
                       </VStack>
