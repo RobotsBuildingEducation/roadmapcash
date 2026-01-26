@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 import { getGenerativeModel, getVertexAI, Schema } from "@firebase/vertexai";
 
 const firebaseConfig = {
@@ -14,6 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const database = getFirestore(app);
+const analytics = getAnalytics(app);
 
 const vertexAI = getVertexAI(app, { location: "global" });
 export const ai = vertexAI;
@@ -22,4 +24,4 @@ const simplemodel = getGenerativeModel(vertexAI, {
   model: "gemini-3-flash-preview",
 });
 
-export { database, doc, getDoc, setDoc, simplemodel };
+export { database, doc, getDoc, setDoc, simplemodel, analytics };

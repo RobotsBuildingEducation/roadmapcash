@@ -14,6 +14,8 @@ import {
   NativeSelect,
   Textarea,
   Spinner,
+  Accordion,
+  Icon,
 } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { useColorModeValue } from "@/components/ui/color-mode";
@@ -1433,12 +1435,11 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
           </Text>
         </Box>
 
-        <Box overflowX="auto">
+        <Box>
           <svg
             width="100%"
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
             preserveAspectRatio="xMidYMid meet"
-            style={{ minWidth: "280px" }}
           >
             {[0, 0.5, 1].map((ratio, index) => (
               <line
@@ -3774,16 +3775,26 @@ export function FinancialChart({
         />
 
         {/* Interactive Updates */}
-        <Box
+        <Accordion.Root
+          collapsible
+          variant="plain"
           bg={theme.elevatedBg}
           borderRadius="xl"
           borderWidth="1px"
           borderColor={theme.elevatedBorder}
-          p={{ base: "4", md: "5" }}
+          marginBottom={2}
+          marginTop={2}
         >
-          <VStack align="stretch" spacing="4">
-            <HStack justify="space-between" flexWrap="wrap" gap="2">
-              <Box>
+          <Accordion.Item value="update-data">
+            <Accordion.ItemTrigger
+              px={{ base: "4", md: "5" }}
+              py={{ base: "3", md: "4" }}
+              cursor="pointer"
+              _hover={{ bg: theme.insetBg }}
+              borderRadius="xl"
+              boxShadow={"0px 4px 0px #b4b4b4"}
+            >
+              <Box flex="1" textAlign="left">
                 <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
                   {t("financialChart.updateSection.title")}
                 </Text>
@@ -3794,189 +3805,207 @@ export function FinancialChart({
                   {t("financialChart.updateSection.subtitle")}
                 </Text>
               </Box>
-            </HStack>
-
-            <Box
-              p="3"
-              bg={theme.insetBg}
-              borderRadius="lg"
-              borderWidth="1px"
-              borderColor={theme.insetBorder}
-              animation={
-                showUpdateFlash ? `${flashAnimation} 1.4s ease-out` : "none"
-              }
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent
+              px={{ base: "4", md: "5" }}
+              pb={{ base: "4", md: "5" }}
             >
-              <HStack justify="space-between" flexWrap="wrap" gap="2">
-                <VStack align="start" spacing="0">
-                  <Text
-                    fontSize="xs"
-                    color={theme.mutedText}
-                    fontWeight="semibold"
-                  >
-                    {t("financialChart.updateSection.statusLabel")}
-                  </Text>
-                  <Text fontSize="xs" color={theme.subText}>
-                    {isUpdating
-                      ? t("financialChart.updateSection.statusApplying")
-                      : updateSummary.length === 0
-                        ? t("financialChart.updateSection.statusEmpty")
-                        : t("financialChart.updateSection.statusReady")}
-                  </Text>
-                </VStack>
-                <Button
-                  size={{ base: "xs", md: "sm" }}
-                  colorScheme="blue"
-                  onClick={handleApplyUpdates}
-                  isDisabled={
-                    !onUpdate || updateSummary.length === 0 || isUpdating
+              <VStack align="stretch" spacing="4">
+                <Box
+                  p="3"
+                  bg={theme.insetBg}
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor={theme.insetBorder}
+                  animation={
+                    showUpdateFlash ? `${flashAnimation} 1.4s ease-out` : "none"
                   }
-                  aria-label={t("financialChart.updateSection.applyUpdates")}
+                  mt={4}
                 >
-                  {isUpdating ? (
-                    <Spinner size="sm" />
-                  ) : (
-                    t("financialChart.updateSection.applyUpdates")
-                  )}
-                </Button>
-              </HStack>
-            </Box>
-
-            <Grid
-              templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-              gap="3"
-            >
-              <Box>
-                <Text fontSize="2xs" color={theme.faintText} mb="1">
-                  {t("financialChart.updateSection.monthlyIncome")}
-                </Text>
-                <Input
-                  value={draftIncome}
-                  onChange={(e) => setDraftIncome(e.target.value)}
-                  type="number"
-                  bg={theme.inputBg}
-                  borderColor={theme.inputBorder}
-                  fontSize="sm"
-                />
-              </Box>
-              <Box>
-                <Text fontSize="2xs" color={theme.faintText} mb="1">
-                  {t("financialChart.updateSection.currentSavings")}
-                </Text>
-                <Input
-                  value={draftCurrentSavings}
-                  onChange={(e) => setDraftCurrentSavings(e.target.value)}
-                  type="number"
-                  bg={theme.inputBg}
-                  borderColor={theme.inputBorder}
-                  fontSize="sm"
-                />
-              </Box>
-              <Box>
-                <Text fontSize="2xs" color={theme.faintText} mb="1">
-                  {t("financialChart.updateSection.savingsGoal")}
-                </Text>
-                <Input
-                  value={draftSavingsGoal}
-                  onChange={(e) => setDraftSavingsGoal(e.target.value)}
-                  type="number"
-                  bg={theme.inputBg}
-                  borderColor={theme.inputBorder}
-                  fontSize="sm"
-                />
-              </Box>
-            </Grid>
-
-            <VStack align="stretch" spacing="2">
-              <HStack justify="space-between">
-                <Text fontSize="2xs" color={theme.faintText}>
-                  {t("financialChart.updateSection.expenses")}
-                </Text>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  colorScheme="blue"
-                  onClick={handleAddExpense}
-                >
-                  {t("financialChart.updateSection.addExpense")}
-                </Button>
-              </HStack>
-              {draftExpenses.map((expense, index) => (
-                <Grid
-                  key={`${expense.name}-${index}`}
-                  templateColumns={{ base: "1fr", md: "2fr 1fr 1fr auto" }}
-                  gap="2"
-                  alignItems="center"
-                >
-                  <Input
-                    value={expense.name}
-                    onChange={(e) =>
-                      updateExpenseField(index, "name", e.target.value)
-                    }
-                    placeholder={t("financialChart.updateSection.expenseName")}
-                    bg={theme.inputBg}
-                    borderColor={theme.inputBorder}
-                    fontSize="sm"
-                  />
-                  <Input
-                    value={expense.amount}
-                    onChange={(e) =>
-                      updateExpenseField(index, "amount", e.target.value)
-                    }
-                    type="number"
-                    placeholder={t("financialChart.updateSection.amount")}
-                    bg={theme.inputBg}
-                    borderColor={theme.inputBorder}
-                    fontSize="sm"
-                  />
-                  <NativeSelect.Root>
-                    <NativeSelect.Field
-                      value={expense.priority}
-                      onChange={(e) =>
-                        updateExpenseField(index, "priority", e.target.value)
+                  <HStack justify="space-between" flexWrap="wrap" gap="2">
+                    <VStack align="start" spacing="0">
+                      <Text
+                        fontSize="xs"
+                        color={theme.mutedText}
+                        fontWeight="semibold"
+                      >
+                        {t("financialChart.updateSection.statusLabel")}
+                      </Text>
+                      <Text fontSize="xs" color={theme.subText}>
+                        {isUpdating
+                          ? t("financialChart.updateSection.statusApplying")
+                          : updateSummary.length === 0
+                            ? t("financialChart.updateSection.statusEmpty")
+                            : t("financialChart.updateSection.statusReady")}
+                      </Text>
+                    </VStack>
+                    <Button
+                      size={{ base: "xs", md: "sm" }}
+                      colorScheme="blue"
+                      onClick={handleApplyUpdates}
+                      isDisabled={
+                        !onUpdate || updateSummary.length === 0 || isUpdating
                       }
+                      aria-label={t(
+                        "financialChart.updateSection.applyUpdates",
+                      )}
+                    >
+                      {isUpdating ? (
+                        <Spinner size="sm" />
+                      ) : (
+                        t("financialChart.updateSection.applyUpdates")
+                      )}
+                    </Button>
+                  </HStack>
+                </Box>
+
+                <Grid
+                  templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
+                  gap="3"
+                >
+                  <Box>
+                    <Text fontSize="2xs" color={theme.faintText} mb="1">
+                      {t("financialChart.updateSection.monthlyIncome")}
+                    </Text>
+                    <Input
+                      value={draftIncome}
+                      onChange={(e) => setDraftIncome(e.target.value)}
+                      type="number"
                       bg={theme.inputBg}
                       borderColor={theme.inputBorder}
                       fontSize="sm"
-                    >
-                      <option value="essential">
-                        {t("financialChart.priorityLabels.essential")}
-                      </option>
-                      <option value="important">
-                        {t("financialChart.priorityLabels.important")}
-                      </option>
-                      <option value="discretionary">
-                        {t("financialChart.priorityLabels.discretionary")}
-                      </option>
-                    </NativeSelect.Field>
-                  </NativeSelect.Root>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    colorScheme="red"
-                    onClick={() => handleRemoveExpense(index)}
-                  >
-                    {t("financialChart.updateSection.remove")}
-                  </Button>
+                    />
+                  </Box>
+                  <Box>
+                    <Text fontSize="2xs" color={theme.faintText} mb="1">
+                      {t("financialChart.updateSection.currentSavings")}
+                    </Text>
+                    <Input
+                      value={draftCurrentSavings}
+                      onChange={(e) => setDraftCurrentSavings(e.target.value)}
+                      type="number"
+                      bg={theme.inputBg}
+                      borderColor={theme.inputBorder}
+                      fontSize="sm"
+                    />
+                  </Box>
+                  <Box>
+                    <Text fontSize="2xs" color={theme.faintText} mb="1">
+                      {t("financialChart.updateSection.savingsGoal")}
+                    </Text>
+                    <Input
+                      value={draftSavingsGoal}
+                      onChange={(e) => setDraftSavingsGoal(e.target.value)}
+                      type="number"
+                      bg={theme.inputBg}
+                      borderColor={theme.inputBorder}
+                      fontSize="sm"
+                    />
+                  </Box>
                 </Grid>
-              ))}
-            </VStack>
 
-            <Box>
-              <Text fontSize="2xs" color={theme.faintText} mb="1">
-                {t("financialChart.updateSection.notesLabel")}
-              </Text>
-              <Textarea
-                value={updateNotes}
-                onChange={(e) => setUpdateNotes(e.target.value)}
-                placeholder={t("financialChart.updateSection.notesPlaceholder")}
-                bg={theme.inputBg}
-                borderColor={theme.inputBorder}
-                fontSize="sm"
-                minH="90px"
-              />
-            </Box>
-          </VStack>
-        </Box>
+                <VStack align="stretch" spacing="2">
+                  <HStack justify="space-between">
+                    <Text fontSize="2xs" color={theme.faintText}>
+                      {t("financialChart.updateSection.expenses")}
+                    </Text>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      colorScheme="blue"
+                      onClick={handleAddExpense}
+                    >
+                      {t("financialChart.updateSection.addExpense")}
+                    </Button>
+                  </HStack>
+                  {draftExpenses.map((expense, index) => (
+                    <Grid
+                      key={`${expense.name}-${index}`}
+                      templateColumns={{ base: "1fr", md: "2fr 1fr 1fr auto" }}
+                      gap="2"
+                      alignItems="center"
+                    >
+                      <Input
+                        value={expense.name}
+                        onChange={(e) =>
+                          updateExpenseField(index, "name", e.target.value)
+                        }
+                        placeholder={t(
+                          "financialChart.updateSection.expenseName",
+                        )}
+                        bg={theme.inputBg}
+                        borderColor={theme.inputBorder}
+                        fontSize="sm"
+                      />
+                      <Input
+                        value={expense.amount}
+                        onChange={(e) =>
+                          updateExpenseField(index, "amount", e.target.value)
+                        }
+                        type="number"
+                        placeholder={t("financialChart.updateSection.amount")}
+                        bg={theme.inputBg}
+                        borderColor={theme.inputBorder}
+                        fontSize="sm"
+                      />
+                      <NativeSelect.Root>
+                        <NativeSelect.Field
+                          value={expense.priority}
+                          onChange={(e) =>
+                            updateExpenseField(
+                              index,
+                              "priority",
+                              e.target.value,
+                            )
+                          }
+                          bg={theme.inputBg}
+                          borderColor={theme.inputBorder}
+                          fontSize="sm"
+                        >
+                          <option value="essential">
+                            {t("financialChart.priorityLabels.essential")}
+                          </option>
+                          <option value="important">
+                            {t("financialChart.priorityLabels.important")}
+                          </option>
+                          <option value="discretionary">
+                            {t("financialChart.priorityLabels.discretionary")}
+                          </option>
+                        </NativeSelect.Field>
+                      </NativeSelect.Root>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        colorScheme="red"
+                        onClick={() => handleRemoveExpense(index)}
+                      >
+                        {t("financialChart.updateSection.remove")}
+                      </Button>
+                    </Grid>
+                  ))}
+                </VStack>
+
+                <Box>
+                  <Text fontSize="2xs" color={theme.faintText} mb="1">
+                    {t("financialChart.updateSection.notesLabel")}
+                  </Text>
+                  <Textarea
+                    value={updateNotes}
+                    onChange={(e) => setUpdateNotes(e.target.value)}
+                    placeholder={t(
+                      "financialChart.updateSection.notesPlaceholder",
+                    )}
+                    bg={theme.inputBg}
+                    borderColor={theme.inputBorder}
+                    fontSize="sm"
+                    minH="90px"
+                  />
+                </Box>
+              </VStack>
+            </Accordion.ItemContent>
+          </Accordion.Item>
+        </Accordion.Root>
 
         {/* Key Metrics */}
         <MetricsSummary
