@@ -1435,12 +1435,11 @@ function GrowthExpectationChart({ blendedReturn, investedAmount, t }) {
           </Text>
         </Box>
 
-        <Box overflowX="auto">
+        <Box>
           <svg
             width="100%"
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
             preserveAspectRatio="xMidYMid meet"
-            style={{ minWidth: "280px" }}
           >
             {[0, 0.5, 1].map((ratio, index) => (
               <line
