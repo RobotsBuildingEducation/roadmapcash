@@ -4041,9 +4041,6 @@ export function FinancialChart({
             {[
               t("financialChart.tabs.overview"),
               t("financialChart.tabs.plan"),
-              t("financialChart.tabs.portfolio"),
-              t("financialChart.tabs.taxPlanner"),
-              t("financialChart.tabs.expenses"),
             ].map((tab, index) => (
               <Button
                 key={tab}
@@ -4066,7 +4063,7 @@ export function FinancialChart({
 
           {/* Tab Panels */}
           <Box p={{ base: "3", md: "5" }}>
-            {/* Overview Tab */}
+            {/* Overview Tab - All Charts and High-Level Data */}
             {activeTab === 0 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <Grid
@@ -4098,6 +4095,39 @@ export function FinancialChart({
                   t={t}
                 />
 
+                {/* Investment Portfolio */}
+                <InvestmentPortfolio
+                  allocations={portfolioAllocations}
+                  investedAmount={investedAmount}
+                  qualitySummary={data.portfolio?.qualitySummary}
+                  onCustomize={openPortfolioModal}
+                  onSaveQuality={(summary) =>
+                    onPortfolioSave?.({ qualitySummary: summary })
+                  }
+                  isUpdating={isUpdating}
+                  t={t}
+                />
+
+                {/* Tax Planner */}
+                <TaxPlanner
+                  allocations={taxAllocations}
+                  income={data.income || 0}
+                  expenses={expenses}
+                  recommendation={data.taxPlanner?.recommendation}
+                  onCustomize={openTaxModal}
+                  onSaveRecommendation={(rec) =>
+                    onTaxPlannerSave?.({ recommendation: rec })
+                  }
+                  isUpdating={isUpdating}
+                  t={t}
+                />
+              </VStack>
+            )}
+
+            {/* Your Plan Tab - All Actionable Items */}
+            {activeTab === 1 && (
+              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                {/* Your Roadmap */}
                 <BirdsEyeView
                   currentSavings={data.currentSavings || 0}
                   savingsGoal={data.savingsGoal}
@@ -4105,12 +4135,7 @@ export function FinancialChart({
                   expenses={expenses}
                   t={t}
                 />
-              </VStack>
-            )}
 
-            {/* Plan Tab */}
-            {activeTab === 1 && (
-              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <Grid
                   templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
                   gap={{ base: "3", md: "5" }}
@@ -4133,53 +4158,14 @@ export function FinancialChart({
                   </GridItem>
                 </Grid>
 
-                <MotivationalNote note={plan?.motivationalNote} t={t} />
-              </VStack>
-            )}
-
-            {/* Portfolio Tab */}
-            {activeTab === 2 && (
-              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                <InvestmentPortfolio
-                  allocations={portfolioAllocations}
-                  investedAmount={investedAmount}
-                  qualitySummary={data.portfolio?.qualitySummary}
-                  onCustomize={openPortfolioModal}
-                  onSaveQuality={(summary) =>
-                    onPortfolioSave?.({ qualitySummary: summary })
-                  }
-                  isUpdating={isUpdating}
-                  t={t}
-                />
-              </VStack>
-            )}
-
-            {/* Tax Planner Tab */}
-            {activeTab === 3 && (
-              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                <TaxPlanner
-                  allocations={taxAllocations}
-                  income={data.income || 0}
-                  expenses={expenses}
-                  recommendation={data.taxPlanner?.recommendation}
-                  onCustomize={openTaxModal}
-                  onSaveRecommendation={(rec) =>
-                    onTaxPlannerSave?.({ recommendation: rec })
-                  }
-                  isUpdating={isUpdating}
-                  t={t}
-                />
-              </VStack>
-            )}
-
-            {/* Expenses Tab */}
-            {activeTab === 4 && (
-              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                {/* Expenses */}
                 <ExpenseAnalysis
                   expenses={interactiveExpenses}
                   onSelect={openInteraction}
                   t={t}
                 />
+
+                <MotivationalNote note={plan?.motivationalNote} t={t} />
               </VStack>
             )}
           </Box>
