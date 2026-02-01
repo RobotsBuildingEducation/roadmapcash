@@ -387,6 +387,7 @@ function TaskProgress({
   weeklyCheckIn,
   currentTaskIndex,
   completedTasks,
+  completedTasksHistory,
   onTaskSelect,
   onNextTask,
   onPreviousTask,
@@ -732,6 +733,37 @@ function TaskProgress({
                   </HStack>
                 );
               })}
+            </VStack>
+          </Box>
+        )}
+
+        {/* Completed Tasks History */}
+        {completedTasksHistory && completedTasksHistory.length > 0 && (
+          <Box>
+            <Text fontSize="xs" color={theme.faintText} mb="2" textTransform="uppercase">
+              {t("financialChart.task.completed")} ({completedTasksHistory.length})
+            </Text>
+            <VStack align="stretch" spacing="2">
+              {completedTasksHistory.slice(-5).reverse().map((task, idx) => (
+                <HStack
+                  key={task.id || idx}
+                  p="2"
+                  bg="green.900"
+                  borderRadius="lg"
+                  spacing="3"
+                  opacity={0.8}
+                >
+                  <Text fontSize="md" color="green.300">✓</Text>
+                  <Text fontSize="sm" color="green.100" flex="1" isTruncated>
+                    {task.title}
+                  </Text>
+                  {task.completedAt && (
+                    <Text fontSize="2xs" color="green.400">
+                      {new Date(task.completedAt).toLocaleDateString()}
+                    </Text>
+                  )}
+                </HStack>
+              ))}
             </VStack>
           </Box>
         )}
@@ -3319,10 +3351,15 @@ function BirdsEyeView({
   savingsGoal,
   monthlySavings,
   expenses,
+  completedTasksCount,
+  totalTasksCount,
   t,
 }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const theme = useChartTheme();
+  const taskProgressPercent = totalTasksCount > 0
+    ? Math.round((completedTasksCount / totalTasksCount) * 100)
+    : 0;
 
   const milestones = useMemo(() => {
     if (!savingsGoal || monthlySavings <= 0) return [];
@@ -3470,6 +3507,34 @@ function BirdsEyeView({
           })}
         </Box>
       </Box>
+
+      {/* Task Progress */}
+      {totalTasksCount > 0 && (
+        <Box mb="5">
+          <HStack justify="space-between" mb="2">
+            <Text fontSize="xs" color={theme.faintText}>
+              {t("financialChart.taskProgress")}
+            </Text>
+            <Text fontSize="xs" color="blue.400" fontWeight="bold">
+              {completedTasksCount} / {totalTasksCount}
+            </Text>
+          </HStack>
+          <Box
+            h="2"
+            bg={theme.insetBg}
+            borderRadius="full"
+            overflow="hidden"
+          >
+            <Box
+              h="100%"
+              w={`${taskProgressPercent}%`}
+              bg="blue.500"
+              borderRadius="full"
+              transition="width 0.3s ease"
+            />
+          </Box>
+        </Box>
+      )}
 
       {milestones.length > 0 && (
         <VStack align="stretch" spacing={{ base: "2", md: "3" }}>
@@ -3720,6 +3785,7 @@ export function FinancialChart({
   onItemUpdate,
   onPortfolioSave,
   onTaxPlannerSave,
+  onTaskComplete,
   isUpdating,
 }) {
   const { t } = useI18n();
@@ -3754,11 +3820,15 @@ export function FinancialChart({
   );
   const [taxDraft, setTaxDraft] = useState(STANDARD_TAX_ALLOCATIONS);
   const [taxModalOpen, setTaxModalOpen] = useState(false);
-  // Quest progress state
+  // Task progress state
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
-  const [completedTasks, setCompletedTasks] = useState(new Set());
 
   if (!data) return null;
+
+  // Get completed task IDs from persisted data
+  const completedTaskIds = new Set(
+    (data.completedTasks || []).map((t) => t.id)
+  );
 
   const expenses = data.expenses || [];
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -4027,22 +4097,36 @@ export function FinancialChart({
     return "";
   };
 
-  const handleAiUpdate = (action) => {
+  // Handle "Try Different" - regenerate task via AI
+  const handleTryDifferent = () => {
     if (!interaction || !onItemUpdate) return;
     const prompt = buildInteractionPrompt(
       interaction.type,
       interaction.item,
-      action,
+      "remix",
     );
     if (!prompt) return;
-    setInteractionAction(action);
+    setInteractionAction("remix");
     onItemUpdate(prompt);
-    // On complete: mark done, close modal, advance to next
-    if (action === "complete" && interaction.item?.id) {
-      markTaskComplete(interaction.item.id);
-      closeInteraction();
-      advanceToNextTask();
+    closeInteraction();
+  };
+
+  // Handle "Done" - mark complete, save, advance (no AI)
+  const handleMarkComplete = () => {
+    if (!interaction) return;
+    const task = interaction.item;
+    if (task && onTaskComplete) {
+      onTaskComplete({
+        id: task.id,
+        type: interaction.type,
+        title: task.title || task.action || task.name || task.text,
+        description: task.description || task.recommendation || null,
+        impact: task.impact || null,
+        amount: task.amount || null,
+      });
     }
+    closeInteraction();
+    advanceToNextTask();
   };
 
   const closeInteraction = () => {
@@ -4065,12 +4149,6 @@ export function FinancialChart({
 
   const handleTaskSelect = (task, type, originalIndex) => {
     openInteraction(task, type, originalIndex);
-  };
-
-  const markTaskComplete = (taskId) => {
-    if (taskId) {
-      setCompletedTasks((prev) => new Set([...prev, taskId]));
-    }
   };
 
   const openPortfolioModal = () => {
@@ -4527,7 +4605,8 @@ export function FinancialChart({
                   expenses={interactiveExpenses}
                   weeklyCheckIn={interactiveWeeklyCheckIn}
                   currentTaskIndex={currentTaskIndex}
-                  completedTasks={completedTasks}
+                  completedTasks={completedTaskIds}
+                  completedTasksHistory={data.completedTasks || []}
                   onTaskSelect={handleTaskSelect}
                   onNextTask={handleNextTask}
                   onPreviousTask={handlePreviousTask}
@@ -4540,6 +4619,13 @@ export function FinancialChart({
                   savingsGoal={data.savingsGoal}
                   monthlySavings={monthlySavings}
                   expenses={expenses}
+                  completedTasksCount={(data.completedTasks || []).length}
+                  totalTasksCount={
+                    (interactiveStrategies?.length || 0) +
+                    (interactiveActions?.length || 0) +
+                    (interactiveExpenses?.length || 0) +
+                    (interactiveWeeklyCheckIn ? 1 : 0)
+                  }
                   t={t}
                 />
 
@@ -4579,10 +4665,10 @@ export function FinancialChart({
                 <Box>
                   <Text fontSize="sm" color={theme.mutedText}>
                     {interaction.type === "expense"
-                      ? t("financialChart.interaction.expenseQuest")
+                      ? t("financialChart.interaction.expenseTask")
                       : interaction.type === "weekly"
                         ? t("financialChart.interaction.weeklyCheckIn")
-                        : t("financialChart.interaction.planQuest")}
+                        : t("financialChart.interaction.planTask")}
                   </Text>
                   <Text fontSize="lg" fontWeight="semibold">
                     {interaction.item.title ||
@@ -4644,22 +4730,19 @@ export function FinancialChart({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleAiUpdate("remix")}
+                  onClick={handleTryDifferent}
                   isDisabled={!onItemUpdate || isUpdating}
                 >
                   {isUpdating && interactionAction === "remix"
                     ? t("financialChart.interaction.generating")
-                    : t("financialChart.interaction.generateDifferent")}
+                    : t("financialChart.interaction.tryDifferent")}
                 </Button>
                 <Button
                   size="sm"
-                  colorScheme="blue"
-                  onClick={() => handleAiUpdate("complete")}
-                  isDisabled={!onItemUpdate || isUpdating}
+                  colorScheme="green"
+                  onClick={handleMarkComplete}
                 >
-                  {isUpdating && interactionAction === "complete"
-                    ? t("financialChart.interaction.completing")
-                    : t("financialChart.interaction.completeExercise")}
+                  {t("financialChart.interaction.done")}
                 </Button>
               </HStack>
             </VStack>
