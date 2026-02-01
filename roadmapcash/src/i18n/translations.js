@@ -276,6 +276,8 @@ export const translations = {
           'Add a new, distinct optimization recommendation for the expense "{name}". Keep the expense list the same, but update the recommendation field for "{name}".',
         portfolioQuality:
           "Review the investment allocation below and return only a concise 2-3 sentence summary highlighting strengths, risks, and one improvement. Do not include keys, labels, or quotes.\n{allocations}",
+        generateNewTasks:
+          "Generate a completely new set of strategies and action items. Replace all existing plan.strategies with 3 new, different strategies. Replace all plan.actionItems with 4-5 new, actionable items. Update the weeklyCheckIn with a fresh prompt. Keep the same expense recommendations but refresh the motivationalNote.",
       },
       task: {
         yourPlan: "Your Financial Plan",
@@ -297,6 +299,10 @@ export const translations = {
         typeAction: "Action",
         typeHabit: "Weekly Habit",
         typeExpense: "Expense",
+        allCompleted: "All Tasks Completed!",
+        allCompletedSub: "You've finished all {count} tasks. Ready for a new set?",
+        generateNew: "Generate New Tasks",
+        generating: "Generating...",
       },
     },
     ai: {
@@ -645,6 +651,8 @@ Respond in English.`,
           'Agrega una nueva recomendación de optimización para el gasto "{name}". Mantén la lista de gastos igual, pero actualiza el campo recommendation para "{name}".',
         portfolioQuality:
           "Revisa la asignación de inversión a continuación y devuelve solo un resumen conciso de 2-3 oraciones que destaque fortalezas, riesgos y una mejora. No incluyas claves, etiquetas ni comillas.\n{allocations}",
+        generateNewTasks:
+          "Genera un conjunto completamente nuevo de estrategias y acciones. Reemplaza todas las plan.strategies con 3 nuevas estrategias diferentes. Reemplaza todos los plan.actionItems con 4-5 nuevas acciones. Actualiza el weeklyCheckIn con una nueva propuesta. Mantén las recomendaciones de gastos pero renueva el motivationalNote.",
       },
       task: {
         yourPlan: "Tu Plan Financiero",
@@ -666,6 +674,10 @@ Respond in English.`,
         typeAction: "Acción",
         typeHabit: "Hábito Semanal",
         typeExpense: "Gasto",
+        allCompleted: "¡Todas las Tareas Completadas!",
+        allCompletedSub: "Completaste las {count} tareas. ¿Listo para nuevas?",
+        generateNew: "Generar Nuevas Tareas",
+        generating: "Generando...",
       },
     },
     ai: {

@@ -391,6 +391,8 @@ function TaskProgress({
   onTaskSelect,
   onNextTask,
   onPreviousTask,
+  onGenerateNewTasks,
+  isGenerating,
   t,
 }) {
   const theme = useChartTheme();
@@ -452,6 +454,7 @@ function TaskProgress({
   const completedCount = completedTasks?.size || 0;
   const progressPercent = Math.round((completedCount / totalTasks) * 100);
   const isCurrentCompleted = completedTasks?.has(currentTask?.id);
+  const allTasksCompleted = completedCount >= totalTasks;
 
   // Get display info based on task type
   const getTaskDisplay = (task) => {
@@ -567,174 +570,220 @@ function TaskProgress({
           />
         </Box>
 
-        {/* Current Task Card */}
-        <Box
-          p={{ base: "4", md: "5" }}
-          bg={isCurrentCompleted ? "green.900" : theme.insetBg}
-          borderRadius="xl"
-          borderWidth="2px"
-          borderColor={isCurrentCompleted ? "green.600" : "blue.600"}
-          position="relative"
-        >
-          {/* Step Badge */}
+        {/* All Tasks Completed State */}
+        {allTasksCompleted ? (
           <Box
-            position="absolute"
-            top="-3"
-            left="4"
-            bg="blue.600"
-            px="3"
-            py="1"
-            borderRadius="full"
+            p={{ base: "5", md: "6" }}
+            bg="green.900"
+            borderRadius="xl"
+            borderWidth="2px"
+            borderColor="green.500"
+            textAlign="center"
           >
-            <Text fontSize="xs" fontWeight="bold" color="white">
-              {t("financialChart.task.stepOf", { current: safeIndex + 1, total: totalTasks })}
-            </Text>
-          </Box>
-
-          {/* Completed Badge */}
-          {isCurrentCompleted && (
-            <Box
-              position="absolute"
-              top="-3"
-              right="4"
-              bg="green.600"
-              px="3"
-              py="1"
-              borderRadius="full"
-            >
-              <Text fontSize="xs" fontWeight="bold" color="white">
-                ✓ {t("financialChart.task.completed")}
-              </Text>
-            </Box>
-          )}
-
-          <VStack align="stretch" spacing="3" pt="2">
-            {/* Type and Badge */}
-            <HStack justify="space-between" flexWrap="wrap" gap="2">
-              <Text fontSize="xs" color={theme.faintText} textTransform="uppercase">
-                {display.typeLabel}
-              </Text>
-              <Badge colorScheme={display.badgeColor} fontSize="xs">
-                {display.badge}
-              </Badge>
-            </HStack>
-
-            {/* Icon and Title */}
-            <HStack spacing="3" align="start">
+            <VStack spacing="4">
               <Box
-                w={{ base: "10", md: "12" }}
-                h={{ base: "10", md: "12" }}
-                borderRadius="xl"
-                bg={isCurrentCompleted ? "green.800" : "blue.900"}
+                w="16"
+                h="16"
+                borderRadius="full"
+                bg="green.800"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                fontSize={{ base: "xl", md: "2xl" }}
-                flexShrink="0"
+                fontSize="3xl"
               >
-                {isCurrentCompleted ? "✓" : display.icon}
+                🎉
               </Box>
-              <VStack align="start" spacing="1" flex="1">
-                <Text
-                  fontSize={{ base: "md", md: "lg" }}
-                  fontWeight="bold"
-                  color={theme.highlightText}
-                >
-                  {display.title}
+              <VStack spacing="1">
+                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color="green.100">
+                  {t("financialChart.task.allCompleted")}
                 </Text>
-                {display.description && (
-                  <Text fontSize={{ base: "sm", md: "md" }} color={theme.mutedText}>
-                    {display.description}
-                  </Text>
-                )}
+                <Text fontSize="sm" color="green.300">
+                  {t("financialChart.task.allCompletedSub", { count: totalTasks })}
+                </Text>
               </VStack>
-            </HStack>
-
-            {/* Detail Info */}
-            {display.detail && (
-              <Box
-                bg={theme.surfaceBg}
-                p="3"
-                borderRadius="lg"
-                borderWidth="1px"
-                borderColor={theme.surfaceBorder}
+              <Button
+                size="lg"
+                colorScheme="green"
+                onClick={onGenerateNewTasks}
+                isLoading={isGenerating}
+                loadingText={t("financialChart.task.generating")}
               >
-                <Text fontSize="xs" color={theme.faintText} mb="1">
-                  {display.detailLabel}
-                </Text>
-                <Text fontSize="sm" fontWeight="semibold" color="cyan.300">
-                  {display.detail}
-                </Text>
-              </Box>
-            )}
-
-            {/* Action Button */}
-            <Button
-              size={{ base: "md", md: "lg" }}
-              colorScheme={isCurrentCompleted ? "green" : "blue"}
-              onClick={() => onTaskSelect(currentTask, currentTask.taskType, currentTask.originalIndex)}
-              width="100%"
-            >
-              {isCurrentCompleted
-                ? t("financialChart.task.review")
-                : t("financialChart.task.start")}
-            </Button>
-          </VStack>
-        </Box>
-
-        {/* Navigation */}
-        <HStack justify="space-between">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onPreviousTask}
-            isDisabled={safeIndex === 0}
-            leftIcon={<Text>←</Text>}
-          >
-            {t("financialChart.task.previous")}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onNextTask}
-            isDisabled={safeIndex >= totalTasks - 1}
-            rightIcon={<Text>→</Text>}
-          >
-            {t("financialChart.task.next")}
-          </Button>
-        </HStack>
-
-        {/* Up Next Preview */}
-        {safeIndex < totalTasks - 1 && (
-          <Box>
-            <Text fontSize="xs" color={theme.faintText} mb="2" textTransform="uppercase">
-              {t("financialChart.task.upNext")}
-            </Text>
-            <VStack align="stretch" spacing="2">
-              {tasks.slice(safeIndex + 1, safeIndex + 3).map((task, idx) => {
-                const taskDisplay = getTaskDisplay(task);
-                const isCompleted = completedTasks?.has(task?.id);
-                return (
-                  <HStack
-                    key={task.id || idx}
-                    p="2"
-                    bg={theme.insetBg}
-                    borderRadius="lg"
-                    opacity={0.7}
-                    spacing="3"
-                  >
-                    <Text fontSize="md">{isCompleted ? "✓" : taskDisplay.icon}</Text>
-                    <Text fontSize="sm" color={theme.mutedText} flex="1" isTruncated>
-                      {taskDisplay.title}
-                    </Text>
-                    <Badge colorScheme={taskDisplay.badgeColor} fontSize="2xs">
-                      {taskDisplay.badge}
-                    </Badge>
-                  </HStack>
-                );
-              })}
+                {t("financialChart.task.generateNew")}
+              </Button>
             </VStack>
           </Box>
+        ) : (
+          <>
+            {/* Current Task Card */}
+            <Box
+              p={{ base: "4", md: "5" }}
+              bg={isCurrentCompleted ? "green.900" : theme.insetBg}
+              borderRadius="xl"
+              borderWidth="2px"
+              borderColor={isCurrentCompleted ? "green.600" : "blue.600"}
+              position="relative"
+            >
+              {/* Step Badge */}
+              <Box
+                position="absolute"
+                top="-3"
+                left="4"
+                bg="blue.600"
+                px="3"
+                py="1"
+                borderRadius="full"
+              >
+                <Text fontSize="xs" fontWeight="bold" color="white">
+                  {t("financialChart.task.stepOf", { current: safeIndex + 1, total: totalTasks })}
+                </Text>
+              </Box>
+
+              {/* Completed Badge */}
+              {isCurrentCompleted && (
+                <Box
+                  position="absolute"
+                  top="-3"
+                  right="4"
+                  bg="green.600"
+                  px="3"
+                  py="1"
+                  borderRadius="full"
+                >
+                  <Text fontSize="xs" fontWeight="bold" color="white">
+                    ✓ {t("financialChart.task.completed")}
+                  </Text>
+                </Box>
+              )}
+
+              <VStack align="stretch" spacing="3" pt="2">
+                {/* Type and Badge */}
+                <HStack justify="space-between" flexWrap="wrap" gap="2">
+                  <Text fontSize="xs" color={theme.faintText} textTransform="uppercase">
+                    {display.typeLabel}
+                  </Text>
+                  <Badge colorScheme={display.badgeColor} fontSize="xs">
+                    {display.badge}
+                  </Badge>
+                </HStack>
+
+                {/* Icon and Title */}
+                <HStack spacing="3" align="start">
+                  <Box
+                    w={{ base: "10", md: "12" }}
+                    h={{ base: "10", md: "12" }}
+                    borderRadius="xl"
+                    bg={isCurrentCompleted ? "green.800" : "blue.900"}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    fontSize={{ base: "xl", md: "2xl" }}
+                    flexShrink="0"
+                  >
+                    {isCurrentCompleted ? "✓" : display.icon}
+                  </Box>
+                  <VStack align="start" spacing="1" flex="1">
+                    <Text
+                      fontSize={{ base: "md", md: "lg" }}
+                      fontWeight="bold"
+                      color={theme.highlightText}
+                    >
+                      {display.title}
+                    </Text>
+                    {display.description && (
+                      <Text fontSize={{ base: "sm", md: "md" }} color={theme.mutedText}>
+                        {display.description}
+                      </Text>
+                    )}
+                  </VStack>
+                </HStack>
+
+                {/* Detail Info */}
+                {display.detail && (
+                  <Box
+                    bg={theme.surfaceBg}
+                    p="3"
+                    borderRadius="lg"
+                    borderWidth="1px"
+                    borderColor={theme.surfaceBorder}
+                  >
+                    <Text fontSize="xs" color={theme.faintText} mb="1">
+                      {display.detailLabel}
+                    </Text>
+                    <Text fontSize="sm" fontWeight="semibold" color="cyan.300">
+                      {display.detail}
+                    </Text>
+                  </Box>
+                )}
+
+                {/* Action Button */}
+                <Button
+                  size={{ base: "md", md: "lg" }}
+                  colorScheme={isCurrentCompleted ? "green" : "blue"}
+                  onClick={() => onTaskSelect(currentTask, currentTask.taskType, currentTask.originalIndex)}
+                  width="100%"
+                >
+                  {isCurrentCompleted
+                    ? t("financialChart.task.review")
+                    : t("financialChart.task.start")}
+                </Button>
+              </VStack>
+            </Box>
+
+            {/* Navigation */}
+            <HStack justify="space-between">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onPreviousTask}
+                isDisabled={safeIndex === 0}
+                leftIcon={<Text>←</Text>}
+              >
+                {t("financialChart.task.previous")}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onNextTask}
+                isDisabled={safeIndex >= totalTasks - 1}
+                rightIcon={<Text>→</Text>}
+              >
+                {t("financialChart.task.next")}
+              </Button>
+            </HStack>
+
+            {/* Up Next Preview */}
+            {safeIndex < totalTasks - 1 && (
+              <Box>
+                <Text fontSize="xs" color={theme.faintText} mb="2" textTransform="uppercase">
+                  {t("financialChart.task.upNext")}
+                </Text>
+                <VStack align="stretch" spacing="2">
+                  {tasks.slice(safeIndex + 1, safeIndex + 3).map((task, idx) => {
+                    const taskDisplay = getTaskDisplay(task);
+                    const isCompleted = completedTasks?.has(task?.id);
+                    return (
+                      <HStack
+                        key={task.id || idx}
+                        p="2"
+                        bg={theme.insetBg}
+                        borderRadius="lg"
+                        opacity={0.7}
+                        spacing="3"
+                      >
+                        <Text fontSize="md">{isCompleted ? "✓" : taskDisplay.icon}</Text>
+                        <Text fontSize="sm" color={theme.mutedText} flex="1" isTruncated>
+                          {taskDisplay.title}
+                        </Text>
+                        <Badge colorScheme={taskDisplay.badgeColor} fontSize="2xs">
+                          {taskDisplay.badge}
+                        </Badge>
+                      </HStack>
+                    );
+                  })}
+                </VStack>
+              </Box>
+            )}
+          </>
         )}
 
         {/* Completed Tasks History */}
@@ -4151,6 +4200,14 @@ export function FinancialChart({
     openInteraction(task, type, originalIndex);
   };
 
+  const handleGenerateNewTasks = () => {
+    if (!onItemUpdate) return;
+    const prompt = t("financialChart.prompts.generateNewTasks");
+    onItemUpdate(prompt);
+    // Reset task index to start from beginning with new tasks
+    setCurrentTaskIndex(0);
+  };
+
   const openPortfolioModal = () => {
     setPortfolioDraft(
       portfolioAllocations.map((allocation) => ({ ...allocation })),
@@ -4610,6 +4667,8 @@ export function FinancialChart({
                   onTaskSelect={handleTaskSelect}
                   onNextTask={handleNextTask}
                   onPreviousTask={handlePreviousTask}
+                  onGenerateNewTasks={handleGenerateNewTasks}
+                  isGenerating={isUpdating}
                   t={t}
                 />
 
