@@ -379,17 +379,17 @@ function PlanHeader({ plan, potentialSavings, t }) {
   );
 }
 
-// Quest Progress - Gamified step-through interface
-function QuestProgress({
+// Task Progress - Step-through interface
+function TaskProgress({
   strategies,
   actionItems,
   expenses,
   weeklyCheckIn,
-  currentQuestIndex,
-  completedQuests,
-  onQuestSelect,
-  onNextQuest,
-  onPreviousQuest,
+  currentTaskIndex,
+  completedTasks,
+  onTaskSelect,
+  onNextTask,
+  onPreviousTask,
   t,
 }) {
   const theme = useChartTheme();
@@ -408,8 +408,8 @@ function QuestProgress({
     }
   );
 
-  // Build unified quest list: strategies first (easy to hard), then actions, then expenses
-  const quests = useMemo(() => {
+  // Build unified task list: strategies first (easy to hard), then actions, then expenses
+  const tasks = useMemo(() => {
     const items = [];
 
     // Add strategies sorted by difficulty (easy first)
@@ -418,17 +418,17 @@ function QuestProgress({
       (a, b) => (difficultyOrder[a.difficulty] || 1) - (difficultyOrder[b.difficulty] || 1)
     );
     sortedStrategies.forEach((s, idx) => {
-      items.push({ ...s, questType: "strategy", originalIndex: idx });
+      items.push({ ...s, taskType: "strategy", originalIndex: idx });
     });
 
     // Add action items
     (actionItems || []).forEach((a, idx) => {
-      items.push({ ...a, questType: "action", originalIndex: idx });
+      items.push({ ...a, taskType: "action", originalIndex: idx });
     });
 
     // Add weekly check-in if exists
     if (weeklyCheckIn) {
-      items.push({ ...weeklyCheckIn, questType: "weekly", originalIndex: null });
+      items.push({ ...weeklyCheckIn, taskType: "weekly", originalIndex: null });
     }
 
     // Add expenses (discretionary first - most actionable)
@@ -437,74 +437,75 @@ function QuestProgress({
       (a, b) => (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1)
     );
     sortedExpenses.forEach((e, idx) => {
-      items.push({ ...e, questType: "expense", originalIndex: idx });
+      items.push({ ...e, taskType: "expense", originalIndex: idx });
     });
 
     return items;
   }, [strategies, actionItems, expenses, weeklyCheckIn]);
 
-  if (quests.length === 0) return null;
+  if (tasks.length === 0) return null;
 
-  const totalQuests = quests.length;
-  const currentQuest = quests[currentQuestIndex] || quests[0];
-  const completedCount = completedQuests?.size || 0;
-  const progressPercent = Math.round((completedCount / totalQuests) * 100);
-  const isCurrentCompleted = completedQuests?.has(currentQuest?.id);
+  const totalTasks = tasks.length;
+  const safeIndex = Math.min(currentTaskIndex, totalTasks - 1);
+  const currentTask = tasks[safeIndex] || tasks[0];
+  const completedCount = completedTasks?.size || 0;
+  const progressPercent = Math.round((completedCount / totalTasks) * 100);
+  const isCurrentCompleted = completedTasks?.has(currentTask?.id);
 
-  // Get display info based on quest type
-  const getQuestDisplay = (quest) => {
-    if (!quest) return {};
+  // Get display info based on task type
+  const getTaskDisplay = (task) => {
+    if (!task) return {};
 
-    switch (quest.questType) {
+    switch (task.taskType) {
       case "strategy": {
-        const diffConfig = difficultyConfigMap[quest.difficulty] || difficultyConfigMap.medium;
+        const diffConfig = difficultyConfigMap[task.difficulty] || difficultyConfigMap.medium;
         return {
-          icon: quest.difficulty === "easy" ? "🎯" : quest.difficulty === "hard" ? "🏔️" : "💡",
-          title: quest.title,
-          description: quest.description,
+          icon: task.difficulty === "easy" ? "🎯" : task.difficulty === "hard" ? "🏔️" : "💡",
+          title: task.title,
+          description: task.description,
           badge: diffConfig.label,
           badgeColor: diffConfig.color,
-          detail: quest.impact,
-          detailLabel: t("financialChart.quest.potentialImpact"),
-          typeLabel: t("financialChart.quest.typeStrategy"),
+          detail: task.impact,
+          detailLabel: t("financialChart.task.potentialImpact"),
+          typeLabel: t("financialChart.task.typeStrategy"),
         };
       }
       case "action": {
-        const catConfig = categoryConfigMap[quest.category] || categoryConfigMap.track;
+        const catConfig = categoryConfigMap[task.category] || categoryConfigMap.track;
         return {
           icon: catConfig.icon,
-          title: quest.action,
+          title: task.action,
           description: null,
           badge: catConfig.label,
-          badgeColor: quest.category === "cut" ? "red" : quest.category === "earn" ? "green" : "blue",
-          detail: quest.timeframe,
-          detailLabel: t("financialChart.quest.timeframe"),
-          typeLabel: t("financialChart.quest.typeAction"),
+          badgeColor: task.category === "cut" ? "red" : task.category === "earn" ? "green" : "blue",
+          detail: task.timeframe,
+          detailLabel: t("financialChart.task.timeframe"),
+          typeLabel: t("financialChart.task.typeAction"),
         };
       }
       case "weekly": {
         return {
           icon: "📅",
           title: t("financialChart.weeklyCheckInLabel"),
-          description: quest.text,
-          badge: t("financialChart.quest.recurring"),
+          description: task.text,
+          badge: t("financialChart.task.recurring"),
           badgeColor: "purple",
-          detail: t("financialChart.quest.weeklyDetail"),
-          detailLabel: t("financialChart.quest.frequency"),
-          typeLabel: t("financialChart.quest.typeHabit"),
+          detail: t("financialChart.task.weeklyDetail"),
+          detailLabel: t("financialChart.task.frequency"),
+          typeLabel: t("financialChart.task.typeHabit"),
         };
       }
       case "expense": {
-        const priConfig = priorityConfig[quest.priority] || priorityConfig.important;
+        const priConfig = priorityConfig[task.priority] || priorityConfig.important;
         return {
-          icon: quest.priority === "discretionary" ? "🎮" : quest.priority === "essential" ? "🏠" : "⚖️",
-          title: quest.name,
-          description: quest.recommendation,
+          icon: task.priority === "discretionary" ? "🎮" : task.priority === "essential" ? "🏠" : "⚖️",
+          title: task.name,
+          description: task.recommendation,
           badge: priConfig.label,
           badgeColor: priConfig.badge,
-          detail: formatCurrency(quest.amount),
-          detailLabel: t("financialChart.quest.monthlyAmount"),
-          typeLabel: t("financialChart.quest.typeExpense"),
+          detail: formatCurrency(task.amount),
+          detailLabel: t("financialChart.task.monthlyAmount"),
+          typeLabel: t("financialChart.task.typeExpense"),
         };
       }
       default:
@@ -512,7 +513,7 @@ function QuestProgress({
     }
   };
 
-  const display = getQuestDisplay(currentQuest);
+  const display = getTaskDisplay(currentTask);
 
   return (
     <Box
@@ -522,21 +523,19 @@ function QuestProgress({
       borderWidth="1px"
       borderColor={theme.surfaceBorder}
     >
-      {/* Progress Header */}
       <VStack align="stretch" spacing={{ base: "4", md: "5" }}>
+        {/* Header */}
         <HStack justify="space-between" flexWrap="wrap" gap="2">
           <VStack align="start" spacing="0">
             <Text
-              fontSize={{ base: "xs", md: "sm" }}
-              fontWeight="semibold"
-              color={theme.mutedText}
-              textTransform="uppercase"
-              letterSpacing="wide"
+              fontSize={{ base: "sm", md: "md" }}
+              fontWeight="bold"
+              color={theme.highlightText}
             >
-              {t("financialChart.quest.yourJourney")}
+              {t("financialChart.task.yourPlan")}
             </Text>
-            <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color={theme.highlightText}>
-              {t("financialChart.quest.progress", { completed: completedCount, total: totalQuests })}
+            <Text fontSize={{ base: "xs", md: "sm" }} color={theme.mutedText}>
+              {t("financialChart.task.progress", { completed: completedCount, total: totalTasks })}
             </Text>
           </VStack>
           <Box
@@ -552,24 +551,22 @@ function QuestProgress({
         </HStack>
 
         {/* Progress Bar */}
-        <Box>
+        <Box
+          h="2"
+          bg={theme.insetBg}
+          borderRadius="full"
+          overflow="hidden"
+        >
           <Box
-            h="2"
-            bg={theme.insetBg}
+            h="100%"
+            w={`${progressPercent}%`}
+            bg="green.500"
             borderRadius="full"
-            overflow="hidden"
-          >
-            <Box
-              h="100%"
-              w={`${progressPercent}%`}
-              bg="green.500"
-              borderRadius="full"
-              transition="width 0.3s ease"
-            />
-          </Box>
+            transition="width 0.3s ease"
+          />
         </Box>
 
-        {/* Current Quest Card */}
+        {/* Current Task Card */}
         <Box
           p={{ base: "4", md: "5" }}
           bg={isCurrentCompleted ? "green.900" : theme.insetBg}
@@ -578,7 +575,7 @@ function QuestProgress({
           borderColor={isCurrentCompleted ? "green.600" : "blue.600"}
           position="relative"
         >
-          {/* Quest Number Badge */}
+          {/* Step Badge */}
           <Box
             position="absolute"
             top="-3"
@@ -589,7 +586,7 @@ function QuestProgress({
             borderRadius="full"
           >
             <Text fontSize="xs" fontWeight="bold" color="white">
-              {t("financialChart.quest.stepOf", { current: currentQuestIndex + 1, total: totalQuests })}
+              {t("financialChart.task.stepOf", { current: safeIndex + 1, total: totalTasks })}
             </Text>
           </Box>
 
@@ -605,7 +602,7 @@ function QuestProgress({
               borderRadius="full"
             >
               <Text fontSize="xs" fontWeight="bold" color="white">
-                ✓ {t("financialChart.quest.completed")}
+                ✓ {t("financialChart.task.completed")}
               </Text>
             </Box>
           )}
@@ -674,12 +671,12 @@ function QuestProgress({
             <Button
               size={{ base: "md", md: "lg" }}
               colorScheme={isCurrentCompleted ? "green" : "blue"}
-              onClick={() => onQuestSelect(currentQuest, currentQuest.questType, currentQuest.originalIndex)}
+              onClick={() => onTaskSelect(currentTask, currentTask.taskType, currentTask.originalIndex)}
               width="100%"
             >
               {isCurrentCompleted
-                ? t("financialChart.quest.reviewQuest")
-                : t("financialChart.quest.startQuest")}
+                ? t("financialChart.task.review")
+                : t("financialChart.task.start")}
             </Button>
           </VStack>
         </Box>
@@ -689,48 +686,48 @@ function QuestProgress({
           <Button
             size="sm"
             variant="ghost"
-            onClick={onPreviousQuest}
-            isDisabled={currentQuestIndex === 0}
+            onClick={onPreviousTask}
+            isDisabled={safeIndex === 0}
             leftIcon={<Text>←</Text>}
           >
-            {t("financialChart.quest.previous")}
+            {t("financialChart.task.previous")}
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            onClick={onNextQuest}
-            isDisabled={currentQuestIndex >= totalQuests - 1}
+            onClick={onNextTask}
+            isDisabled={safeIndex >= totalTasks - 1}
             rightIcon={<Text>→</Text>}
           >
-            {t("financialChart.quest.next")}
+            {t("financialChart.task.next")}
           </Button>
         </HStack>
 
-        {/* Upcoming Quests Preview */}
-        {currentQuestIndex < totalQuests - 1 && (
+        {/* Up Next Preview */}
+        {safeIndex < totalTasks - 1 && (
           <Box>
             <Text fontSize="xs" color={theme.faintText} mb="2" textTransform="uppercase">
-              {t("financialChart.quest.upNext")}
+              {t("financialChart.task.upNext")}
             </Text>
             <VStack align="stretch" spacing="2">
-              {quests.slice(currentQuestIndex + 1, currentQuestIndex + 3).map((quest, idx) => {
-                const qDisplay = getQuestDisplay(quest);
-                const isCompleted = completedQuests?.has(quest?.id);
+              {tasks.slice(safeIndex + 1, safeIndex + 3).map((task, idx) => {
+                const taskDisplay = getTaskDisplay(task);
+                const isCompleted = completedTasks?.has(task?.id);
                 return (
                   <HStack
-                    key={quest.id || idx}
+                    key={task.id || idx}
                     p="2"
                     bg={theme.insetBg}
                     borderRadius="lg"
                     opacity={0.7}
                     spacing="3"
                   >
-                    <Text fontSize="md">{isCompleted ? "✓" : qDisplay.icon}</Text>
+                    <Text fontSize="md">{isCompleted ? "✓" : taskDisplay.icon}</Text>
                     <Text fontSize="sm" color={theme.mutedText} flex="1" isTruncated>
-                      {qDisplay.title}
+                      {taskDisplay.title}
                     </Text>
-                    <Badge colorScheme={qDisplay.badgeColor} fontSize="2xs">
-                      {qDisplay.badge}
+                    <Badge colorScheme={taskDisplay.badgeColor} fontSize="2xs">
+                      {taskDisplay.badge}
                     </Badge>
                   </HStack>
                 );
@@ -3758,8 +3755,8 @@ export function FinancialChart({
   const [taxDraft, setTaxDraft] = useState(STANDARD_TAX_ALLOCATIONS);
   const [taxModalOpen, setTaxModalOpen] = useState(false);
   // Quest progress state
-  const [currentQuestIndex, setCurrentQuestIndex] = useState(0);
-  const [completedQuests, setCompletedQuests] = useState(new Set());
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+  const [completedTasks, setCompletedTasks] = useState(new Set());
 
   if (!data) return null;
 
@@ -4040,9 +4037,11 @@ export function FinancialChart({
     if (!prompt) return;
     setInteractionAction(action);
     onItemUpdate(prompt);
-    // Mark quest as complete when completing
+    // On complete: mark done, close modal, advance to next
     if (action === "complete" && interaction.item?.id) {
-      markQuestComplete(interaction.item.id);
+      markTaskComplete(interaction.item.id);
+      closeInteraction();
+      advanceToNextTask();
     }
   };
 
@@ -4051,22 +4050,26 @@ export function FinancialChart({
     setInteractionIndex(null);
   };
 
-  // Quest navigation functions
-  const handleNextQuest = () => {
-    setCurrentQuestIndex((prev) => prev + 1);
+  // Task navigation functions
+  const advanceToNextTask = () => {
+    setCurrentTaskIndex((prev) => prev + 1);
   };
 
-  const handlePreviousQuest = () => {
-    setCurrentQuestIndex((prev) => Math.max(0, prev - 1));
+  const handleNextTask = () => {
+    setCurrentTaskIndex((prev) => prev + 1);
   };
 
-  const handleQuestSelect = (quest, type, originalIndex) => {
-    openInteraction(quest, type, originalIndex);
+  const handlePreviousTask = () => {
+    setCurrentTaskIndex((prev) => Math.max(0, prev - 1));
   };
 
-  const markQuestComplete = (questId) => {
-    if (questId) {
-      setCompletedQuests((prev) => new Set([...prev, questId]));
+  const handleTaskSelect = (task, type, originalIndex) => {
+    openInteraction(task, type, originalIndex);
+  };
+
+  const markTaskComplete = (taskId) => {
+    if (taskId) {
+      setCompletedTasks((prev) => new Set([...prev, taskId]));
     }
   };
 
@@ -4514,29 +4517,29 @@ export function FinancialChart({
               </VStack>
             )}
 
-            {/* Your Plan Tab - Gamified Step-Through */}
+            {/* Your Plan Tab - Step-Through Tasks */}
             {activeTab === 1 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                {/* Your Roadmap - Visual Progress */}
+                {/* Step-Through Task Progress - Primary Focus */}
+                <TaskProgress
+                  strategies={interactiveStrategies}
+                  actionItems={interactiveActions}
+                  expenses={interactiveExpenses}
+                  weeklyCheckIn={interactiveWeeklyCheckIn}
+                  currentTaskIndex={currentTaskIndex}
+                  completedTasks={completedTasks}
+                  onTaskSelect={handleTaskSelect}
+                  onNextTask={handleNextTask}
+                  onPreviousTask={handlePreviousTask}
+                  t={t}
+                />
+
+                {/* Your Roadmap - Visual Savings Progress */}
                 <BirdsEyeView
                   currentSavings={data.currentSavings || 0}
                   savingsGoal={data.savingsGoal}
                   monthlySavings={monthlySavings}
                   expenses={expenses}
-                  t={t}
-                />
-
-                {/* Quest Progress - One Objective at a Time */}
-                <QuestProgress
-                  strategies={interactiveStrategies}
-                  actionItems={interactiveActions}
-                  expenses={interactiveExpenses}
-                  weeklyCheckIn={interactiveWeeklyCheckIn}
-                  currentQuestIndex={currentQuestIndex}
-                  completedQuests={completedQuests}
-                  onQuestSelect={handleQuestSelect}
-                  onNextQuest={handleNextQuest}
-                  onPreviousQuest={handlePreviousQuest}
                   t={t}
                 />
 
