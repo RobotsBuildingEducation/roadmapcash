@@ -379,6 +379,370 @@ function PlanHeader({ plan, potentialSavings, t }) {
   );
 }
 
+// Quest Progress - Gamified step-through interface
+function QuestProgress({
+  strategies,
+  actionItems,
+  expenses,
+  weeklyCheckIn,
+  currentQuestIndex,
+  completedQuests,
+  onQuestSelect,
+  onNextQuest,
+  onPreviousQuest,
+  t,
+}) {
+  const theme = useChartTheme();
+  const difficultyConfigMap = getDifficultyConfig(t);
+  const categoryConfigMap = getCategoryConfig(t);
+  const priorityConfig = useColorModeValue(
+    {
+      essential: { badge: "blue", label: t("financialChart.priorityLabels.essential") },
+      important: { badge: "purple", label: t("financialChart.priorityLabels.important") },
+      discretionary: { badge: "orange", label: t("financialChart.priorityLabels.discretionary") },
+    },
+    {
+      essential: { badge: "blue", label: t("financialChart.priorityLabels.essential") },
+      important: { badge: "purple", label: t("financialChart.priorityLabels.important") },
+      discretionary: { badge: "orange", label: t("financialChart.priorityLabels.discretionary") },
+    }
+  );
+
+  // Build unified quest list: strategies first (easy to hard), then actions, then expenses
+  const quests = useMemo(() => {
+    const items = [];
+
+    // Add strategies sorted by difficulty (easy first)
+    const difficultyOrder = { easy: 0, medium: 1, hard: 2 };
+    const sortedStrategies = [...(strategies || [])].sort(
+      (a, b) => (difficultyOrder[a.difficulty] || 1) - (difficultyOrder[b.difficulty] || 1)
+    );
+    sortedStrategies.forEach((s, idx) => {
+      items.push({ ...s, questType: "strategy", originalIndex: idx });
+    });
+
+    // Add action items
+    (actionItems || []).forEach((a, idx) => {
+      items.push({ ...a, questType: "action", originalIndex: idx });
+    });
+
+    // Add weekly check-in if exists
+    if (weeklyCheckIn) {
+      items.push({ ...weeklyCheckIn, questType: "weekly", originalIndex: null });
+    }
+
+    // Add expenses (discretionary first - most actionable)
+    const priorityOrder = { discretionary: 0, important: 1, essential: 2 };
+    const sortedExpenses = [...(expenses || [])].sort(
+      (a, b) => (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1)
+    );
+    sortedExpenses.forEach((e, idx) => {
+      items.push({ ...e, questType: "expense", originalIndex: idx });
+    });
+
+    return items;
+  }, [strategies, actionItems, expenses, weeklyCheckIn]);
+
+  if (quests.length === 0) return null;
+
+  const totalQuests = quests.length;
+  const currentQuest = quests[currentQuestIndex] || quests[0];
+  const completedCount = completedQuests?.size || 0;
+  const progressPercent = Math.round((completedCount / totalQuests) * 100);
+  const isCurrentCompleted = completedQuests?.has(currentQuest?.id);
+
+  // Get display info based on quest type
+  const getQuestDisplay = (quest) => {
+    if (!quest) return {};
+
+    switch (quest.questType) {
+      case "strategy": {
+        const diffConfig = difficultyConfigMap[quest.difficulty] || difficultyConfigMap.medium;
+        return {
+          icon: quest.difficulty === "easy" ? "🎯" : quest.difficulty === "hard" ? "🏔️" : "💡",
+          title: quest.title,
+          description: quest.description,
+          badge: diffConfig.label,
+          badgeColor: diffConfig.color,
+          detail: quest.impact,
+          detailLabel: t("financialChart.quest.potentialImpact"),
+          typeLabel: t("financialChart.quest.typeStrategy"),
+        };
+      }
+      case "action": {
+        const catConfig = categoryConfigMap[quest.category] || categoryConfigMap.track;
+        return {
+          icon: catConfig.icon,
+          title: quest.action,
+          description: null,
+          badge: catConfig.label,
+          badgeColor: quest.category === "cut" ? "red" : quest.category === "earn" ? "green" : "blue",
+          detail: quest.timeframe,
+          detailLabel: t("financialChart.quest.timeframe"),
+          typeLabel: t("financialChart.quest.typeAction"),
+        };
+      }
+      case "weekly": {
+        return {
+          icon: "📅",
+          title: t("financialChart.weeklyCheckInLabel"),
+          description: quest.text,
+          badge: t("financialChart.quest.recurring"),
+          badgeColor: "purple",
+          detail: t("financialChart.quest.weeklyDetail"),
+          detailLabel: t("financialChart.quest.frequency"),
+          typeLabel: t("financialChart.quest.typeHabit"),
+        };
+      }
+      case "expense": {
+        const priConfig = priorityConfig[quest.priority] || priorityConfig.important;
+        return {
+          icon: quest.priority === "discretionary" ? "🎮" : quest.priority === "essential" ? "🏠" : "⚖️",
+          title: quest.name,
+          description: quest.recommendation,
+          badge: priConfig.label,
+          badgeColor: priConfig.badge,
+          detail: formatCurrency(quest.amount),
+          detailLabel: t("financialChart.quest.monthlyAmount"),
+          typeLabel: t("financialChart.quest.typeExpense"),
+        };
+      }
+      default:
+        return {};
+    }
+  };
+
+  const display = getQuestDisplay(currentQuest);
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "6" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      {/* Progress Header */}
+      <VStack align="stretch" spacing={{ base: "4", md: "5" }}>
+        <HStack justify="space-between" flexWrap="wrap" gap="2">
+          <VStack align="start" spacing="0">
+            <Text
+              fontSize={{ base: "xs", md: "sm" }}
+              fontWeight="semibold"
+              color={theme.mutedText}
+              textTransform="uppercase"
+              letterSpacing="wide"
+            >
+              {t("financialChart.quest.yourJourney")}
+            </Text>
+            <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color={theme.highlightText}>
+              {t("financialChart.quest.progress", { completed: completedCount, total: totalQuests })}
+            </Text>
+          </VStack>
+          <Box
+            bg="green.900"
+            px="3"
+            py="1"
+            borderRadius="full"
+          >
+            <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold" color="green.300">
+              {progressPercent}%
+            </Text>
+          </Box>
+        </HStack>
+
+        {/* Progress Bar */}
+        <Box>
+          <Box
+            h="2"
+            bg={theme.insetBg}
+            borderRadius="full"
+            overflow="hidden"
+          >
+            <Box
+              h="100%"
+              w={`${progressPercent}%`}
+              bg="green.500"
+              borderRadius="full"
+              transition="width 0.3s ease"
+            />
+          </Box>
+        </Box>
+
+        {/* Current Quest Card */}
+        <Box
+          p={{ base: "4", md: "5" }}
+          bg={isCurrentCompleted ? "green.900" : theme.insetBg}
+          borderRadius="xl"
+          borderWidth="2px"
+          borderColor={isCurrentCompleted ? "green.600" : "blue.600"}
+          position="relative"
+        >
+          {/* Quest Number Badge */}
+          <Box
+            position="absolute"
+            top="-3"
+            left="4"
+            bg="blue.600"
+            px="3"
+            py="1"
+            borderRadius="full"
+          >
+            <Text fontSize="xs" fontWeight="bold" color="white">
+              {t("financialChart.quest.stepOf", { current: currentQuestIndex + 1, total: totalQuests })}
+            </Text>
+          </Box>
+
+          {/* Completed Badge */}
+          {isCurrentCompleted && (
+            <Box
+              position="absolute"
+              top="-3"
+              right="4"
+              bg="green.600"
+              px="3"
+              py="1"
+              borderRadius="full"
+            >
+              <Text fontSize="xs" fontWeight="bold" color="white">
+                ✓ {t("financialChart.quest.completed")}
+              </Text>
+            </Box>
+          )}
+
+          <VStack align="stretch" spacing="3" pt="2">
+            {/* Type and Badge */}
+            <HStack justify="space-between" flexWrap="wrap" gap="2">
+              <Text fontSize="xs" color={theme.faintText} textTransform="uppercase">
+                {display.typeLabel}
+              </Text>
+              <Badge colorScheme={display.badgeColor} fontSize="xs">
+                {display.badge}
+              </Badge>
+            </HStack>
+
+            {/* Icon and Title */}
+            <HStack spacing="3" align="start">
+              <Box
+                w={{ base: "10", md: "12" }}
+                h={{ base: "10", md: "12" }}
+                borderRadius="xl"
+                bg={isCurrentCompleted ? "green.800" : "blue.900"}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                fontSize={{ base: "xl", md: "2xl" }}
+                flexShrink="0"
+              >
+                {isCurrentCompleted ? "✓" : display.icon}
+              </Box>
+              <VStack align="start" spacing="1" flex="1">
+                <Text
+                  fontSize={{ base: "md", md: "lg" }}
+                  fontWeight="bold"
+                  color={theme.highlightText}
+                >
+                  {display.title}
+                </Text>
+                {display.description && (
+                  <Text fontSize={{ base: "sm", md: "md" }} color={theme.mutedText}>
+                    {display.description}
+                  </Text>
+                )}
+              </VStack>
+            </HStack>
+
+            {/* Detail Info */}
+            {display.detail && (
+              <Box
+                bg={theme.surfaceBg}
+                p="3"
+                borderRadius="lg"
+                borderWidth="1px"
+                borderColor={theme.surfaceBorder}
+              >
+                <Text fontSize="xs" color={theme.faintText} mb="1">
+                  {display.detailLabel}
+                </Text>
+                <Text fontSize="sm" fontWeight="semibold" color="cyan.300">
+                  {display.detail}
+                </Text>
+              </Box>
+            )}
+
+            {/* Action Button */}
+            <Button
+              size={{ base: "md", md: "lg" }}
+              colorScheme={isCurrentCompleted ? "green" : "blue"}
+              onClick={() => onQuestSelect(currentQuest, currentQuest.questType, currentQuest.originalIndex)}
+              width="100%"
+            >
+              {isCurrentCompleted
+                ? t("financialChart.quest.reviewQuest")
+                : t("financialChart.quest.startQuest")}
+            </Button>
+          </VStack>
+        </Box>
+
+        {/* Navigation */}
+        <HStack justify="space-between">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onPreviousQuest}
+            isDisabled={currentQuestIndex === 0}
+            leftIcon={<Text>←</Text>}
+          >
+            {t("financialChart.quest.previous")}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onNextQuest}
+            isDisabled={currentQuestIndex >= totalQuests - 1}
+            rightIcon={<Text>→</Text>}
+          >
+            {t("financialChart.quest.next")}
+          </Button>
+        </HStack>
+
+        {/* Upcoming Quests Preview */}
+        {currentQuestIndex < totalQuests - 1 && (
+          <Box>
+            <Text fontSize="xs" color={theme.faintText} mb="2" textTransform="uppercase">
+              {t("financialChart.quest.upNext")}
+            </Text>
+            <VStack align="stretch" spacing="2">
+              {quests.slice(currentQuestIndex + 1, currentQuestIndex + 3).map((quest, idx) => {
+                const qDisplay = getQuestDisplay(quest);
+                const isCompleted = completedQuests?.has(quest?.id);
+                return (
+                  <HStack
+                    key={quest.id || idx}
+                    p="2"
+                    bg={theme.insetBg}
+                    borderRadius="lg"
+                    opacity={0.7}
+                    spacing="3"
+                  >
+                    <Text fontSize="md">{isCompleted ? "✓" : qDisplay.icon}</Text>
+                    <Text fontSize="sm" color={theme.mutedText} flex="1" isTruncated>
+                      {qDisplay.title}
+                    </Text>
+                    <Badge colorScheme={qDisplay.badgeColor} fontSize="2xs">
+                      {qDisplay.badge}
+                    </Badge>
+                  </HStack>
+                );
+              })}
+            </VStack>
+          </Box>
+        )}
+      </VStack>
+    </Box>
+  );
+}
+
 // Expense Analysis with recommendations
 function ExpenseAnalysis({ expenses, onSelect, t }) {
   if (!expenses || expenses.length === 0) return null;
@@ -3393,6 +3757,9 @@ export function FinancialChart({
   );
   const [taxDraft, setTaxDraft] = useState(STANDARD_TAX_ALLOCATIONS);
   const [taxModalOpen, setTaxModalOpen] = useState(false);
+  // Quest progress state
+  const [currentQuestIndex, setCurrentQuestIndex] = useState(0);
+  const [completedQuests, setCompletedQuests] = useState(new Set());
 
   if (!data) return null;
 
@@ -3673,11 +4040,34 @@ export function FinancialChart({
     if (!prompt) return;
     setInteractionAction(action);
     onItemUpdate(prompt);
+    // Mark quest as complete when completing
+    if (action === "complete" && interaction.item?.id) {
+      markQuestComplete(interaction.item.id);
+    }
   };
 
   const closeInteraction = () => {
     setInteraction(null);
     setInteractionIndex(null);
+  };
+
+  // Quest navigation functions
+  const handleNextQuest = () => {
+    setCurrentQuestIndex((prev) => prev + 1);
+  };
+
+  const handlePreviousQuest = () => {
+    setCurrentQuestIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleQuestSelect = (quest, type, originalIndex) => {
+    openInteraction(quest, type, originalIndex);
+  };
+
+  const markQuestComplete = (questId) => {
+    if (questId) {
+      setCompletedQuests((prev) => new Set([...prev, questId]));
+    }
   };
 
   const openPortfolioModal = () => {
@@ -4124,10 +4514,10 @@ export function FinancialChart({
               </VStack>
             )}
 
-            {/* Your Plan Tab - All Actionable Items */}
+            {/* Your Plan Tab - Gamified Step-Through */}
             {activeTab === 1 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                {/* Your Roadmap */}
+                {/* Your Roadmap - Visual Progress */}
                 <BirdsEyeView
                   currentSavings={data.currentSavings || 0}
                   savingsGoal={data.savingsGoal}
@@ -4136,32 +4526,17 @@ export function FinancialChart({
                   t={t}
                 />
 
-                <Grid
-                  templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
-                  gap={{ base: "3", md: "5" }}
-                >
-                  <GridItem>
-                    <SavingsStrategies
-                      strategies={interactiveStrategies}
-                      onSelect={openInteraction}
-                      t={t}
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <ActionItems
-                      actionItems={interactiveActions}
-                      weeklyCheckIn={interactiveWeeklyCheckIn}
-                      onSelect={openInteraction}
-                      onSelectWeekly={openInteraction}
-                      t={t}
-                    />
-                  </GridItem>
-                </Grid>
-
-                {/* Expenses */}
-                <ExpenseAnalysis
+                {/* Quest Progress - One Objective at a Time */}
+                <QuestProgress
+                  strategies={interactiveStrategies}
+                  actionItems={interactiveActions}
                   expenses={interactiveExpenses}
-                  onSelect={openInteraction}
+                  weeklyCheckIn={interactiveWeeklyCheckIn}
+                  currentQuestIndex={currentQuestIndex}
+                  completedQuests={completedQuests}
+                  onQuestSelect={handleQuestSelect}
+                  onNextQuest={handleNextQuest}
+                  onPreviousQuest={handlePreviousQuest}
                   t={t}
                 />
 
