@@ -474,6 +474,11 @@ ${updateRequest}`;
         };
         const finalized = finalizeFinancialData(parsed, fallback);
 
+        // Preserve completedTasks from current data if not in parsed result
+        if (currentData.completedTasks && !finalized.completedTasks) {
+          finalized.completedTasks = currentData.completedTasks;
+        }
+
         setFinancialData(finalized);
         return finalized;
       } catch (err) {
@@ -521,6 +526,11 @@ ${updateRequest}`;
           plan: currentData.plan || {},
         };
         const finalized = finalizeFinancialData(parsed, fallback);
+
+        // Preserve completedTasks from current data (AI doesn't return these)
+        if (currentData.completedTasks) {
+          finalized.completedTasks = currentData.completedTasks;
+        }
 
         setFinancialData(finalized);
         return finalized;
