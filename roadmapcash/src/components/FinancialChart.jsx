@@ -396,6 +396,23 @@ function TaskProgress({
   t,
 }) {
   const theme = useChartTheme();
+  const [isLocalGenerating, setIsLocalGenerating] = useState(false);
+
+  // Combined loading state - show spinner if either local or parent says generating
+  const showLoading = isLocalGenerating || isGenerating;
+
+  // Wrapped handler to manage local loading state
+  const handleGenerateClick = () => {
+    setIsLocalGenerating(true);
+    onGenerateNewTasks();
+  };
+
+  // Reset local loading when parent indicates done
+  useEffect(() => {
+    if (!isGenerating && isLocalGenerating) {
+      setIsLocalGenerating(false);
+    }
+  }, [isGenerating, isLocalGenerating]);
 
   // Theme-aware colors for completed/success states
   const successColors = {
@@ -662,8 +679,8 @@ function TaskProgress({
               <Button
                 size="lg"
                 colorScheme="green"
-                onClick={onGenerateNewTasks}
-                isLoading={isGenerating}
+                onClick={handleGenerateClick}
+                isLoading={showLoading}
                 loadingText={t("financialChart.task.generating")}
               >
                 {t("financialChart.task.generateNew")}
