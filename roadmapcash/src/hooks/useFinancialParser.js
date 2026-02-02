@@ -522,6 +522,11 @@ ${updateRequest}`;
         };
         const finalized = finalizeFinancialData(parsed, fallback);
 
+        // Preserve completedTasks from current data (AI doesn't return these)
+        if (currentData.completedTasks) {
+          finalized.completedTasks = currentData.completedTasks;
+        }
+
         setFinancialData(finalized);
         return finalized;
       } catch (err) {

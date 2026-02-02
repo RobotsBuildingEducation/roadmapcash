@@ -396,6 +396,24 @@ function TaskProgress({
   t,
 }) {
   const theme = useChartTheme();
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
+
+  // Reset local loading when new tasks arrive (strategies/actionItems change)
+  const tasksKey = JSON.stringify([
+    strategies?.map((s) => s.id),
+    actionItems?.map((a) => a.id),
+  ]);
+
+  useEffect(() => {
+    if (isLocalLoading) {
+      setIsLocalLoading(false);
+    }
+  }, [tasksKey]);
+
+  const handleGenerateClick = () => {
+    setIsLocalLoading(true);
+    onGenerateNewTasks();
+  };
 
   // Theme-aware colors for completed/success states
   const successColors = {
@@ -662,8 +680,8 @@ function TaskProgress({
               <Button
                 size="lg"
                 colorScheme="green"
-                onClick={onGenerateNewTasks}
-                isLoading={isGenerating}
+                onClick={handleGenerateClick}
+                isLoading={isLocalLoading || isGenerating}
                 loadingText={t("financialChart.task.generating")}
               >
                 {t("financialChart.task.generateNew")}
