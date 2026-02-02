@@ -396,25 +396,6 @@ function TaskProgress({
   t,
 }) {
   const theme = useChartTheme();
-<<<<<<< HEAD
-  const [isLocalGenerating, setIsLocalGenerating] = useState(false);
-
-  // Combined loading state - show spinner if either local or parent says generating
-  const showLoading = isLocalGenerating || isGenerating;
-
-  // Wrapped handler to manage local loading state
-  const handleGenerateClick = () => {
-    setIsLocalGenerating(true);
-    onGenerateNewTasks();
-  };
-
-  // Reset local loading when parent indicates done
-  useEffect(() => {
-    if (!isGenerating && isLocalGenerating) {
-      setIsLocalGenerating(false);
-    }
-  }, [isGenerating, isLocalGenerating]);
-=======
   const [isLocalLoading, setIsLocalLoading] = useState(false);
 
   // Reset local loading when new tasks arrive (strategies/actionItems change)
@@ -433,7 +414,6 @@ function TaskProgress({
     setIsLocalLoading(true);
     onGenerateNewTasks();
   };
->>>>>>> 8cb0768728279d38b0abbd30995b221ddefce7ff
 
   // Theme-aware colors for completed/success states
   const successColors = {
@@ -701,11 +681,7 @@ function TaskProgress({
                 size="lg"
                 colorScheme="green"
                 onClick={handleGenerateClick}
-<<<<<<< HEAD
-                isLoading={showLoading}
-=======
                 isLoading={isLocalLoading || isGenerating}
->>>>>>> 8cb0768728279d38b0abbd30995b221ddefce7ff
                 loadingText={t("financialChart.task.generating")}
               >
                 {t("financialChart.task.generateNew")}
@@ -720,7 +696,9 @@ function TaskProgress({
               bg={isCurrentCompleted ? successColors.cardBg : theme.insetBg}
               borderRadius="xl"
               borderWidth="2px"
-              borderColor={isCurrentCompleted ? successColors.cardBorder : "blue.600"}
+              borderColor={
+                isCurrentCompleted ? successColors.cardBorder : "blue.600"
+              }
               position="relative"
             >
               {/* Step Badge */}
@@ -779,7 +757,9 @@ function TaskProgress({
                     w={{ base: "10", md: "12" }}
                     h={{ base: "10", md: "12" }}
                     borderRadius="xl"
-                    bg={isCurrentCompleted ? successColors.cardIconBg : "blue.900"}
+                    bg={
+                      isCurrentCompleted ? successColors.cardIconBg : "blue.900"
+                    }
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
