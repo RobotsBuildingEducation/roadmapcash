@@ -396,6 +396,22 @@ function TaskProgress({
   t,
 }) {
   const theme = useChartTheme();
+
+  // Theme-aware colors for completed/success states
+  const successColors = {
+    boxBg: useColorModeValue("green.50", "green.900"),
+    boxBorder: useColorModeValue("green.300", "green.500"),
+    iconBg: useColorModeValue("green.100", "green.800"),
+    titleText: useColorModeValue("green.800", "green.100"),
+    subText: useColorModeValue("green.600", "green.300"),
+    historyBg: useColorModeValue("green.50", "green.900"),
+    historyCheck: useColorModeValue("green.600", "green.300"),
+    historyText: useColorModeValue("green.800", "green.100"),
+    historyDate: useColorModeValue("green.500", "green.400"),
+    cardBg: useColorModeValue("green.50", "green.900"),
+    cardBorder: useColorModeValue("green.300", "green.600"),
+    cardIconBg: useColorModeValue("green.100", "green.800"),
+  };
   const difficultyConfigMap = getDifficultyConfig(t);
   const categoryConfigMap = getCategoryConfig(t);
   const priorityConfig = useColorModeValue(
@@ -610,10 +626,10 @@ function TaskProgress({
         {allTasksCompleted ? (
           <Box
             p={{ base: "5", md: "6" }}
-            bg="green.900"
+            bg={successColors.boxBg}
             borderRadius="xl"
             borderWidth="2px"
-            borderColor="green.500"
+            borderColor={successColors.boxBorder}
             textAlign="center"
           >
             <VStack spacing="4">
@@ -621,7 +637,7 @@ function TaskProgress({
                 w="16"
                 h="16"
                 borderRadius="full"
-                bg="green.800"
+                bg={successColors.iconBg}
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
@@ -633,11 +649,11 @@ function TaskProgress({
                 <Text
                   fontSize={{ base: "lg", md: "xl" }}
                   fontWeight="bold"
-                  color="green.100"
+                  color={successColors.titleText}
                 >
                   {t("financialChart.task.allCompleted")}
                 </Text>
-                <Text fontSize="sm" color="green.300">
+                <Text fontSize="sm" color={successColors.subText}>
                   {t("financialChart.task.allCompletedSub", {
                     count: totalTasks,
                   })}
@@ -659,10 +675,10 @@ function TaskProgress({
             {/* Current Task Card */}
             <Box
               p={{ base: "4", md: "5" }}
-              bg={isCurrentCompleted ? "green.900" : theme.insetBg}
+              bg={isCurrentCompleted ? successColors.cardBg : theme.insetBg}
               borderRadius="xl"
               borderWidth="2px"
-              borderColor={isCurrentCompleted ? "green.600" : "blue.600"}
+              borderColor={isCurrentCompleted ? successColors.cardBorder : "blue.600"}
               position="relative"
             >
               {/* Step Badge */}
@@ -689,7 +705,7 @@ function TaskProgress({
                   position="absolute"
                   top="-3"
                   right="4"
-                  bg="green.600"
+                  bg="green.500"
                   px="3"
                   py="1"
                   borderRadius="full"
@@ -721,7 +737,7 @@ function TaskProgress({
                     w={{ base: "10", md: "12" }}
                     h={{ base: "10", md: "12" }}
                     borderRadius="xl"
-                    bg={isCurrentCompleted ? "green.800" : "blue.900"}
+                    bg={isCurrentCompleted ? successColors.cardIconBg : "blue.900"}
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
@@ -859,48 +875,6 @@ function TaskProgress({
               </Box>
             )}
           </>
-        )}
-
-        {/* Completed Tasks History */}
-        {completedTasksHistory && completedTasksHistory.length > 0 && (
-          <Box>
-            <Text
-              fontSize="xs"
-              color={theme.faintText}
-              mb="2"
-              textTransform="uppercase"
-            >
-              {t("financialChart.task.completed")} (
-              {completedTasksHistory.length})
-            </Text>
-            <VStack align="stretch" spacing="2">
-              {completedTasksHistory
-                .slice(-5)
-                .reverse()
-                .map((task, idx) => (
-                  <HStack
-                    key={task.id || idx}
-                    p="2"
-                    bg="green.900"
-                    borderRadius="lg"
-                    spacing="3"
-                    opacity={0.8}
-                  >
-                    <Text fontSize="md" color="green.300">
-                      ✓
-                    </Text>
-                    <Text fontSize="sm" color="green.100" flex="1" isTruncated>
-                      {task.title}
-                    </Text>
-                    {task.completedAt && (
-                      <Text fontSize="2xs" color="green.400">
-                        {new Date(task.completedAt).toLocaleDateString()}
-                      </Text>
-                    )}
-                  </HStack>
-                ))}
-            </VStack>
-          </Box>
         )}
       </VStack>
     </Box>
@@ -3480,6 +3454,73 @@ function MonthlyChart({
   );
 }
 
+// Completed Tasks History - Shows history of completed tasks
+function CompletedTasksHistory({ completedTasksHistory, t }) {
+  const theme = useChartTheme();
+
+  // Theme-aware colors for completed/success states
+  const successColors = {
+    historyBg: useColorModeValue("green.50", "green.900"),
+    historyCheck: useColorModeValue("green.600", "green.300"),
+    historyText: useColorModeValue("green.800", "green.100"),
+    historyDate: useColorModeValue("green.500", "green.400"),
+  };
+
+  if (!completedTasksHistory || completedTasksHistory.length === 0) return null;
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "5" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <Text
+        fontSize="xs"
+        color={theme.faintText}
+        mb="3"
+        textTransform="uppercase"
+        fontWeight="semibold"
+      >
+        {t("financialChart.task.completed")} ({completedTasksHistory.length})
+      </Text>
+      <VStack align="stretch" spacing="2">
+        {completedTasksHistory
+          .slice(-5)
+          .reverse()
+          .map((task, idx) => (
+            <HStack
+              key={task.id || idx}
+              p="2"
+              bg={successColors.historyBg}
+              borderRadius="lg"
+              spacing="3"
+              opacity={0.9}
+            >
+              <Text fontSize="md" color={successColors.historyCheck}>
+                ✓
+              </Text>
+              <Text
+                fontSize="sm"
+                color={successColors.historyText}
+                flex="1"
+                isTruncated
+              >
+                {task.title}
+              </Text>
+              {task.completedAt && (
+                <Text fontSize="2xs" color={successColors.historyDate}>
+                  {new Date(task.completedAt).toLocaleDateString()}
+                </Text>
+              )}
+            </HStack>
+          ))}
+      </VStack>
+    </Box>
+  );
+}
+
 // Bird's Eye View - Timeline
 function BirdsEyeView({
   currentSavings,
@@ -4768,6 +4809,12 @@ export function FinancialChart({
                     (interactiveExpenses?.length || 0) +
                     (interactiveWeeklyCheckIn ? 1 : 0)
                   }
+                  t={t}
+                />
+
+                {/* Completed Tasks History - at bottom */}
+                <CompletedTasksHistory
+                  completedTasksHistory={data.completedTasks || []}
                   t={t}
                 />
               </VStack>
