@@ -207,7 +207,7 @@ const useChartTheme = () => ({
   elevatedBorder: useColorModeValue("gray.200", "gray.800"),
   insetBg: useColorModeValue("gray.50", "gray.750"),
   insetBorder: useColorModeValue("gray.200", "gray.700"),
-  mutedText: useColorModeValue("gray.600", "gray.400"),
+  mutedText: useColorModeValue("black", "white"),
   subText: useColorModeValue("gray.600", "gray.300"),
   faintText: useColorModeValue("gray.500", "gray.500"),
   highlightText: useColorModeValue("gray.700", "gray.200"),
@@ -400,15 +400,33 @@ function TaskProgress({
   const categoryConfigMap = getCategoryConfig(t);
   const priorityConfig = useColorModeValue(
     {
-      essential: { badge: "blue", label: t("financialChart.priorityLabels.essential") },
-      important: { badge: "purple", label: t("financialChart.priorityLabels.important") },
-      discretionary: { badge: "orange", label: t("financialChart.priorityLabels.discretionary") },
+      essential: {
+        badge: "blue",
+        label: t("financialChart.priorityLabels.essential"),
+      },
+      important: {
+        badge: "purple",
+        label: t("financialChart.priorityLabels.important"),
+      },
+      discretionary: {
+        badge: "orange",
+        label: t("financialChart.priorityLabels.discretionary"),
+      },
     },
     {
-      essential: { badge: "blue", label: t("financialChart.priorityLabels.essential") },
-      important: { badge: "purple", label: t("financialChart.priorityLabels.important") },
-      discretionary: { badge: "orange", label: t("financialChart.priorityLabels.discretionary") },
-    }
+      essential: {
+        badge: "blue",
+        label: t("financialChart.priorityLabels.essential"),
+      },
+      important: {
+        badge: "purple",
+        label: t("financialChart.priorityLabels.important"),
+      },
+      discretionary: {
+        badge: "orange",
+        label: t("financialChart.priorityLabels.discretionary"),
+      },
+    },
   );
 
   // Build unified task list: strategies first (easy to hard), then actions, then expenses
@@ -418,7 +436,9 @@ function TaskProgress({
     // Add strategies sorted by difficulty (easy first)
     const difficultyOrder = { easy: 0, medium: 1, hard: 2 };
     const sortedStrategies = [...(strategies || [])].sort(
-      (a, b) => (difficultyOrder[a.difficulty] || 1) - (difficultyOrder[b.difficulty] || 1)
+      (a, b) =>
+        (difficultyOrder[a.difficulty] || 1) -
+        (difficultyOrder[b.difficulty] || 1),
     );
     sortedStrategies.forEach((s, idx) => {
       items.push({ ...s, taskType: "strategy", originalIndex: idx });
@@ -437,7 +457,8 @@ function TaskProgress({
     // Add expenses (discretionary first - most actionable)
     const priorityOrder = { discretionary: 0, important: 1, essential: 2 };
     const sortedExpenses = [...(expenses || [])].sort(
-      (a, b) => (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1)
+      (a, b) =>
+        (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1),
     );
     sortedExpenses.forEach((e, idx) => {
       items.push({ ...e, taskType: "expense", originalIndex: idx });
@@ -462,9 +483,15 @@ function TaskProgress({
 
     switch (task.taskType) {
       case "strategy": {
-        const diffConfig = difficultyConfigMap[task.difficulty] || difficultyConfigMap.medium;
+        const diffConfig =
+          difficultyConfigMap[task.difficulty] || difficultyConfigMap.medium;
         return {
-          icon: task.difficulty === "easy" ? "🎯" : task.difficulty === "hard" ? "🏔️" : "💡",
+          icon:
+            task.difficulty === "easy"
+              ? "🎯"
+              : task.difficulty === "hard"
+                ? "🏔️"
+                : "💡",
           title: task.title,
           description: task.description,
           badge: diffConfig.label,
@@ -475,13 +502,19 @@ function TaskProgress({
         };
       }
       case "action": {
-        const catConfig = categoryConfigMap[task.category] || categoryConfigMap.track;
+        const catConfig =
+          categoryConfigMap[task.category] || categoryConfigMap.track;
         return {
           icon: catConfig.icon,
           title: task.action,
           description: null,
           badge: catConfig.label,
-          badgeColor: task.category === "cut" ? "red" : task.category === "earn" ? "green" : "blue",
+          badgeColor:
+            task.category === "cut"
+              ? "red"
+              : task.category === "earn"
+                ? "green"
+                : "blue",
           detail: task.timeframe,
           detailLabel: t("financialChart.task.timeframe"),
           typeLabel: t("financialChart.task.typeAction"),
@@ -500,9 +533,15 @@ function TaskProgress({
         };
       }
       case "expense": {
-        const priConfig = priorityConfig[task.priority] || priorityConfig.important;
+        const priConfig =
+          priorityConfig[task.priority] || priorityConfig.important;
         return {
-          icon: task.priority === "discretionary" ? "🎮" : task.priority === "essential" ? "🏠" : "⚖️",
+          icon:
+            task.priority === "discretionary"
+              ? "🎮"
+              : task.priority === "essential"
+                ? "🏠"
+                : "⚖️",
           title: task.name,
           description: task.recommendation,
           badge: priConfig.label,
@@ -539,28 +578,25 @@ function TaskProgress({
               {t("financialChart.task.yourPlan")}
             </Text>
             <Text fontSize={{ base: "xs", md: "sm" }} color={theme.mutedText}>
-              {t("financialChart.task.progress", { completed: completedCount, total: totalTasks })}
+              {t("financialChart.task.progress", {
+                completed: completedCount,
+                total: totalTasks,
+              })}
             </Text>
           </VStack>
-          <Box
-            bg="green.900"
-            px="3"
-            py="1"
-            borderRadius="full"
-          >
-            <Text fontSize={{ base: "xs", md: "sm" }} fontWeight="bold" color="green.300">
+          <Box bg="green.900" px="3" py="1" borderRadius="full">
+            <Text
+              fontSize={{ base: "xs", md: "sm" }}
+              fontWeight="bold"
+              color="green.300"
+            >
               {progressPercent}%
             </Text>
           </Box>
         </HStack>
 
         {/* Progress Bar */}
-        <Box
-          h="2"
-          bg={theme.insetBg}
-          borderRadius="full"
-          overflow="hidden"
-        >
+        <Box h="2" bg={theme.insetBg} borderRadius="full" overflow="hidden">
           <Box
             h="100%"
             w={`${progressPercent}%`}
@@ -594,11 +630,17 @@ function TaskProgress({
                 🎉
               </Box>
               <VStack spacing="1">
-                <Text fontSize={{ base: "lg", md: "xl" }} fontWeight="bold" color="green.100">
+                <Text
+                  fontSize={{ base: "lg", md: "xl" }}
+                  fontWeight="bold"
+                  color="green.100"
+                >
                   {t("financialChart.task.allCompleted")}
                 </Text>
                 <Text fontSize="sm" color="green.300">
-                  {t("financialChart.task.allCompletedSub", { count: totalTasks })}
+                  {t("financialChart.task.allCompletedSub", {
+                    count: totalTasks,
+                  })}
                 </Text>
               </VStack>
               <Button
@@ -634,7 +676,10 @@ function TaskProgress({
                 borderRadius="full"
               >
                 <Text fontSize="xs" fontWeight="bold" color="white">
-                  {t("financialChart.task.stepOf", { current: safeIndex + 1, total: totalTasks })}
+                  {t("financialChart.task.stepOf", {
+                    current: safeIndex + 1,
+                    total: totalTasks,
+                  })}
                 </Text>
               </Box>
 
@@ -658,7 +703,11 @@ function TaskProgress({
               <VStack align="stretch" spacing="3" pt="2">
                 {/* Type and Badge */}
                 <HStack justify="space-between" flexWrap="wrap" gap="2">
-                  <Text fontSize="xs" color={theme.faintText} textTransform="uppercase">
+                  <Text
+                    fontSize="xs"
+                    color={theme.faintText}
+                    textTransform="uppercase"
+                  >
                     {display.typeLabel}
                   </Text>
                   <Badge colorScheme={display.badgeColor} fontSize="xs">
@@ -690,7 +739,10 @@ function TaskProgress({
                       {display.title}
                     </Text>
                     {display.description && (
-                      <Text fontSize={{ base: "sm", md: "md" }} color={theme.mutedText}>
+                      <Text
+                        fontSize={{ base: "sm", md: "md" }}
+                        color={theme.mutedText}
+                      >
                         {display.description}
                       </Text>
                     )}
@@ -719,7 +771,13 @@ function TaskProgress({
                 <Button
                   size={{ base: "md", md: "lg" }}
                   colorScheme={isCurrentCompleted ? "green" : "blue"}
-                  onClick={() => onTaskSelect(currentTask, currentTask.taskType, currentTask.originalIndex)}
+                  onClick={() =>
+                    onTaskSelect(
+                      currentTask,
+                      currentTask.taskType,
+                      currentTask.originalIndex,
+                    )
+                  }
                   width="100%"
                 >
                   {isCurrentCompleted
@@ -754,32 +812,49 @@ function TaskProgress({
             {/* Up Next Preview */}
             {safeIndex < totalTasks - 1 && (
               <Box>
-                <Text fontSize="xs" color={theme.faintText} mb="2" textTransform="uppercase">
+                <Text
+                  fontSize="xs"
+                  color={theme.faintText}
+                  mb="2"
+                  textTransform="uppercase"
+                >
                   {t("financialChart.task.upNext")}
                 </Text>
                 <VStack align="stretch" spacing="2">
-                  {tasks.slice(safeIndex + 1, safeIndex + 3).map((task, idx) => {
-                    const taskDisplay = getTaskDisplay(task);
-                    const isCompleted = completedTasks?.has(task?.id);
-                    return (
-                      <HStack
-                        key={task.id || idx}
-                        p="2"
-                        bg={theme.insetBg}
-                        borderRadius="lg"
-                        opacity={0.7}
-                        spacing="3"
-                      >
-                        <Text fontSize="md">{isCompleted ? "✓" : taskDisplay.icon}</Text>
-                        <Text fontSize="sm" color={theme.mutedText} flex="1" isTruncated>
-                          {taskDisplay.title}
-                        </Text>
-                        <Badge colorScheme={taskDisplay.badgeColor} fontSize="2xs">
-                          {taskDisplay.badge}
-                        </Badge>
-                      </HStack>
-                    );
-                  })}
+                  {tasks
+                    .slice(safeIndex + 1, safeIndex + 3)
+                    .map((task, idx) => {
+                      const taskDisplay = getTaskDisplay(task);
+                      const isCompleted = completedTasks?.has(task?.id);
+                      return (
+                        <HStack
+                          key={task.id || idx}
+                          p="2"
+                          bg={theme.insetBg}
+                          borderRadius="lg"
+                          opacity={0.7}
+                          spacing="3"
+                        >
+                          <Text fontSize="md">
+                            {isCompleted ? "✓" : taskDisplay.icon}
+                          </Text>
+                          <Text
+                            fontSize="sm"
+                            color={theme.mutedText}
+                            flex="1"
+                            isTruncated
+                          >
+                            {taskDisplay.title}
+                          </Text>
+                          <Badge
+                            colorScheme={taskDisplay.badgeColor}
+                            fontSize="2xs"
+                          >
+                            {taskDisplay.badge}
+                          </Badge>
+                        </HStack>
+                      );
+                    })}
                 </VStack>
               </Box>
             )}
@@ -789,30 +864,41 @@ function TaskProgress({
         {/* Completed Tasks History */}
         {completedTasksHistory && completedTasksHistory.length > 0 && (
           <Box>
-            <Text fontSize="xs" color={theme.faintText} mb="2" textTransform="uppercase">
-              {t("financialChart.task.completed")} ({completedTasksHistory.length})
+            <Text
+              fontSize="xs"
+              color={theme.faintText}
+              mb="2"
+              textTransform="uppercase"
+            >
+              {t("financialChart.task.completed")} (
+              {completedTasksHistory.length})
             </Text>
             <VStack align="stretch" spacing="2">
-              {completedTasksHistory.slice(-5).reverse().map((task, idx) => (
-                <HStack
-                  key={task.id || idx}
-                  p="2"
-                  bg="green.900"
-                  borderRadius="lg"
-                  spacing="3"
-                  opacity={0.8}
-                >
-                  <Text fontSize="md" color="green.300">✓</Text>
-                  <Text fontSize="sm" color="green.100" flex="1" isTruncated>
-                    {task.title}
-                  </Text>
-                  {task.completedAt && (
-                    <Text fontSize="2xs" color="green.400">
-                      {new Date(task.completedAt).toLocaleDateString()}
+              {completedTasksHistory
+                .slice(-5)
+                .reverse()
+                .map((task, idx) => (
+                  <HStack
+                    key={task.id || idx}
+                    p="2"
+                    bg="green.900"
+                    borderRadius="lg"
+                    spacing="3"
+                    opacity={0.8}
+                  >
+                    <Text fontSize="md" color="green.300">
+                      ✓
                     </Text>
-                  )}
-                </HStack>
-              ))}
+                    <Text fontSize="sm" color="green.100" flex="1" isTruncated>
+                      {task.title}
+                    </Text>
+                    {task.completedAt && (
+                      <Text fontSize="2xs" color="green.400">
+                        {new Date(task.completedAt).toLocaleDateString()}
+                      </Text>
+                    )}
+                  </HStack>
+                ))}
             </VStack>
           </Box>
         )}
@@ -3406,9 +3492,10 @@ function BirdsEyeView({
 }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const theme = useChartTheme();
-  const taskProgressPercent = totalTasksCount > 0
-    ? Math.round((completedTasksCount / totalTasksCount) * 100)
-    : 0;
+  const taskProgressPercent =
+    totalTasksCount > 0
+      ? Math.round((completedTasksCount / totalTasksCount) * 100)
+      : 0;
 
   const milestones = useMemo(() => {
     if (!savingsGoal || monthlySavings <= 0) return [];
@@ -3568,12 +3655,7 @@ function BirdsEyeView({
               {completedTasksCount} / {totalTasksCount}
             </Text>
           </HStack>
-          <Box
-            h="2"
-            bg={theme.insetBg}
-            borderRadius="full"
-            overflow="hidden"
-          >
+          <Box h="2" bg={theme.insetBg} borderRadius="full" overflow="hidden">
             <Box
               h="100%"
               w={`${taskProgressPercent}%`}
@@ -3876,7 +3958,7 @@ export function FinancialChart({
 
   // Get completed task IDs from persisted data
   const completedTaskIds = new Set(
-    (data.completedTasks || []).map((t) => t.id)
+    (data.completedTasks || []).map((t) => t.id),
   );
 
   const expenses = data.expenses || [];
@@ -4672,6 +4754,7 @@ export function FinancialChart({
                   t={t}
                 />
 
+                <MotivationalNote note={plan?.motivationalNote} t={t} />
                 {/* Your Roadmap - Visual Savings Progress */}
                 <BirdsEyeView
                   currentSavings={data.currentSavings || 0}
@@ -4687,8 +4770,6 @@ export function FinancialChart({
                   }
                   t={t}
                 />
-
-                <MotivationalNote note={plan?.motivationalNote} t={t} />
               </VStack>
             )}
           </Box>
