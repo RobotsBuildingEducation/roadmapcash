@@ -1,6 +1,7 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { keyframes } from "@emotion/react";
+import { AnimatedLogo } from "@/components/AnimatedLogo";
 import {
   Box,
   VStack,
@@ -397,6 +398,13 @@ function TaskProgress({
 }) {
   const theme = useChartTheme();
   const [isLocalLoading, setIsLocalLoading] = useState(false);
+  const [loaderStep, setLoaderStep] = useState(0);
+
+  // Loader messages for task generation
+  const loaderMessages = useMemo(
+    () => t("financialChart.task.generatingLoaderMessages"),
+    [t],
+  );
 
   // Reset local loading when new tasks arrive (strategies/actionItems change)
   const tasksKey = JSON.stringify([
@@ -407,13 +415,34 @@ function TaskProgress({
   useEffect(() => {
     if (isLocalLoading) {
       setIsLocalLoading(false);
+      setLoaderStep(0);
     }
   }, [tasksKey]);
+
+  // Rotate loader messages when generating
+  useEffect(() => {
+    if (!isLocalLoading && !isGenerating) {
+      setLoaderStep(0);
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setLoaderStep((prev) => (prev + 1) % loaderMessages.length);
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [isLocalLoading, isGenerating, loaderMessages.length]);
 
   const handleGenerateClick = () => {
     setIsLocalLoading(true);
     onGenerateNewTasks();
   };
+
+  // Animation for loader text
+  const loaderFade = keyframes`
+    0%, 100% { opacity: 0; }
+    15%, 85% { opacity: 1; }
+  `;
 
   // Theme-aware colors for completed/success states
   const successColors = {
@@ -650,43 +679,63 @@ function TaskProgress({
             borderColor={successColors.boxBorder}
             textAlign="center"
           >
-            <VStack spacing="4">
-              <Box
-                w="16"
-                h="16"
-                borderRadius="full"
-                bg={successColors.iconBg}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                fontSize="3xl"
-              >
-                🎉
-              </Box>
-              <VStack spacing="1">
+            {isLocalLoading || isGenerating ? (
+              <VStack spacing="4">
+                <AnimatedLogo showWordmark={false} size={100} />
                 <Text
                   fontSize={{ base: "lg", md: "xl" }}
-                  fontWeight="bold"
+                  fontWeight="semibold"
                   color={successColors.titleText}
                 >
-                  {t("financialChart.task.allCompleted")}
+                  {t("financialChart.task.generating")}
                 </Text>
-                <Text fontSize="sm" color={successColors.subText}>
-                  {t("financialChart.task.allCompletedSub", {
-                    count: totalTasks,
-                  })}
+                <Text
+                  key={loaderStep}
+                  color={successColors.subText}
+                  fontSize="sm"
+                  textAlign="center"
+                  animation={`${loaderFade} 2s ease-in-out`}
+                >
+                  {loaderMessages[loaderStep]}
                 </Text>
               </VStack>
-              <Button
-                size="lg"
-                colorScheme="green"
-                onClick={handleGenerateClick}
-                isLoading={isLocalLoading || isGenerating}
-                loadingText={t("financialChart.task.generating")}
-              >
-                {t("financialChart.task.generateNew")}
-              </Button>
-            </VStack>
+            ) : (
+              <VStack spacing="4">
+                <Box
+                  w="16"
+                  h="16"
+                  borderRadius="full"
+                  bg={successColors.iconBg}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  fontSize="3xl"
+                >
+                  🎉
+                </Box>
+                <VStack spacing="1">
+                  <Text
+                    fontSize={{ base: "lg", md: "xl" }}
+                    fontWeight="bold"
+                    color={successColors.titleText}
+                  >
+                    {t("financialChart.task.allCompleted")}
+                  </Text>
+                  <Text fontSize="sm" color={successColors.subText}>
+                    {t("financialChart.task.allCompletedSub", {
+                      count: totalTasks,
+                    })}
+                  </Text>
+                </VStack>
+                <Button
+                  size="lg"
+                  colorScheme="green"
+                  onClick={handleGenerateClick}
+                >
+                  {t("financialChart.task.generateNew")}
+                </Button>
+              </VStack>
+            )}
           </Box>
         ) : (
           <>

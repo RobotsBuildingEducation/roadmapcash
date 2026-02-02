@@ -304,6 +304,12 @@ export const translations = {
           "You've finished all {count} tasks. Ready for a new set?",
         generateNew: "Generate New Tasks",
         generating: "Generating...",
+        generatingLoaderMessages: [
+          "Designing new savings strategies...",
+          "Creating action items for this week...",
+          "Preparing your next weekly check-in...",
+          "Finalizing your new tasks...",
+        ],
       },
     },
     ai: {
@@ -679,6 +685,12 @@ Respond in English.`,
         allCompletedSub: "Completaste las {count} tareas. ¿Listo para nuevas?",
         generateNew: "Generar Nuevas Tareas",
         generating: "Generando...",
+        generatingLoaderMessages: [
+          "Diseñando nuevas estrategias de ahorro...",
+          "Creando acciones para esta semana...",
+          "Preparando tu próximo check-in semanal...",
+          "Finalizando tus nuevas tareas...",
+        ],
       },
     },
     ai: {
