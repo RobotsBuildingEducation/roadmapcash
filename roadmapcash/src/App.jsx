@@ -125,6 +125,23 @@ function App() {
     await saveRoadmap(userInput, updated, "Tax optimizer update");
   };
 
+  const handleTaskComplete = async (completedTask) => {
+    if (!financialData) return;
+    const existingCompleted = financialData.completedTasks || [];
+    const updated = {
+      ...financialData,
+      completedTasks: [
+        ...existingCompleted,
+        {
+          ...completedTask,
+          completedAt: new Date().toISOString(),
+        },
+      ],
+    };
+    setFinancialData(updated);
+    await saveRoadmap(userInput, updated, "Task completed");
+  };
+
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
 
   useEffect(() => {
@@ -310,6 +327,7 @@ function App() {
                 onItemUpdate={handleItemUpdate}
                 onPortfolioSave={handlePortfolioSave}
                 onTaxPlannerSave={handleTaxPlannerSave}
+                onTaskComplete={handleTaskComplete}
                 isUpdating={isUpdating}
               />
             )}

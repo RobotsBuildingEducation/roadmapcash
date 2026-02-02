@@ -207,7 +207,7 @@ const useChartTheme = () => ({
   elevatedBorder: useColorModeValue("gray.200", "gray.800"),
   insetBg: useColorModeValue("gray.50", "gray.750"),
   insetBorder: useColorModeValue("gray.200", "gray.700"),
-  mutedText: useColorModeValue("gray.600", "gray.400"),
+  mutedText: useColorModeValue("black", "white"),
   subText: useColorModeValue("gray.600", "gray.300"),
   faintText: useColorModeValue("gray.500", "gray.500"),
   highlightText: useColorModeValue("gray.700", "gray.200"),
@@ -373,6 +373,534 @@ function PlanHeader({ plan, potentialSavings, t }) {
               </Text>
             </Box>
           </Grid>
+        )}
+      </VStack>
+    </Box>
+  );
+}
+
+// Task Progress - Step-through interface
+function TaskProgress({
+  strategies,
+  actionItems,
+  expenses,
+  weeklyCheckIn,
+  currentTaskIndex,
+  completedTasks,
+  completedTasksHistory,
+  onTaskSelect,
+  onNextTask,
+  onPreviousTask,
+  onGenerateNewTasks,
+  isGenerating,
+  t,
+}) {
+  const theme = useChartTheme();
+  const difficultyConfigMap = getDifficultyConfig(t);
+  const categoryConfigMap = getCategoryConfig(t);
+  const priorityConfig = useColorModeValue(
+    {
+      essential: {
+        badge: "blue",
+        label: t("financialChart.priorityLabels.essential"),
+      },
+      important: {
+        badge: "purple",
+        label: t("financialChart.priorityLabels.important"),
+      },
+      discretionary: {
+        badge: "orange",
+        label: t("financialChart.priorityLabels.discretionary"),
+      },
+    },
+    {
+      essential: {
+        badge: "blue",
+        label: t("financialChart.priorityLabels.essential"),
+      },
+      important: {
+        badge: "purple",
+        label: t("financialChart.priorityLabels.important"),
+      },
+      discretionary: {
+        badge: "orange",
+        label: t("financialChart.priorityLabels.discretionary"),
+      },
+    },
+  );
+
+  // Build unified task list: strategies first (easy to hard), then actions, then expenses
+  const tasks = useMemo(() => {
+    const items = [];
+
+    // Add strategies sorted by difficulty (easy first)
+    const difficultyOrder = { easy: 0, medium: 1, hard: 2 };
+    const sortedStrategies = [...(strategies || [])].sort(
+      (a, b) =>
+        (difficultyOrder[a.difficulty] || 1) -
+        (difficultyOrder[b.difficulty] || 1),
+    );
+    sortedStrategies.forEach((s, idx) => {
+      items.push({ ...s, taskType: "strategy", originalIndex: idx });
+    });
+
+    // Add action items
+    (actionItems || []).forEach((a, idx) => {
+      items.push({ ...a, taskType: "action", originalIndex: idx });
+    });
+
+    // Add weekly check-in if exists
+    if (weeklyCheckIn) {
+      items.push({ ...weeklyCheckIn, taskType: "weekly", originalIndex: null });
+    }
+
+    // Add expenses (discretionary first - most actionable)
+    const priorityOrder = { discretionary: 0, important: 1, essential: 2 };
+    const sortedExpenses = [...(expenses || [])].sort(
+      (a, b) =>
+        (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1),
+    );
+    sortedExpenses.forEach((e, idx) => {
+      items.push({ ...e, taskType: "expense", originalIndex: idx });
+    });
+
+    return items;
+  }, [strategies, actionItems, expenses, weeklyCheckIn]);
+
+  if (tasks.length === 0) return null;
+
+  const totalTasks = tasks.length;
+  const safeIndex = Math.min(currentTaskIndex, totalTasks - 1);
+  const currentTask = tasks[safeIndex] || tasks[0];
+  const completedCount = completedTasks?.size || 0;
+  const progressPercent = Math.round((completedCount / totalTasks) * 100);
+  const isCurrentCompleted = completedTasks?.has(currentTask?.id);
+  const allTasksCompleted = completedCount >= totalTasks;
+
+  // Get display info based on task type
+  const getTaskDisplay = (task) => {
+    if (!task) return {};
+
+    switch (task.taskType) {
+      case "strategy": {
+        const diffConfig =
+          difficultyConfigMap[task.difficulty] || difficultyConfigMap.medium;
+        return {
+          icon:
+            task.difficulty === "easy"
+              ? "🎯"
+              : task.difficulty === "hard"
+                ? "🏔️"
+                : "💡",
+          title: task.title,
+          description: task.description,
+          badge: diffConfig.label,
+          badgeColor: diffConfig.color,
+          detail: task.impact,
+          detailLabel: t("financialChart.task.potentialImpact"),
+          typeLabel: t("financialChart.task.typeStrategy"),
+        };
+      }
+      case "action": {
+        const catConfig =
+          categoryConfigMap[task.category] || categoryConfigMap.track;
+        return {
+          icon: catConfig.icon,
+          title: task.action,
+          description: null,
+          badge: catConfig.label,
+          badgeColor:
+            task.category === "cut"
+              ? "red"
+              : task.category === "earn"
+                ? "green"
+                : "blue",
+          detail: task.timeframe,
+          detailLabel: t("financialChart.task.timeframe"),
+          typeLabel: t("financialChart.task.typeAction"),
+        };
+      }
+      case "weekly": {
+        return {
+          icon: "📅",
+          title: t("financialChart.weeklyCheckInLabel"),
+          description: task.text,
+          badge: t("financialChart.task.recurring"),
+          badgeColor: "purple",
+          detail: t("financialChart.task.weeklyDetail"),
+          detailLabel: t("financialChart.task.frequency"),
+          typeLabel: t("financialChart.task.typeHabit"),
+        };
+      }
+      case "expense": {
+        const priConfig =
+          priorityConfig[task.priority] || priorityConfig.important;
+        return {
+          icon:
+            task.priority === "discretionary"
+              ? "🎮"
+              : task.priority === "essential"
+                ? "🏠"
+                : "⚖️",
+          title: task.name,
+          description: task.recommendation,
+          badge: priConfig.label,
+          badgeColor: priConfig.badge,
+          detail: formatCurrency(task.amount),
+          detailLabel: t("financialChart.task.monthlyAmount"),
+          typeLabel: t("financialChart.task.typeExpense"),
+        };
+      }
+      default:
+        return {};
+    }
+  };
+
+  const display = getTaskDisplay(currentTask);
+
+  return (
+    <Box
+      bg={theme.surfaceBg}
+      borderRadius="xl"
+      p={{ base: "4", md: "6" }}
+      borderWidth="1px"
+      borderColor={theme.surfaceBorder}
+    >
+      <VStack align="stretch" spacing={{ base: "4", md: "5" }}>
+        {/* Header */}
+        <HStack justify="space-between" flexWrap="wrap" gap="2">
+          <VStack align="start" spacing="0">
+            <Text
+              fontSize={{ base: "sm", md: "md" }}
+              fontWeight="bold"
+              color={theme.highlightText}
+            >
+              {t("financialChart.task.yourPlan")}
+            </Text>
+            <Text fontSize={{ base: "xs", md: "sm" }} color={theme.mutedText}>
+              {t("financialChart.task.progress", {
+                completed: completedCount,
+                total: totalTasks,
+              })}
+            </Text>
+          </VStack>
+          <Box bg="green.900" px="3" py="1" borderRadius="full">
+            <Text
+              fontSize={{ base: "xs", md: "sm" }}
+              fontWeight="bold"
+              color="green.300"
+            >
+              {progressPercent}%
+            </Text>
+          </Box>
+        </HStack>
+
+        {/* Progress Bar */}
+        <Box h="2" bg={theme.insetBg} borderRadius="full" overflow="hidden">
+          <Box
+            h="100%"
+            w={`${progressPercent}%`}
+            bg="green.500"
+            borderRadius="full"
+            transition="width 0.3s ease"
+          />
+        </Box>
+
+        {/* All Tasks Completed State */}
+        {allTasksCompleted ? (
+          <Box
+            p={{ base: "5", md: "6" }}
+            bg="green.900"
+            borderRadius="xl"
+            borderWidth="2px"
+            borderColor="green.500"
+            textAlign="center"
+          >
+            <VStack spacing="4">
+              <Box
+                w="16"
+                h="16"
+                borderRadius="full"
+                bg="green.800"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                fontSize="3xl"
+              >
+                🎉
+              </Box>
+              <VStack spacing="1">
+                <Text
+                  fontSize={{ base: "lg", md: "xl" }}
+                  fontWeight="bold"
+                  color="green.100"
+                >
+                  {t("financialChart.task.allCompleted")}
+                </Text>
+                <Text fontSize="sm" color="green.300">
+                  {t("financialChart.task.allCompletedSub", {
+                    count: totalTasks,
+                  })}
+                </Text>
+              </VStack>
+              <Button
+                size="lg"
+                colorScheme="green"
+                onClick={onGenerateNewTasks}
+                isLoading={isGenerating}
+                loadingText={t("financialChart.task.generating")}
+              >
+                {t("financialChart.task.generateNew")}
+              </Button>
+            </VStack>
+          </Box>
+        ) : (
+          <>
+            {/* Current Task Card */}
+            <Box
+              p={{ base: "4", md: "5" }}
+              bg={isCurrentCompleted ? "green.900" : theme.insetBg}
+              borderRadius="xl"
+              borderWidth="2px"
+              borderColor={isCurrentCompleted ? "green.600" : "blue.600"}
+              position="relative"
+            >
+              {/* Step Badge */}
+              <Box
+                position="absolute"
+                top="-3"
+                left="4"
+                bg="blue.600"
+                px="3"
+                py="1"
+                borderRadius="full"
+              >
+                <Text fontSize="xs" fontWeight="bold" color="white">
+                  {t("financialChart.task.stepOf", {
+                    current: safeIndex + 1,
+                    total: totalTasks,
+                  })}
+                </Text>
+              </Box>
+
+              {/* Completed Badge */}
+              {isCurrentCompleted && (
+                <Box
+                  position="absolute"
+                  top="-3"
+                  right="4"
+                  bg="green.600"
+                  px="3"
+                  py="1"
+                  borderRadius="full"
+                >
+                  <Text fontSize="xs" fontWeight="bold" color="white">
+                    ✓ {t("financialChart.task.completed")}
+                  </Text>
+                </Box>
+              )}
+
+              <VStack align="stretch" spacing="3" pt="2">
+                {/* Type and Badge */}
+                <HStack justify="space-between" flexWrap="wrap" gap="2">
+                  <Text
+                    fontSize="xs"
+                    color={theme.faintText}
+                    textTransform="uppercase"
+                  >
+                    {display.typeLabel}
+                  </Text>
+                  <Badge colorScheme={display.badgeColor} fontSize="xs">
+                    {display.badge}
+                  </Badge>
+                </HStack>
+
+                {/* Icon and Title */}
+                <HStack spacing="3" align="start">
+                  <Box
+                    w={{ base: "10", md: "12" }}
+                    h={{ base: "10", md: "12" }}
+                    borderRadius="xl"
+                    bg={isCurrentCompleted ? "green.800" : "blue.900"}
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    fontSize={{ base: "xl", md: "2xl" }}
+                    flexShrink="0"
+                  >
+                    {isCurrentCompleted ? "✓" : display.icon}
+                  </Box>
+                  <VStack align="start" spacing="1" flex="1">
+                    <Text
+                      fontSize={{ base: "md", md: "lg" }}
+                      fontWeight="bold"
+                      color={theme.highlightText}
+                    >
+                      {display.title}
+                    </Text>
+                    {display.description && (
+                      <Text
+                        fontSize={{ base: "sm", md: "md" }}
+                        color={theme.mutedText}
+                      >
+                        {display.description}
+                      </Text>
+                    )}
+                  </VStack>
+                </HStack>
+
+                {/* Detail Info */}
+                {display.detail && (
+                  <Box
+                    bg={theme.surfaceBg}
+                    p="3"
+                    borderRadius="lg"
+                    borderWidth="1px"
+                    borderColor={theme.surfaceBorder}
+                  >
+                    <Text fontSize="xs" color={theme.faintText} mb="1">
+                      {display.detailLabel}
+                    </Text>
+                    <Text fontSize="sm" fontWeight="semibold" color="cyan.300">
+                      {display.detail}
+                    </Text>
+                  </Box>
+                )}
+
+                {/* Action Button */}
+                <Button
+                  size={{ base: "md", md: "lg" }}
+                  colorScheme={isCurrentCompleted ? "green" : "blue"}
+                  onClick={() =>
+                    onTaskSelect(
+                      currentTask,
+                      currentTask.taskType,
+                      currentTask.originalIndex,
+                    )
+                  }
+                  width="100%"
+                >
+                  {isCurrentCompleted
+                    ? t("financialChart.task.review")
+                    : t("financialChart.task.start")}
+                </Button>
+              </VStack>
+            </Box>
+
+            {/* Navigation */}
+            <HStack justify="space-between">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onPreviousTask}
+                isDisabled={safeIndex === 0}
+                leftIcon={<Text>←</Text>}
+              >
+                {t("financialChart.task.previous")}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onNextTask}
+                isDisabled={safeIndex >= totalTasks - 1}
+                rightIcon={<Text>→</Text>}
+              >
+                {t("financialChart.task.next")}
+              </Button>
+            </HStack>
+
+            {/* Up Next Preview */}
+            {safeIndex < totalTasks - 1 && (
+              <Box>
+                <Text
+                  fontSize="xs"
+                  color={theme.faintText}
+                  mb="2"
+                  textTransform="uppercase"
+                >
+                  {t("financialChart.task.upNext")}
+                </Text>
+                <VStack align="stretch" spacing="2">
+                  {tasks
+                    .slice(safeIndex + 1, safeIndex + 3)
+                    .map((task, idx) => {
+                      const taskDisplay = getTaskDisplay(task);
+                      const isCompleted = completedTasks?.has(task?.id);
+                      return (
+                        <HStack
+                          key={task.id || idx}
+                          p="2"
+                          bg={theme.insetBg}
+                          borderRadius="lg"
+                          opacity={0.7}
+                          spacing="3"
+                        >
+                          <Text fontSize="md">
+                            {isCompleted ? "✓" : taskDisplay.icon}
+                          </Text>
+                          <Text
+                            fontSize="sm"
+                            color={theme.mutedText}
+                            flex="1"
+                            isTruncated
+                          >
+                            {taskDisplay.title}
+                          </Text>
+                          <Badge
+                            colorScheme={taskDisplay.badgeColor}
+                            fontSize="2xs"
+                          >
+                            {taskDisplay.badge}
+                          </Badge>
+                        </HStack>
+                      );
+                    })}
+                </VStack>
+              </Box>
+            )}
+          </>
+        )}
+
+        {/* Completed Tasks History */}
+        {completedTasksHistory && completedTasksHistory.length > 0 && (
+          <Box>
+            <Text
+              fontSize="xs"
+              color={theme.faintText}
+              mb="2"
+              textTransform="uppercase"
+            >
+              {t("financialChart.task.completed")} (
+              {completedTasksHistory.length})
+            </Text>
+            <VStack align="stretch" spacing="2">
+              {completedTasksHistory
+                .slice(-5)
+                .reverse()
+                .map((task, idx) => (
+                  <HStack
+                    key={task.id || idx}
+                    p="2"
+                    bg="green.900"
+                    borderRadius="lg"
+                    spacing="3"
+                    opacity={0.8}
+                  >
+                    <Text fontSize="md" color="green.300">
+                      ✓
+                    </Text>
+                    <Text fontSize="sm" color="green.100" flex="1" isTruncated>
+                      {task.title}
+                    </Text>
+                    {task.completedAt && (
+                      <Text fontSize="2xs" color="green.400">
+                        {new Date(task.completedAt).toLocaleDateString()}
+                      </Text>
+                    )}
+                  </HStack>
+                ))}
+            </VStack>
+          </Box>
         )}
       </VStack>
     </Box>
@@ -2958,10 +3486,16 @@ function BirdsEyeView({
   savingsGoal,
   monthlySavings,
   expenses,
+  completedTasksCount,
+  totalTasksCount,
   t,
 }) {
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const theme = useChartTheme();
+  const taskProgressPercent =
+    totalTasksCount > 0
+      ? Math.round((completedTasksCount / totalTasksCount) * 100)
+      : 0;
 
   const milestones = useMemo(() => {
     if (!savingsGoal || monthlySavings <= 0) return [];
@@ -3109,6 +3643,29 @@ function BirdsEyeView({
           })}
         </Box>
       </Box>
+
+      {/* Task Progress */}
+      {totalTasksCount > 0 && (
+        <Box mb="5">
+          <HStack justify="space-between" mb="2">
+            <Text fontSize="xs" color={theme.faintText}>
+              {t("financialChart.taskProgress")}
+            </Text>
+            <Text fontSize="xs" color="blue.400" fontWeight="bold">
+              {completedTasksCount} / {totalTasksCount}
+            </Text>
+          </HStack>
+          <Box h="2" bg={theme.insetBg} borderRadius="full" overflow="hidden">
+            <Box
+              h="100%"
+              w={`${taskProgressPercent}%`}
+              bg="blue.500"
+              borderRadius="full"
+              transition="width 0.3s ease"
+            />
+          </Box>
+        </Box>
+      )}
 
       {milestones.length > 0 && (
         <VStack align="stretch" spacing={{ base: "2", md: "3" }}>
@@ -3359,6 +3916,7 @@ export function FinancialChart({
   onItemUpdate,
   onPortfolioSave,
   onTaxPlannerSave,
+  onTaskComplete,
   isUpdating,
 }) {
   const { t } = useI18n();
@@ -3393,8 +3951,15 @@ export function FinancialChart({
   );
   const [taxDraft, setTaxDraft] = useState(STANDARD_TAX_ALLOCATIONS);
   const [taxModalOpen, setTaxModalOpen] = useState(false);
+  // Task progress state
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
   if (!data) return null;
+
+  // Get completed task IDs from persisted data
+  const completedTaskIds = new Set(
+    (data.completedTasks || []).map((t) => t.id),
+  );
 
   const expenses = data.expenses || [];
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -3663,21 +4228,66 @@ export function FinancialChart({
     return "";
   };
 
-  const handleAiUpdate = (action) => {
+  // Handle "Try Different" - regenerate task via AI
+  const handleTryDifferent = () => {
     if (!interaction || !onItemUpdate) return;
     const prompt = buildInteractionPrompt(
       interaction.type,
       interaction.item,
-      action,
+      "remix",
     );
     if (!prompt) return;
-    setInteractionAction(action);
+    setInteractionAction("remix");
     onItemUpdate(prompt);
+    closeInteraction();
+  };
+
+  // Handle "Done" - mark complete, save, advance (no AI)
+  const handleMarkComplete = () => {
+    if (!interaction) return;
+    const task = interaction.item;
+    if (task && onTaskComplete) {
+      onTaskComplete({
+        id: task.id,
+        type: interaction.type,
+        title: task.title || task.action || task.name || task.text,
+        description: task.description || task.recommendation || null,
+        impact: task.impact || null,
+        amount: task.amount || null,
+      });
+    }
+    closeInteraction();
+    advanceToNextTask();
   };
 
   const closeInteraction = () => {
     setInteraction(null);
     setInteractionIndex(null);
+  };
+
+  // Task navigation functions
+  const advanceToNextTask = () => {
+    setCurrentTaskIndex((prev) => prev + 1);
+  };
+
+  const handleNextTask = () => {
+    setCurrentTaskIndex((prev) => prev + 1);
+  };
+
+  const handlePreviousTask = () => {
+    setCurrentTaskIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleTaskSelect = (task, type, originalIndex) => {
+    openInteraction(task, type, originalIndex);
+  };
+
+  const handleGenerateNewTasks = () => {
+    if (!onItemUpdate) return;
+    const prompt = t("financialChart.prompts.generateNewTasks");
+    onItemUpdate(prompt);
+    // Reset task index to start from beginning with new tasks
+    setCurrentTaskIndex(0);
   };
 
   const openPortfolioModal = () => {
@@ -4041,9 +4651,6 @@ export function FinancialChart({
             {[
               t("financialChart.tabs.overview"),
               t("financialChart.tabs.plan"),
-              t("financialChart.tabs.portfolio"),
-              t("financialChart.tabs.taxPlanner"),
-              t("financialChart.tabs.expenses"),
             ].map((tab, index) => (
               <Button
                 key={tab}
@@ -4066,7 +4673,7 @@ export function FinancialChart({
 
           {/* Tab Panels */}
           <Box p={{ base: "3", md: "5" }}>
-            {/* Overview Tab */}
+            {/* Overview Tab - All Charts and High-Level Data */}
             {activeTab === 0 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
                 <Grid
@@ -4098,48 +4705,7 @@ export function FinancialChart({
                   t={t}
                 />
 
-                <BirdsEyeView
-                  currentSavings={data.currentSavings || 0}
-                  savingsGoal={data.savingsGoal}
-                  monthlySavings={monthlySavings}
-                  expenses={expenses}
-                  t={t}
-                />
-              </VStack>
-            )}
-
-            {/* Plan Tab */}
-            {activeTab === 1 && (
-              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                <Grid
-                  templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
-                  gap={{ base: "3", md: "5" }}
-                >
-                  <GridItem>
-                    <SavingsStrategies
-                      strategies={interactiveStrategies}
-                      onSelect={openInteraction}
-                      t={t}
-                    />
-                  </GridItem>
-                  <GridItem>
-                    <ActionItems
-                      actionItems={interactiveActions}
-                      weeklyCheckIn={interactiveWeeklyCheckIn}
-                      onSelect={openInteraction}
-                      onSelectWeekly={openInteraction}
-                      t={t}
-                    />
-                  </GridItem>
-                </Grid>
-
-                <MotivationalNote note={plan?.motivationalNote} t={t} />
-              </VStack>
-            )}
-
-            {/* Portfolio Tab */}
-            {activeTab === 2 && (
-              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                {/* Investment Portfolio */}
                 <InvestmentPortfolio
                   allocations={portfolioAllocations}
                   investedAmount={investedAmount}
@@ -4151,12 +4717,8 @@ export function FinancialChart({
                   isUpdating={isUpdating}
                   t={t}
                 />
-              </VStack>
-            )}
 
-            {/* Tax Planner Tab */}
-            {activeTab === 3 && (
-              <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
+                {/* Tax Planner */}
                 <TaxPlanner
                   allocations={taxAllocations}
                   income={data.income || 0}
@@ -4172,12 +4734,40 @@ export function FinancialChart({
               </VStack>
             )}
 
-            {/* Expenses Tab */}
-            {activeTab === 4 && (
+            {/* Your Plan Tab - Step-Through Tasks */}
+            {activeTab === 1 && (
               <VStack align="stretch" spacing={{ base: "3", md: "5" }}>
-                <ExpenseAnalysis
+                {/* Step-Through Task Progress - Primary Focus */}
+                <TaskProgress
+                  strategies={interactiveStrategies}
+                  actionItems={interactiveActions}
                   expenses={interactiveExpenses}
-                  onSelect={openInteraction}
+                  weeklyCheckIn={interactiveWeeklyCheckIn}
+                  currentTaskIndex={currentTaskIndex}
+                  completedTasks={completedTaskIds}
+                  completedTasksHistory={data.completedTasks || []}
+                  onTaskSelect={handleTaskSelect}
+                  onNextTask={handleNextTask}
+                  onPreviousTask={handlePreviousTask}
+                  onGenerateNewTasks={handleGenerateNewTasks}
+                  isGenerating={isUpdating}
+                  t={t}
+                />
+
+                <MotivationalNote note={plan?.motivationalNote} t={t} />
+                {/* Your Roadmap - Visual Savings Progress */}
+                <BirdsEyeView
+                  currentSavings={data.currentSavings || 0}
+                  savingsGoal={data.savingsGoal}
+                  monthlySavings={monthlySavings}
+                  expenses={expenses}
+                  completedTasksCount={(data.completedTasks || []).length}
+                  totalTasksCount={
+                    (interactiveStrategies?.length || 0) +
+                    (interactiveActions?.length || 0) +
+                    (interactiveExpenses?.length || 0) +
+                    (interactiveWeeklyCheckIn ? 1 : 0)
+                  }
                   t={t}
                 />
               </VStack>
@@ -4215,10 +4805,10 @@ export function FinancialChart({
                 <Box>
                   <Text fontSize="sm" color={theme.mutedText}>
                     {interaction.type === "expense"
-                      ? t("financialChart.interaction.expenseQuest")
+                      ? t("financialChart.interaction.expenseTask")
                       : interaction.type === "weekly"
                         ? t("financialChart.interaction.weeklyCheckIn")
-                        : t("financialChart.interaction.planQuest")}
+                        : t("financialChart.interaction.planTask")}
                   </Text>
                   <Text fontSize="lg" fontWeight="semibold">
                     {interaction.item.title ||
@@ -4280,22 +4870,19 @@ export function FinancialChart({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleAiUpdate("remix")}
+                  onClick={handleTryDifferent}
                   isDisabled={!onItemUpdate || isUpdating}
                 >
                   {isUpdating && interactionAction === "remix"
                     ? t("financialChart.interaction.generating")
-                    : t("financialChart.interaction.generateDifferent")}
+                    : t("financialChart.interaction.tryDifferent")}
                 </Button>
                 <Button
                   size="sm"
-                  colorScheme="blue"
-                  onClick={() => handleAiUpdate("complete")}
-                  isDisabled={!onItemUpdate || isUpdating}
+                  colorScheme="green"
+                  onClick={handleMarkComplete}
                 >
-                  {isUpdating && interactionAction === "complete"
-                    ? t("financialChart.interaction.completing")
-                    : t("financialChart.interaction.completeExercise")}
+                  {t("financialChart.interaction.done")}
                 </Button>
               </HStack>
             </VStack>
