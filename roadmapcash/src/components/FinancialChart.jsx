@@ -393,6 +393,7 @@ function TaskProgress({
   onNextTask,
   onPreviousTask,
   onGenerateNewTasks,
+  onTaskComplete,
   isGenerating,
   t,
 }) {
@@ -437,6 +438,29 @@ function TaskProgress({
     setIsLocalLoading(true);
     onGenerateNewTasks();
   };
+
+  // Handle "Done" - mark task complete and advance to next
+  const handleDone = useCallback(
+    (task) => {
+      if (task && onTaskComplete) {
+        onTaskComplete({
+          id: task.id,
+          type: task.taskType,
+          title: task.title || task.action || task.name || task.text,
+          description: task.description || task.recommendation || null,
+          impact: task.impact || null,
+          amount: task.amount || null,
+        });
+      }
+      onNextTask();
+    },
+    [onTaskComplete, onNextTask],
+  );
+
+  // Handle "Skip" - just advance to next without marking complete
+  const handleSkip = useCallback(() => {
+    onNextTask();
+  }, [onNextTask]);
 
   // Animation for loader text
   const loaderFade = keyframes`
@@ -854,23 +878,28 @@ function TaskProgress({
                   </Box>
                 )}
 
-                {/* Action Button */}
-                <Button
-                  size={{ base: "md", md: "lg" }}
-                  colorScheme={isCurrentCompleted ? "green" : "blue"}
-                  onClick={() =>
-                    onTaskSelect(
-                      currentTask,
-                      currentTask.taskType,
-                      currentTask.originalIndex,
-                    )
-                  }
-                  width="100%"
-                >
-                  {isCurrentCompleted
-                    ? t("financialChart.task.review")
-                    : t("financialChart.task.start")}
-                </Button>
+                {/* Action Buttons */}
+                <HStack spacing="3" width="100%">
+                  <Button
+                    size={{ base: "md", md: "lg" }}
+                    colorScheme="green"
+                    onClick={() => handleDone(currentTask)}
+                    flex="1"
+                    isDisabled={isCurrentCompleted}
+                  >
+                    {isCurrentCompleted
+                      ? t("financialChart.task.completed")
+                      : t("financialChart.interaction.done")}
+                  </Button>
+                  <Button
+                    size={{ base: "md", md: "lg" }}
+                    variant="outline"
+                    onClick={handleSkip}
+                    flex="1"
+                  >
+                    {t("financialChart.task.skip")}
+                  </Button>
+                </HStack>
               </VStack>
             </Box>
 
@@ -4862,6 +4891,7 @@ export function FinancialChart({
                   onNextTask={handleNextTask}
                   onPreviousTask={handlePreviousTask}
                   onGenerateNewTasks={handleGenerateNewTasks}
+                  onTaskComplete={onTaskComplete}
                   isGenerating={isUpdating}
                   t={t}
                 />
