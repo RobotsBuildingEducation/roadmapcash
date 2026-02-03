@@ -896,10 +896,27 @@ function TaskProgress({
                     variant="outline"
                     onClick={handleSkip}
                     flex="1"
+                    isDisabled={
+                      isCurrentCompleted && safeIndex >= totalTasks - 1
+                    }
                   >
                     {t("financialChart.task.skip")}
                   </Button>
                 </HStack>
+
+                {/* Generate New Tasks - shown on last task when completed */}
+                {isCurrentCompleted && safeIndex >= totalTasks - 1 && (
+                  <Button
+                    size={{ base: "md", md: "lg" }}
+                    colorScheme="blue"
+                    onClick={handleGenerateClick}
+                    width="100%"
+                    isLoading={isLocalLoading || isGenerating}
+                    loadingText={t("financialChart.task.generating")}
+                  >
+                    {t("financialChart.task.generateNew")}
+                  </Button>
+                )}
               </VStack>
             </Box>
 
