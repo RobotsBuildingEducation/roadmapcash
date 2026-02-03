@@ -4920,7 +4920,13 @@ export function FinancialChart({
                   savingsGoal={data.savingsGoal}
                   monthlySavings={monthlySavings}
                   expenses={expenses}
-                  completedTasksCount={(data.completedTasks || []).length}
+                  completedTasksCount={
+                    (data.completedTasks || []).length +
+                    (data.completedTasksHistory || []).reduce(
+                      (sum, set) => sum + (set.tasks?.length || 0),
+                      0,
+                    )
+                  }
                   totalTasksCount={
                     (interactiveStrategies?.length || 0) +
                     (interactiveActions?.length || 0) +
@@ -4932,7 +4938,12 @@ export function FinancialChart({
 
                 {/* Completed Tasks History - at bottom */}
                 <CompletedTasksHistory
-                  completedTasksHistory={data.completedTasks || []}
+                  completedTasksHistory={[
+                    ...(data.completedTasks || []),
+                    ...(data.completedTasksHistory || []).flatMap(
+                      (set) => set.tasks || [],
+                    ),
+                  ]}
                   t={t}
                 />
               </VStack>
