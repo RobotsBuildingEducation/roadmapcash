@@ -527,8 +527,17 @@ ${updateRequest}`;
         };
         const finalized = finalizeFinancialData(parsed, fallback);
 
-        // Preserve completedTasks from current data (AI doesn't return these)
-        if (currentData.completedTasks) {
+        // Check if this is a "generate new tasks" request - if so, clear completedTasks
+        // since the old task IDs won't match the new tasks
+        const isGenerateNewTasks =
+          updateRequest.includes("Generate a completely new set") ||
+          updateRequest.includes("Genera un conjunto completamente nuevo");
+
+        if (isGenerateNewTasks) {
+          // Clear completedTasks when generating new tasks
+          finalized.completedTasks = [];
+        } else if (currentData.completedTasks) {
+          // Preserve completedTasks from current data for regular updates
           finalized.completedTasks = currentData.completedTasks;
         }
 
