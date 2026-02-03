@@ -3603,9 +3603,8 @@ function CompletedTasksHistory({ completedTasksHistory, t }) {
         {t("financialChart.task.completed")} ({completedTasksHistory.length})
       </Text>
       <VStack align="stretch" spacing="2">
-        {completedTasksHistory
-          .slice(-5)
-          .reverse()
+        {[...completedTasksHistory]
+          .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
           .map((task, idx) => (
             <HStack
               key={task.id || idx}
@@ -4920,13 +4919,7 @@ export function FinancialChart({
                   savingsGoal={data.savingsGoal}
                   monthlySavings={monthlySavings}
                   expenses={expenses}
-                  completedTasksCount={
-                    (data.completedTasks || []).length +
-                    (data.completedTasksHistory || []).reduce(
-                      (sum, set) => sum + (set.tasks?.length || 0),
-                      0,
-                    )
-                  }
+                  completedTasksCount={(data.completedTasks || []).length}
                   totalTasksCount={
                     (interactiveStrategies?.length || 0) +
                     (interactiveActions?.length || 0) +
