@@ -479,6 +479,11 @@ ${updateRequest}`;
           finalized.completedTasks = currentData.completedTasks;
         }
 
+        // Preserve completedTasksHistory from current data
+        if (currentData.completedTasksHistory) {
+          finalized.completedTasksHistory = currentData.completedTasksHistory;
+        }
+
         setFinancialData(finalized);
         return finalized;
       } catch (err) {
@@ -527,14 +532,28 @@ ${updateRequest}`;
         };
         const finalized = finalizeFinancialData(parsed, fallback);
 
-        // Check if this is a "generate new tasks" request - if so, clear completedTasks
-        // since the old task IDs won't match the new tasks
+        // Check if this is a "generate new tasks" request - if so, archive completedTasks
+        // to history and start fresh, since the old task IDs won't match the new tasks
         const isGenerateNewTasks =
           updateRequest.includes("Generate a completely new set") ||
           updateRequest.includes("Genera un conjunto completamente nuevo");
 
+        // Always preserve the task history
+        if (currentData.completedTasksHistory) {
+          finalized.completedTasksHistory = [...currentData.completedTasksHistory];
+        } else {
+          finalized.completedTasksHistory = [];
+        }
+
         if (isGenerateNewTasks) {
-          // Clear completedTasks when generating new tasks
+          // Archive current completedTasks to history before clearing
+          if (currentData.completedTasks && currentData.completedTasks.length > 0) {
+            finalized.completedTasksHistory.push({
+              archivedAt: new Date().toISOString(),
+              tasks: currentData.completedTasks,
+            });
+          }
+          // Start fresh with new task set
           finalized.completedTasks = [];
         } else if (currentData.completedTasks) {
           // Preserve completedTasks from current data for regular updates
