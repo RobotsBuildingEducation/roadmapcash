@@ -3574,6 +3574,7 @@ function MonthlyChart({
 // Completed Tasks History - Shows history of completed tasks
 function CompletedTasksHistory({ completedTasksHistory, t }) {
   const theme = useChartTheme();
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // Theme-aware colors for completed/success states
   const successColors = {
@@ -3583,57 +3584,180 @@ function CompletedTasksHistory({ completedTasksHistory, t }) {
     historyDate: useColorModeValue("green.500", "green.400"),
   };
 
+  const modalBg = useColorModeValue("white", "gray.800");
+  const modalBorder = useColorModeValue("gray.200", "gray.600");
+
   if (!completedTasksHistory || completedTasksHistory.length === 0) return null;
 
   return (
-    <Box
-      bg={theme.surfaceBg}
-      borderRadius="xl"
-      p={{ base: "4", md: "5" }}
-      borderWidth="1px"
-      borderColor={theme.surfaceBorder}
-    >
-      <Text
-        fontSize="xs"
-        color={theme.faintText}
-        mb="3"
-        textTransform="uppercase"
-        fontWeight="semibold"
+    <>
+      <Box
+        bg={theme.surfaceBg}
+        borderRadius="xl"
+        p={{ base: "4", md: "5" }}
+        borderWidth="1px"
+        borderColor={theme.surfaceBorder}
       >
-        {t("financialChart.task.completed")} ({completedTasksHistory.length})
-      </Text>
-      <VStack align="stretch" spacing="2">
-        {[...completedTasksHistory]
-          .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
-          .map((task, idx) => (
-            <HStack
-              key={task.id || idx}
-              p="2"
-              bg={successColors.historyBg}
-              borderRadius="lg"
-              spacing="3"
-              opacity={0.9}
-            >
-              <Text fontSize="md" color={successColors.historyCheck}>
-                ✓
-              </Text>
-              <Text
-                fontSize="sm"
-                color={successColors.historyText}
-                flex="1"
-                isTruncated
+        <Text
+          fontSize="xs"
+          color={theme.faintText}
+          mb="3"
+          textTransform="uppercase"
+          fontWeight="semibold"
+        >
+          {t("financialChart.task.completed")} ({completedTasksHistory.length})
+        </Text>
+        <VStack align="stretch" spacing="2">
+          {[...completedTasksHistory]
+            .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+            .map((task, idx) => (
+              <HStack
+                key={task.id || idx}
+                p="2"
+                bg={successColors.historyBg}
+                borderRadius="lg"
+                spacing="3"
+                opacity={0.9}
+                cursor="pointer"
+                _hover={{ opacity: 1, transform: "scale(1.01)" }}
+                transition="all 0.2s"
+                onClick={() => setSelectedTask(task)}
               >
-                {task.title}
-              </Text>
-              {task.completedAt && (
-                <Text fontSize="2xs" color={successColors.historyDate}>
-                  {new Date(task.completedAt).toLocaleDateString()}
+                <Text fontSize="md" color={successColors.historyCheck}>
+                  ✓
                 </Text>
+                <Text
+                  fontSize="sm"
+                  color={successColors.historyText}
+                  flex="1"
+                  isTruncated
+                >
+                  {task.title}
+                </Text>
+                {task.completedAt && (
+                  <Text fontSize="2xs" color={successColors.historyDate}>
+                    {new Date(task.completedAt).toLocaleDateString()}
+                  </Text>
+                )}
+              </HStack>
+            ))}
+        </VStack>
+      </Box>
+
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.600"
+          zIndex="1000"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          p="4"
+          onClick={() => setSelectedTask(null)}
+        >
+          <Box
+            bg={modalBg}
+            borderRadius="xl"
+            borderWidth="1px"
+            borderColor={modalBorder}
+            p={{ base: "5", md: "6" }}
+            maxW="500px"
+            w="100%"
+            maxH="80vh"
+            overflowY="auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <VStack align="stretch" spacing="4">
+              {/* Header */}
+              <HStack justify="space-between" align="start">
+                <HStack spacing="3">
+                  <Box
+                    w="10"
+                    h="10"
+                    borderRadius="full"
+                    bg="green.500"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <Text fontSize="lg" color="white">
+                      ✓
+                    </Text>
+                  </Box>
+                  <VStack align="start" spacing="0">
+                    <Text
+                      fontSize="xs"
+                      color={theme.faintText}
+                      textTransform="uppercase"
+                    >
+                      {t("financialChart.task.completed")}
+                    </Text>
+                    {selectedTask.completedAt && (
+                      <Text fontSize="xs" color={theme.mutedText}>
+                        {new Date(selectedTask.completedAt).toLocaleDateString()}
+                      </Text>
+                    )}
+                  </VStack>
+                </HStack>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedTask(null)}
+                >
+                  ✕
+                </Button>
+              </HStack>
+
+              {/* Title */}
+              <Text fontSize="lg" fontWeight="bold" color={theme.highlightText}>
+                {selectedTask.title}
+              </Text>
+
+              {/* Description */}
+              {selectedTask.description && (
+                <Box
+                  bg={theme.insetBg}
+                  p="4"
+                  borderRadius="lg"
+                  borderWidth="1px"
+                  borderColor={theme.surfaceBorder}
+                >
+                  <Text fontSize="sm" color={theme.bodyText}>
+                    {selectedTask.description}
+                  </Text>
+                </Box>
               )}
-            </HStack>
-          ))}
-      </VStack>
-    </Box>
+
+              {/* Impact if available */}
+              {selectedTask.impact && (
+                <HStack spacing="2">
+                  <Text fontSize="sm" color={theme.faintText}>
+                    {t("financialChart.task.potentialImpact")}:
+                  </Text>
+                  <Text fontSize="sm" color="cyan.400" fontWeight="semibold">
+                    {selectedTask.impact}
+                  </Text>
+                </HStack>
+              )}
+
+              {/* Close button */}
+              <Button
+                colorScheme="green"
+                onClick={() => setSelectedTask(null)}
+                width="100%"
+              >
+                {t("financialChart.interaction.close")}
+              </Button>
+            </VStack>
+          </Box>
+        </Box>
+      )}
+    </>
   );
 }
 
