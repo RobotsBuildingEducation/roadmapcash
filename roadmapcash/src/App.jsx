@@ -199,7 +199,7 @@ function App() {
   }, [colorMode, identity?.npub, updateUserData, userData]);
 
   useEffect(() => {
-    if (!isGenerating || financialData) {
+    if (!isGenerating) {
       setLoaderStep(0);
       return;
     }
@@ -209,7 +209,7 @@ function App() {
     }, 2000);
 
     return () => clearInterval(intervalId);
-  }, [financialData, isGenerating, loaderMessages.length]);
+  }, [isGenerating, loaderMessages.length]);
 
   const loaderFade = keyframes`
     0%, 100% { opacity: 0; }
@@ -291,7 +291,7 @@ function App() {
               </Box>
             )}
 
-            {isGenerating && !financialData && (
+            {isGenerating && (
               <Box
                 p={{ base: "6", md: "8" }}
                 bg={loaderCardBg}
@@ -303,7 +303,7 @@ function App() {
                   <AnimatedLogo showWordmark={false} size={120} />
                   <Text
                     fontSize={{ base: "lg", md: "xl" }}
-                    fontWeight="semibo  ld"
+                    fontWeight="semibold"
                   >
                     {t("app.buildingPlan")}
                   </Text>
@@ -320,7 +320,7 @@ function App() {
               </Box>
             )}
 
-            {financialData && (
+            {financialData && !isGenerating && (
               <FinancialChart
                 data={financialData}
                 onUpdate={handleUpdate}

@@ -123,7 +123,6 @@ export function useDecentralizedIdentity() {
     [t],
   );
 
-
   const initializeIdentity = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -187,7 +186,12 @@ export function useDecentralizedIdentity() {
         setIsLoading(false);
       }
     },
-    [createIdentityFromPrivateKey, fetchOrCreateUser, saveToLocalStorage, decodeNsec]
+    [
+      createIdentityFromPrivateKey,
+      fetchOrCreateUser,
+      saveToLocalStorage,
+      decodeNsec,
+    ],
   );
 
   const logout = useCallback(() => {
@@ -215,7 +219,7 @@ export function useDecentralizedIdentity() {
         throw err;
       }
     },
-    [identity, userData]
+    [identity, userData],
   );
 
   const saveRoadmap = useCallback(
@@ -242,7 +246,7 @@ export function useDecentralizedIdentity() {
         throw err;
       }
     },
-    [identity]
+    [identity],
   );
 
   const getSavedRoadmap = useCallback(() => {
