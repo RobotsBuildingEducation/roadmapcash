@@ -1635,6 +1635,7 @@ function InvestmentPortfolio({
   onCustomize,
   onSaveQuality,
   isUpdating,
+  portfolioAction,
   t,
 }) {
   const theme = useChartTheme();
@@ -4238,6 +4239,33 @@ export function FinancialChart({
   // Task progress state
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
+  // Update loader state
+  const [updateLoaderStep, setUpdateLoaderStep] = useState(0);
+  const updateLoaderMessages = useMemo(
+    () => t("financialChart.updateSection.updatingLoaderMessages"),
+    [t],
+  );
+
+  // Rotate update loader messages when updating
+  useEffect(() => {
+    if (!isUpdating) {
+      setUpdateLoaderStep(0);
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setUpdateLoaderStep((prev) => (prev + 1) % updateLoaderMessages.length);
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [isUpdating, updateLoaderMessages.length]);
+
+  // Update loader fade animation
+  const updateLoaderFade = keyframes`
+    0%, 100% { opacity: 0; }
+    15%, 85% { opacity: 1; }
+  `;
+
   if (!data) return null;
 
   // Get completed task IDs from persisted data
@@ -4308,33 +4336,6 @@ export function FinancialChart({
       setTaxAllocations(data.taxPlanner.allocations);
     }
   }, [data.taxPlanner?.allocations]);
-
-  // Update loader state
-  const [updateLoaderStep, setUpdateLoaderStep] = useState(0);
-  const updateLoaderMessages = useMemo(
-    () => t("financialChart.updateSection.updatingLoaderMessages"),
-    [t],
-  );
-
-  // Rotate update loader messages when updating
-  useEffect(() => {
-    if (!isUpdating) {
-      setUpdateLoaderStep(0);
-      return;
-    }
-
-    const intervalId = setInterval(() => {
-      setUpdateLoaderStep((prev) => (prev + 1) % updateLoaderMessages.length);
-    }, 2000);
-
-    return () => clearInterval(intervalId);
-  }, [isUpdating, updateLoaderMessages.length]);
-
-  // Update loader fade animation
-  const updateLoaderFade = keyframes`
-    0%, 100% { opacity: 0; }
-    15%, 85% { opacity: 1; }
-  `;
 
   useEffect(() => {
     if (previousUpdatingRef.current && !isUpdating) {
@@ -5040,6 +5041,7 @@ export function FinancialChart({
                     onPortfolioSave?.({ qualitySummary: summary })
                   }
                   isUpdating={isUpdating}
+                  portfolioAction={portfolioAction}
                   t={t}
                 />
 
