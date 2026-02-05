@@ -160,6 +160,12 @@ export const translations = {
         remove: "Remove",
         notesLabel: "Notes for AI (optional)",
         notesPlaceholder: "Add context: new job, moving, debt payoff, etc.",
+        updatingLoaderMessages: [
+          "Analyzing your updated numbers...",
+          "Recalculating your budget allocations...",
+          "Refreshing savings recommendations...",
+          "Updating your personalized plan...",
+        ],
       },
       tabs: {
         overview: "Overview",
@@ -542,6 +548,12 @@ Respond in English.`,
         notesLabel: "Notas para IA (opcional)",
         notesPlaceholder:
           "Agrega contexto: nuevo trabajo, mudanza, pago de deudas, etc.",
+        updatingLoaderMessages: [
+          "Analizando tus números actualizados...",
+          "Recalculando tus asignaciones de presupuesto...",
+          "Actualizando recomendaciones de ahorro...",
+          "Actualizando tu plan personalizado...",
+        ],
       },
       tabs: {
         overview: "Resumen",

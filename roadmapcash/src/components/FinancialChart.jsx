@@ -235,6 +235,8 @@ const useChartTheme = () => ({
   inputBorder: useColorModeValue("gray.300", "gray.700"),
   tabHoverBg: useColorModeValue("gray.100", "gray.700"),
   bandFill: useColorModeValue("#10b981", "#4ade80"),
+  progressBadgeBg: useColorModeValue("green.100", "green.900"),
+  progressBadgeText: useColorModeValue("green.700", "green.300"),
 });
 
 // Plan Header with title and overview
@@ -671,11 +673,11 @@ function TaskProgress({
               })}
             </Text>
           </VStack>
-          <Box bg="green.900" px="3" py="1" borderRadius="full">
+          <Box bg={theme.progressBadgeBg} px="3" py="1" borderRadius="full">
             <Text
               fontSize={{ base: "xs", md: "sm" }}
               fontWeight="bold"
-              color="green.300"
+              color={theme.progressBadgeText}
             >
               {progressPercent}%
             </Text>
@@ -773,6 +775,7 @@ function TaskProgress({
                 isCurrentCompleted ? successColors.cardBorder : "blue.600"
               }
               position="relative"
+              mt="2"
             >
               {/* Step Badge */}
               <Box
@@ -1632,6 +1635,7 @@ function InvestmentPortfolio({
   onCustomize,
   onSaveQuality,
   isUpdating,
+  portfolioAction,
   t,
 }) {
   const theme = useChartTheme();
@@ -4235,6 +4239,33 @@ export function FinancialChart({
   // Task progress state
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
+  // Update loader state
+  const [updateLoaderStep, setUpdateLoaderStep] = useState(0);
+  const updateLoaderMessages = useMemo(
+    () => t("financialChart.updateSection.updatingLoaderMessages"),
+    [t],
+  );
+
+  // Rotate update loader messages when updating
+  useEffect(() => {
+    if (!isUpdating) {
+      setUpdateLoaderStep(0);
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setUpdateLoaderStep((prev) => (prev + 1) % updateLoaderMessages.length);
+    }, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [isUpdating, updateLoaderMessages.length]);
+
+  // Update loader fade animation
+  const updateLoaderFade = keyframes`
+    0%, 100% { opacity: 0; }
+    15%, 85% { opacity: 1; }
+  `;
+
   if (!data) return null;
 
   // Get completed task IDs from persisted data
@@ -4714,41 +4745,55 @@ export function FinancialChart({
                   }
                   mt={4}
                 >
-                  <HStack justify="space-between" flexWrap="wrap" gap="2">
-                    <VStack align="start" spacing="0">
+                  {isUpdating ? (
+                    <VStack spacing="3" py="4">
+                      <AnimatedLogo showWordmark={false} size={80} />
                       <Text
-                        fontSize="xs"
-                        color={theme.mutedText}
+                        fontSize={{ base: "sm", md: "md" }}
                         fontWeight="semibold"
+                        color={theme.highlightText}
                       >
-                        {t("financialChart.updateSection.statusLabel")}
+                        {t("financialChart.updateSection.statusApplying")}
                       </Text>
-                      <Text fontSize="xs" color={theme.subText}>
-                        {isUpdating
-                          ? t("financialChart.updateSection.statusApplying")
-                          : updateSummary.length === 0
-                            ? t("financialChart.updateSection.statusEmpty")
-                            : t("financialChart.updateSection.statusReady")}
+                      <Text
+                        key={updateLoaderStep}
+                        color={theme.mutedText}
+                        fontSize="sm"
+                        textAlign="center"
+                        animation={`${updateLoaderFade} 2s ease-in-out`}
+                      >
+                        {updateLoaderMessages[updateLoaderStep]}
                       </Text>
                     </VStack>
-                    <Button
-                      size={{ base: "xs", md: "sm" }}
-                      colorScheme="blue"
-                      onClick={handleApplyUpdates}
-                      isDisabled={
-                        !onUpdate || updateSummary.length === 0 || isUpdating
-                      }
-                      aria-label={t(
-                        "financialChart.updateSection.applyUpdates",
-                      )}
-                    >
-                      {isUpdating ? (
-                        <Spinner size="sm" />
-                      ) : (
-                        t("financialChart.updateSection.applyUpdates")
-                      )}
-                    </Button>
-                  </HStack>
+                  ) : (
+                    <HStack justify="space-between" flexWrap="wrap" gap="2">
+                      <VStack align="start" spacing="0">
+                        <Text
+                          fontSize="xs"
+                          color={theme.mutedText}
+                          fontWeight="semibold"
+                        >
+                          {t("financialChart.updateSection.statusLabel")}
+                        </Text>
+                        <Text fontSize="xs" color={theme.subText}>
+                          {updateSummary.length === 0
+                            ? t("financialChart.updateSection.statusEmpty")
+                            : t("financialChart.updateSection.statusReady")}
+                        </Text>
+                      </VStack>
+                      <Button
+                        size={{ base: "xs", md: "sm" }}
+                        colorScheme="blue"
+                        onClick={handleApplyUpdates}
+                        isDisabled={!onUpdate || updateSummary.length === 0}
+                        aria-label={t(
+                          "financialChart.updateSection.applyUpdates",
+                        )}
+                      >
+                        {t("financialChart.updateSection.applyUpdates")}
+                      </Button>
+                    </HStack>
+                  )}
                 </Box>
 
                 <Grid
@@ -4996,6 +5041,7 @@ export function FinancialChart({
                     onPortfolioSave?.({ qualitySummary: summary })
                   }
                   isUpdating={isUpdating}
+                  portfolioAction={portfolioAction}
                   t={t}
                 />
 
