@@ -42,6 +42,7 @@ function App() {
 
   // Initialize input state - use saved input if available
   const [userInput, setUserInput] = useState("");
+  const [strictness, setStrictness] = useState(5.0);
   const [isInitialized, setIsInitialized] = useState(false);
   const [loaderStep, setLoaderStep] = useState(0);
   const skipLanguageSyncRef = useRef(false);
@@ -66,6 +67,9 @@ function App() {
         if (savedRoadmap.financialData && !financialData) {
           setFinancialData(savedRoadmap.financialData);
         }
+        if (savedRoadmap.strictness != null) {
+          setStrictness(savedRoadmap.strictness);
+        }
         setIsInitialized(true);
       }
     },
@@ -75,27 +79,48 @@ function App() {
   const hasSavedData =
     Boolean(savedRoadmap?.financialData) || Boolean(financialData);
 
+  const getStrictnessContext = (level) => {
+    if (level < 3.4) {
+      return `The user's AI strictness level is ${level}/10.0 (Easy Going). Be lenient and gentle with recommendations. Focus on encouragement, small wins, and gradual improvements. Avoid aggressive cost-cutting suggestions. Prioritize quality of life while still making progress toward goals.`;
+    }
+    if (level < 6.7) {
+      return `The user's AI strictness level is ${level}/10.0 (Normal). Provide balanced recommendations with a mix of practical savings and quality of life. Be direct but not aggressive. Suggest moderate adjustments.`;
+    }
+    return `The user's AI strictness level is ${level}/10.0 (Strict). Be very aggressive and direct with recommendations. Push hard on cutting unnecessary expenses. Prioritize maximum savings and fastest path to goals. Challenge every discretionary expense. Hold the user to high financial discipline.`;
+  };
+
   const handleGenerate = async (input) => {
-    const result = await parseFinancialInput(input);
+    const strictnessContext = getStrictnessContext(strictness);
+    const result = await parseFinancialInput(input, strictnessContext);
     if (result) {
       // Save the roadmap data after successful generation
-      await saveRoadmap(input, result);
+      await saveRoadmap(input, result, null, strictness);
     }
   };
 
   const handleUpdate = async (updateInput) => {
     if (!financialData) return;
-    const result = await updateFinancialData(financialData, updateInput);
+    const strictnessContext = getStrictnessContext(strictness);
+    const result = await updateFinancialData(
+      financialData,
+      updateInput,
+      strictnessContext,
+    );
     if (result) {
-      await saveRoadmap(userInput, result, updateInput);
+      await saveRoadmap(userInput, result, updateInput, strictness);
     }
   };
 
   const handleItemUpdate = async (updateInput) => {
     if (!financialData) return;
-    const result = await updateFinancialItem(financialData, updateInput);
+    const strictnessContext = getStrictnessContext(strictness);
+    const result = await updateFinancialItem(
+      financialData,
+      updateInput,
+      strictnessContext,
+    );
     if (result) {
-      await saveRoadmap(userInput, result, updateInput);
+      await saveRoadmap(userInput, result, updateInput, strictness);
     }
   };
 
@@ -109,7 +134,7 @@ function App() {
       },
     };
     setFinancialData(updated);
-    await saveRoadmap(userInput, updated, "Portfolio update");
+    await saveRoadmap(userInput, updated, "Portfolio update", strictness);
   };
 
   const handleTaxPlannerSave = async (taxPlanner) => {
@@ -122,7 +147,7 @@ function App() {
       },
     };
     setFinancialData(updated);
-    await saveRoadmap(userInput, updated, "Tax optimizer update");
+    await saveRoadmap(userInput, updated, "Tax optimizer update", strictness);
   };
 
   const handleTaskComplete = async (completedTask) => {
@@ -139,7 +164,7 @@ function App() {
       ],
     };
     setFinancialData(updated);
-    await saveRoadmap(userInput, updated, "Task completed");
+    await saveRoadmap(userInput, updated, "Task completed", strictness);
   };
 
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
@@ -275,6 +300,8 @@ function App() {
               input={userInput}
               onInputChange={setUserInput}
               hasSavedData={hasSavedData}
+              strictness={strictness}
+              onStrictnessChange={setStrictness}
             />
 
             {(parseError || updateError) && (

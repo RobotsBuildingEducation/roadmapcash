@@ -377,6 +377,12 @@ Respond in English.`,
       motivationalNoteFallback:
         "You've taken the first step by creating a plan. Stay consistent!",
     },
+    gradientSlider: {
+      label: "AI Strictness",
+      easyGoing: "Easy Going",
+      normal: "Normal",
+      strict: "Strict",
+    },
     identity: {
       errors: {
         invalidNsecPrefix: "Invalid nsec prefix",
@@ -763,6 +769,12 @@ Responde en español.`,
       weeklyCheckInFallback: "Revisa tus gastos y el progreso hacia tu meta.",
       motivationalNoteFallback:
         "Has dado el primer paso creando un plan. ¡Sé constante!",
+    },
+    gradientSlider: {
+      label: "Rigurosidad de la IA",
+      easyGoing: "Relajado",
+      normal: "Normal",
+      strict: "Estricto",
     },
     identity: {
       errors: {

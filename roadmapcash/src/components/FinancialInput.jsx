@@ -1,6 +1,7 @@
 import { Box, VStack, Text, Textarea, Button } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
 import { useColorModeValue } from "@/components/ui/color-mode";
+import { GradientSlider } from "@/components/GradientSlider";
 
 export function FinancialInput({
   onGenerate,
@@ -8,6 +9,8 @@ export function FinancialInput({
   input,
   onInputChange,
   hasSavedData,
+  strictness,
+  onStrictnessChange,
 }) {
   const { t } = useI18n();
   const cardBg = useColorModeValue("white", "gray.900");
@@ -55,6 +58,11 @@ export function FinancialInput({
           }}
           fontSize={"16px"}
           resize="vertical"
+        />
+
+        <GradientSlider
+          value={strictness}
+          onChange={onStrictnessChange}
         />
 
         <Box>
