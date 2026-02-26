@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Box, HStack, Text, VStack, IconButton } from "@chakra-ui/react";
 import { useColorModeValue } from "@/components/ui/color-mode";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -6,16 +6,11 @@ import { useMemo } from "react";
 import { HiX } from "react-icons/hi";
 import { LuCircleHelp } from "react-icons/lu";
 
-const SLIDER_MIN = 0;
-const SLIDER_MAX = 100;
+const VALUE_MIN = 0.0;
 const VALUE_MAX = 10.0;
 
-function sliderToValue(sliderVal) {
-  return Math.round((sliderVal / SLIDER_MAX) * VALUE_MAX * 10) / 10;
-}
-
-function valueToSlider(val) {
-  return Math.round((val / VALUE_MAX) * SLIDER_MAX);
+function clamp(val, min, max) {
+  return Math.min(Math.max(val, min), max);
 }
 
 function getCategory(value) {
@@ -27,6 +22,8 @@ function getCategory(value) {
 export function GradientSlider({ value = 5.0, onChange }) {
   const { t } = useI18n();
   const [infoOpen, setInfoOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const trackRef = useRef(null);
 
   const trackBg = useColorModeValue(
     "linear-gradient(to right, #22d3ee, #a3e635, #c084fc)",
@@ -34,8 +31,8 @@ export function GradientSlider({ value = 5.0, onChange }) {
   );
   const thumbBorder = useColorModeValue("white", "gray.900");
   const thumbShadow = useColorModeValue(
-    "0 1px 3px rgba(0,0,0,0.3)",
-    "0 1px 3px rgba(0,0,0,0.6)",
+    "0 2px 4px rgba(0,0,0,0.25)",
+    "0 2px 4px rgba(0,0,0,0.5)",
   );
   const labelColor = useColorModeValue("gray.500", "gray.500");
   const activeColor = useColorModeValue("gray.800", "white");
@@ -51,13 +48,33 @@ export function GradientSlider({ value = 5.0, onChange }) {
   const strictColor = useColorModeValue("#7e22ce", "#c084fc");
   const categoryColors = { easyGoing: easyGoingColor, normal: normalColor, strict: strictColor };
 
-  const sliderVal = valueToSlider(value);
-  const percent = (sliderVal / SLIDER_MAX) * 100;
+  const percent = ((value - VALUE_MIN) / (VALUE_MAX - VALUE_MIN)) * 100;
 
-  const handleChange = (e) => {
-    const newValue = sliderToValue(Number(e.target.value));
-    onChange?.(newValue);
-  };
+  const resolveValue = useCallback((clientX) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const rect = track.getBoundingClientRect();
+    const ratio = clamp((clientX - rect.left) / rect.width, 0, 1);
+    const raw = VALUE_MIN + ratio * (VALUE_MAX - VALUE_MIN);
+    const snapped = Math.round(raw * 10) / 10;
+    onChange?.(snapped);
+  }, [onChange]);
+
+  const handlePointerDown = useCallback((e) => {
+    e.preventDefault();
+    e.target.setPointerCapture(e.pointerId);
+    setDragging(true);
+    resolveValue(e.clientX);
+  }, [resolveValue]);
+
+  const handlePointerMove = useCallback((e) => {
+    if (!dragging) return;
+    resolveValue(e.clientX);
+  }, [dragging, resolveValue]);
+
+  const handlePointerUp = useCallback(() => {
+    setDragging(false);
+  }, []);
 
   return (
     <VStack align="stretch" gap="2" width="100%">
@@ -100,47 +117,47 @@ export function GradientSlider({ value = 5.0, onChange }) {
         </HStack>
       </HStack>
 
-      <Box position="relative" px="1">
-        <Box
-          height="8px"
-          borderRadius="full"
-          background={trackBg}
-        />
-        <Box
-          as="input"
-          type="range"
-          min={SLIDER_MIN}
-          max={SLIDER_MAX}
-          step={1}
-          value={sliderVal}
-          onChange={handleChange}
-          position="absolute"
-          top="0"
-          left="0"
-          width="100%"
-          height="8px"
-          opacity="0"
-          cursor="pointer"
-          zIndex="2"
-          margin="0"
-          padding="0"
-        />
+      {/* Slider track — pointer events drive everything */}
+      <Box
+        ref={trackRef}
+        position="relative"
+        height="28px"
+        cursor="pointer"
+        touchAction="none"
+        userSelect="none"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        mx="1"
+      >
+        {/* Gradient track bar */}
         <Box
           position="absolute"
           top="50%"
-          left={`calc(${percent}% + ${1 - percent / 50}px)`}
+          left="0"
+          right="0"
+          transform="translateY(-50%)"
+          height="8px"
+          borderRadius="full"
+          background={trackBg}
+          pointerEvents="none"
+        />
+        {/* Thumb */}
+        <Box
+          position="absolute"
+          top="50%"
+          left={`${percent}%`}
           transform="translate(-50%, -50%)"
-          width="20px"
-          height="20px"
+          width="22px"
+          height="22px"
           borderRadius="full"
           bg="white"
           border="2px solid"
           borderColor={thumbBorder}
-          boxShadow={thumbShadow}
+          boxShadow={dragging ? `${thumbShadow}, 0 0 0 4px rgba(99,102,241,0.2)` : thumbShadow}
           pointerEvents="none"
-          transition="left 0.05s ease-out"
-          zIndex="1"
-          marginTop="-4px"
+          willChange="left"
         />
       </Box>
 
