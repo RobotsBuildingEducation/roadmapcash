@@ -26,8 +26,8 @@ export function GradientSlider({ value = 5.0, onChange }) {
   const trackRef = useRef(null);
 
   const trackBg = useColorModeValue(
-    "linear-gradient(to right, #22d3ee, #a3e635, #c084fc)",
-    "linear-gradient(to right, #0891b2, #65a30d, #9333ea)",
+    "linear-gradient(to right, #06b6d4, #2dd4bf, #14b8a6 50%, #8b5cf6, #a855f7)",
+    "linear-gradient(to right, #22d3ee, #5eead4, #2dd4bf 50%, #a78bfa, #c084fc)",
   );
   const thumbBorder = useColorModeValue("white", "gray.900");
   const thumbShadow = useColorModeValue(
@@ -44,8 +44,8 @@ export function GradientSlider({ value = 5.0, onChange }) {
   const category = useMemo(() => getCategory(value), [value]);
 
   const easyGoingColor = useColorModeValue("#0891b2", "#22d3ee");
-  const normalColor = useColorModeValue("#65a30d", "#a3e635");
-  const strictColor = useColorModeValue("#7e22ce", "#c084fc");
+  const normalColor = useColorModeValue("#0d9488", "#2dd4bf");
+  const strictColor = useColorModeValue("#7c3aed", "#a78bfa");
   const categoryColors = { easyGoing: easyGoingColor, normal: normalColor, strict: strictColor };
 
   const percent = ((value - VALUE_MIN) / (VALUE_MAX - VALUE_MIN)) * 100;
