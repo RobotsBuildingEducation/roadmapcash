@@ -1,7 +1,10 @@
-import { Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { useState } from "react";
+import { Box, HStack, Text, VStack, IconButton } from "@chakra-ui/react";
 import { useColorModeValue } from "@/components/ui/color-mode";
 import { useI18n } from "@/i18n/I18nProvider";
 import { useMemo } from "react";
+import { HiX } from "react-icons/hi";
+import { LuCircleHelp } from "react-icons/lu";
 
 const SLIDER_MIN = 0;
 const SLIDER_MAX = 100;
@@ -23,10 +26,11 @@ function getCategory(value) {
 
 export function GradientSlider({ value = 5.0, onChange }) {
   const { t } = useI18n();
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const trackBg = useColorModeValue(
-    "linear-gradient(to right, #6ee7b7, #fbbf24, #f87171)",
-    "linear-gradient(to right, #059669, #d97706, #dc2626)",
+    "linear-gradient(to right, #22d3ee, #a3e635, #c084fc)",
+    "linear-gradient(to right, #0891b2, #65a30d, #9333ea)",
   );
   const thumbBorder = useColorModeValue("white", "gray.900");
   const thumbShadow = useColorModeValue(
@@ -36,12 +40,15 @@ export function GradientSlider({ value = 5.0, onChange }) {
   const labelColor = useColorModeValue("gray.500", "gray.500");
   const activeColor = useColorModeValue("gray.800", "white");
   const valueBg = useColorModeValue("gray.100", "gray.800");
+  const modalBg = useColorModeValue("white", "gray.900");
+  const modalBorder = useColorModeValue("gray.200", "gray.700");
+  const modalDescColor = useColorModeValue("gray.600", "gray.400");
 
   const category = useMemo(() => getCategory(value), [value]);
 
-  const easyGoingColor = useColorModeValue("#059669", "#6ee7b7");
-  const normalColor = useColorModeValue("#d97706", "#fbbf24");
-  const strictColor = useColorModeValue("#dc2626", "#f87171");
+  const easyGoingColor = useColorModeValue("#0891b2", "#22d3ee");
+  const normalColor = useColorModeValue("#65a30d", "#a3e635");
+  const strictColor = useColorModeValue("#7e22ce", "#c084fc");
   const categoryColors = { easyGoing: easyGoingColor, normal: normalColor, strict: strictColor };
 
   const sliderVal = valueToSlider(value);
@@ -55,9 +62,24 @@ export function GradientSlider({ value = 5.0, onChange }) {
   return (
     <VStack align="stretch" gap="2" width="100%">
       <HStack justify="space-between" align="center">
-        <Text fontSize="sm" fontWeight="semibold">
-          {t("gradientSlider.label")}
-        </Text>
+        <HStack gap="1" align="center">
+          <Text fontSize="sm" fontWeight="semibold">
+            {t("gradientSlider.label")}
+          </Text>
+          <IconButton
+            aria-label={t("gradientSlider.infoButton")}
+            onClick={() => setInfoOpen(true)}
+            variant="ghost"
+            size="xs"
+            minW="auto"
+            h="auto"
+            p="0.5"
+            color={labelColor}
+            _hover={{ color: activeColor }}
+          >
+            <LuCircleHelp size={14} />
+          </IconButton>
+        </HStack>
         <HStack
           gap="1"
           bg={valueBg}
@@ -145,6 +167,81 @@ export function GradientSlider({ value = 5.0, onChange }) {
           {t("gradientSlider.strict")}
         </Text>
       </HStack>
+
+      {infoOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          right="0"
+          bottom="0"
+          bg="blackAlpha.600"
+          zIndex="1000"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          p="4"
+          onClick={() => setInfoOpen(false)}
+        >
+          <Box
+            bg={modalBg}
+            borderRadius="xl"
+            borderWidth="1px"
+            borderColor={modalBorder}
+            p={{ base: "5", md: "6" }}
+            maxW="440px"
+            w="100%"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <VStack align="stretch" gap="4">
+              <HStack justify="space-between" align="center">
+                <Text fontSize="lg" fontWeight="bold">
+                  {t("gradientSlider.infoTitle")}
+                </Text>
+                <IconButton
+                  aria-label={t("gradientSlider.close")}
+                  onClick={() => setInfoOpen(false)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <HiX size={18} />
+                </IconButton>
+              </HStack>
+
+              <Text fontSize="sm" color={modalDescColor}>
+                {t("gradientSlider.infoDescription")}
+              </Text>
+
+              <VStack align="stretch" gap="2">
+                <HStack align="start" gap="2">
+                  <Text fontWeight="bold" fontSize="sm" color={easyGoingColor} flexShrink={0}>
+                    {t("gradientSlider.easyGoing")}
+                  </Text>
+                  <Text fontSize="sm" color={modalDescColor}>
+                    {t("gradientSlider.infoEasyGoing")}
+                  </Text>
+                </HStack>
+                <HStack align="start" gap="2">
+                  <Text fontWeight="bold" fontSize="sm" color={normalColor} flexShrink={0}>
+                    {t("gradientSlider.normal")}
+                  </Text>
+                  <Text fontSize="sm" color={modalDescColor}>
+                    {t("gradientSlider.infoNormal")}
+                  </Text>
+                </HStack>
+                <HStack align="start" gap="2">
+                  <Text fontWeight="bold" fontSize="sm" color={strictColor} flexShrink={0}>
+                    {t("gradientSlider.strict")}
+                  </Text>
+                  <Text fontSize="sm" color={modalDescColor}>
+                    {t("gradientSlider.infoStrict")}
+                  </Text>
+                </HStack>
+              </VStack>
+            </VStack>
+          </Box>
+        </Box>
+      )}
     </VStack>
   );
 }

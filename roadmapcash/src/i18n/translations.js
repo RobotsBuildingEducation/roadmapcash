@@ -378,10 +378,21 @@ Respond in English.`,
         "You've taken the first step by creating a plan. Stay consistent!",
     },
     gradientSlider: {
-      label: "AI Strictness",
+      label: "Planner Strictness",
       easyGoing: "Easy Going",
       normal: "Normal",
       strict: "Strict",
+      infoButton: "What is this?",
+      infoTitle: "Planner Strictness",
+      infoDescription:
+        "This slider controls how aggressive your AI financial planner is when making recommendations. It affects your goals, strategy analysis, and all AI-generated advice.",
+      infoEasyGoing:
+        "— Gentle, encouraging advice. Focuses on small wins and gradual improvements without aggressive cost-cutting.",
+      infoNormal:
+        "— Balanced recommendations. A practical mix of savings suggestions and quality of life.",
+      infoStrict:
+        "— Maximum discipline. Challenges every discretionary expense and pushes for the fastest path to your goals.",
+      close: "Close",
     },
     identity: {
       errors: {
@@ -771,10 +782,21 @@ Responde en español.`,
         "Has dado el primer paso creando un plan. ¡Sé constante!",
     },
     gradientSlider: {
-      label: "Rigurosidad de la IA",
+      label: "Rigurosidad del planificador",
       easyGoing: "Relajado",
       normal: "Normal",
       strict: "Estricto",
+      infoButton: "¿Qué es esto?",
+      infoTitle: "Rigurosidad del planificador",
+      infoDescription:
+        "Este control ajusta qué tan agresivo es tu planificador financiero con IA al hacer recomendaciones. Afecta tus metas, análisis de estrategia y todos los consejos generados por la IA.",
+      infoEasyGoing:
+        "— Consejos suaves y motivadores. Se enfoca en pequeños logros y mejoras graduales sin recortes agresivos.",
+      infoNormal:
+        "— Recomendaciones equilibradas. Una mezcla práctica de sugerencias de ahorro y calidad de vida.",
+      infoStrict:
+        "— Máxima disciplina. Cuestiona cada gasto discrecional y busca el camino más rápido hacia tus metas.",
+      close: "Cerrar",
     },
     identity: {
       errors: {
