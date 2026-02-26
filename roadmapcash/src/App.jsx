@@ -7,6 +7,7 @@ import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { AccountMenu } from "@/components/AccountMenu";
 import { FinancialInput } from "@/components/FinancialInput";
 import { FinancialChart } from "@/components/FinancialChart";
+import { GradientSlider } from "@/components/GradientSlider";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { Toaster } from "@/components/ui/toaster";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -49,6 +50,9 @@ function App() {
   const hasHydratedLanguageRef = useRef(false);
   const skipThemeSyncRef = useRef(false);
   const hasHydratedThemeRef = useRef(false);
+  const skipStrictnessSyncRef = useRef(false);
+  const hasHydratedStrictnessRef = useRef(false);
+  const strictnessDebounceRef = useRef(null);
   const { colorMode, setColorMode } = useColorMode();
   const pageBg = useColorModeValue("#faf9f5", "gray.950");
   const pageColor = useColorModeValue("gray.900", "white");
@@ -66,9 +70,6 @@ function App() {
         }
         if (savedRoadmap.financialData && !financialData) {
           setFinancialData(savedRoadmap.financialData);
-        }
-        if (savedRoadmap.strictness != null) {
-          setStrictness(savedRoadmap.strictness);
         }
         setIsInitialized(true);
       }
@@ -223,6 +224,39 @@ function App() {
     }
   }, [colorMode, identity?.npub, updateUserData, userData]);
 
+  // Hydrate strictness from saved settings
+  useEffect(() => {
+    const storedStrictness = userData?.settings?.strictness;
+    if (storedStrictness == null || hasHydratedStrictnessRef.current) return;
+    if (storedStrictness !== strictness) {
+      skipStrictnessSyncRef.current = true;
+      setStrictness(storedStrictness);
+    }
+    hasHydratedStrictnessRef.current = true;
+  }, [strictness, userData]);
+
+  // Debounced sync strictness to user settings
+  useEffect(() => {
+    if (!identity?.npub || !userData) return;
+    if (skipStrictnessSyncRef.current) {
+      skipStrictnessSyncRef.current = false;
+      return;
+    }
+    const storedStrictness = userData.settings?.strictness;
+    if (strictness !== storedStrictness) {
+      clearTimeout(strictnessDebounceRef.current);
+      strictnessDebounceRef.current = setTimeout(() => {
+        updateUserData({
+          settings: {
+            ...(userData.settings || {}),
+            strictness,
+          },
+        });
+      }, 600);
+    }
+    return () => clearTimeout(strictnessDebounceRef.current);
+  }, [identity?.npub, strictness, updateUserData, userData]);
+
   useEffect(() => {
     if (!isGenerating) {
       setLoaderStep(0);
@@ -294,15 +328,30 @@ function App() {
             maxW="900px"
             mx="auto"
           >
-            <FinancialInput
-              onGenerate={handleGenerate}
-              isGenerating={isGenerating}
-              input={userInput}
-              onInputChange={setUserInput}
-              hasSavedData={hasSavedData}
-              strictness={strictness}
-              onStrictnessChange={setStrictness}
-            />
+            {!financialData && !isGenerating ? (
+              <FinancialInput
+                onGenerate={handleGenerate}
+                isGenerating={isGenerating}
+                input={userInput}
+                onInputChange={setUserInput}
+                hasSavedData={hasSavedData}
+                strictness={strictness}
+                onStrictnessChange={setStrictness}
+              />
+            ) : (
+              <Box
+                p={{ base: "4", md: "6" }}
+                bg={loaderCardBg}
+                borderRadius="lg"
+                borderWidth="1px"
+                borderColor={loaderCardBorder}
+              >
+                <GradientSlider
+                  value={strictness}
+                  onChange={setStrictness}
+                />
+              </Box>
+            )}
 
             {(parseError || updateError) && (
               <Box
