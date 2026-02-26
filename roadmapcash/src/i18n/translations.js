@@ -380,18 +380,18 @@ Respond in English.`,
     gradientSlider: {
       label: "Planner Strictness",
       easyGoing: "Easy Going",
-      normal: "Normal",
+      normal: "Balanced",
       strict: "Strict",
       infoButton: "What is this?",
       infoTitle: "Planner Strictness",
       infoDescription:
         "This slider controls how aggressive your AI financial planner is when making recommendations. It affects your goals, strategy analysis, and all AI-generated advice.",
       infoEasyGoing:
-        "— Gentle, encouraging advice. Focuses on small wins and gradual improvements without aggressive cost-cutting.",
+        "Gentle, encouraging advice. Focuses on small wins and gradual improvements without aggressive cost-cutting.",
       infoNormal:
-        "— Balanced recommendations. A practical mix of savings suggestions and quality of life.",
+        "Practical recommendations with a mix of savings suggestions and quality of life.",
       infoStrict:
-        "— Maximum discipline. Challenges every discretionary expense and pushes for the fastest path to your goals.",
+        "Maximum discipline. Challenges every discretionary expense and pushes for the fastest path to your goals.",
       close: "Close",
     },
     identity: {
@@ -784,18 +784,18 @@ Responde en español.`,
     gradientSlider: {
       label: "Rigurosidad del planificador",
       easyGoing: "Relajado",
-      normal: "Normal",
+      normal: "Equilibrado",
       strict: "Estricto",
       infoButton: "¿Qué es esto?",
       infoTitle: "Rigurosidad del planificador",
       infoDescription:
         "Este control ajusta qué tan agresivo es tu planificador financiero con IA al hacer recomendaciones. Afecta tus metas, análisis de estrategia y todos los consejos generados por la IA.",
       infoEasyGoing:
-        "— Consejos suaves y motivadores. Se enfoca en pequeños logros y mejoras graduales sin recortes agresivos.",
+        "Consejos suaves y motivadores. Se enfoca en pequeños logros y mejoras graduales sin recortes agresivos.",
       infoNormal:
-        "— Recomendaciones equilibradas. Una mezcla práctica de sugerencias de ahorro y calidad de vida.",
+        "Recomendaciones prácticas con una mezcla de sugerencias de ahorro y calidad de vida.",
       infoStrict:
-        "— Máxima disciplina. Cuestiona cada gasto discrecional y busca el camino más rápido hacia tus metas.",
+        "Máxima disciplina. Cuestiona cada gasto discrecional y busca el camino más rápido hacia tus metas.",
       close: "Cerrar",
     },
     identity: {

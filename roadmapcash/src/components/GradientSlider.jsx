@@ -206,7 +206,7 @@ export function GradientSlider({ value = 5.0, onChange }) {
             borderWidth="1px"
             borderColor={modalBorder}
             p={{ base: "5", md: "6" }}
-            maxW="440px"
+            maxW="400px"
             w="100%"
             onClick={(e) => e.stopPropagation()}
           >
@@ -225,35 +225,35 @@ export function GradientSlider({ value = 5.0, onChange }) {
                 </IconButton>
               </HStack>
 
-              <Text fontSize="sm" color={modalDescColor}>
+              <Text fontSize="sm" color={modalDescColor} lineHeight="tall">
                 {t("gradientSlider.infoDescription")}
               </Text>
 
-              <VStack align="stretch" gap="2">
-                <HStack align="start" gap="2">
-                  <Text fontWeight="bold" fontSize="sm" color={easyGoingColor} flexShrink={0}>
+              <VStack align="stretch" gap="3">
+                <Box borderLeftWidth="3px" borderColor={easyGoingColor} pl="3">
+                  <Text fontWeight="semibold" fontSize="sm" color={easyGoingColor} mb="0.5">
                     {t("gradientSlider.easyGoing")}
                   </Text>
-                  <Text fontSize="sm" color={modalDescColor}>
+                  <Text fontSize="xs" color={modalDescColor} lineHeight="tall">
                     {t("gradientSlider.infoEasyGoing")}
                   </Text>
-                </HStack>
-                <HStack align="start" gap="2">
-                  <Text fontWeight="bold" fontSize="sm" color={normalColor} flexShrink={0}>
+                </Box>
+                <Box borderLeftWidth="3px" borderColor={normalColor} pl="3">
+                  <Text fontWeight="semibold" fontSize="sm" color={normalColor} mb="0.5">
                     {t("gradientSlider.normal")}
                   </Text>
-                  <Text fontSize="sm" color={modalDescColor}>
+                  <Text fontSize="xs" color={modalDescColor} lineHeight="tall">
                     {t("gradientSlider.infoNormal")}
                   </Text>
-                </HStack>
-                <HStack align="start" gap="2">
-                  <Text fontWeight="bold" fontSize="sm" color={strictColor} flexShrink={0}>
+                </Box>
+                <Box borderLeftWidth="3px" borderColor={strictColor} pl="3">
+                  <Text fontWeight="semibold" fontSize="sm" color={strictColor} mb="0.5">
                     {t("gradientSlider.strict")}
                   </Text>
-                  <Text fontSize="sm" color={modalDescColor}>
+                  <Text fontSize="xs" color={modalDescColor} lineHeight="tall">
                     {t("gradientSlider.infoStrict")}
                   </Text>
-                </HStack>
+                </Box>
               </VStack>
             </VStack>
           </Box>
