@@ -19,7 +19,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { useI18n } from "@/i18n/I18nProvider";
-import { useColorModeValue } from "@/components/ui/color-mode";
+import { useColorMode, useColorModeValue } from "@/components/ui/color-mode";
 import { simplemodel } from "@/database/firebaseConfig";
 
 // Color palette for consistent theming
@@ -3703,7 +3703,9 @@ function CompletedTasksHistory({ completedTasksHistory, t }) {
                     </Text>
                     {selectedTask.completedAt && (
                       <Text fontSize="xs" color={theme.mutedText}>
-                        {new Date(selectedTask.completedAt).toLocaleDateString()}
+                        {new Date(
+                          selectedTask.completedAt,
+                        ).toLocaleDateString()}
                       </Text>
                     )}
                   </VStack>
@@ -4238,6 +4240,7 @@ export function FinancialChart({
   const [taxModalOpen, setTaxModalOpen] = useState(false);
   // Task progress state
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+  const { colorMode, setColorMode } = useColorMode();
 
   // Update loader state
   const [updateLoaderStep, setUpdateLoaderStep] = useState(0);
@@ -4714,7 +4717,7 @@ export function FinancialChart({
               cursor="pointer"
               _hover={{ bg: theme.insetBg }}
               borderRadius="xl"
-              boxShadow={"0px 4px 0px #b4b4b4"}
+              boxShadow={`0px 4px 0px ${colorMode === "dark" ? "#2c2c2c" : "#d4d4d4"}`}
             >
               <Box flex="1" textAlign="left">
                 <Text fontSize={{ base: "sm", md: "md" }} fontWeight="semibold">
