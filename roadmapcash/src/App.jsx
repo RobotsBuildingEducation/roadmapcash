@@ -346,10 +346,7 @@ function App() {
                 borderWidth="1px"
                 borderColor={loaderCardBorder}
               >
-                <GradientSlider
-                  value={strictness}
-                  onChange={setStrictness}
-                />
+                <GradientSlider value={strictness} onChange={setStrictness} />
               </Box>
             )}
 
