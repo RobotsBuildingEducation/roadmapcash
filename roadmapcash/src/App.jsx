@@ -7,6 +7,7 @@ import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { AccountMenu } from "@/components/AccountMenu";
 import { FinancialInput } from "@/components/FinancialInput";
 import { FinancialChart } from "@/components/FinancialChart";
+import { GradientSlider } from "@/components/GradientSlider";
 import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { Toaster } from "@/components/ui/toaster";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -42,12 +43,16 @@ function App() {
 
   // Initialize input state - use saved input if available
   const [userInput, setUserInput] = useState("");
+  const [strictness, setStrictness] = useState(5.0);
   const [isInitialized, setIsInitialized] = useState(false);
   const [loaderStep, setLoaderStep] = useState(0);
   const skipLanguageSyncRef = useRef(false);
   const hasHydratedLanguageRef = useRef(false);
   const skipThemeSyncRef = useRef(false);
   const hasHydratedThemeRef = useRef(false);
+  const skipStrictnessSyncRef = useRef(false);
+  const hasHydratedStrictnessRef = useRef(false);
+  const strictnessDebounceRef = useRef(null);
   const { colorMode, setColorMode } = useColorMode();
   const pageBg = useColorModeValue("#faf9f5", "gray.950");
   const pageColor = useColorModeValue("gray.900", "white");
@@ -75,27 +80,48 @@ function App() {
   const hasSavedData =
     Boolean(savedRoadmap?.financialData) || Boolean(financialData);
 
+  const getStrictnessContext = (level) => {
+    if (level < 3.4) {
+      return `The user's AI strictness level is ${level}/10.0 (Easy Going). Be lenient and gentle with recommendations. Focus on encouragement, small wins, and gradual improvements. Avoid aggressive cost-cutting suggestions. Prioritize quality of life while still making progress toward goals.`;
+    }
+    if (level < 6.7) {
+      return `The user's AI strictness level is ${level}/10.0 (Normal). Provide balanced recommendations with a mix of practical savings and quality of life. Be direct but not aggressive. Suggest moderate adjustments.`;
+    }
+    return `The user's AI strictness level is ${level}/10.0 (Strict). Be very aggressive and direct with recommendations. Push hard on cutting unnecessary expenses. Prioritize maximum savings and fastest path to goals. Challenge every discretionary expense. Hold the user to high financial discipline.`;
+  };
+
   const handleGenerate = async (input) => {
-    const result = await parseFinancialInput(input);
+    const strictnessContext = getStrictnessContext(strictness);
+    const result = await parseFinancialInput(input, strictnessContext);
     if (result) {
       // Save the roadmap data after successful generation
-      await saveRoadmap(input, result);
+      await saveRoadmap(input, result, null, strictness);
     }
   };
 
   const handleUpdate = async (updateInput) => {
     if (!financialData) return;
-    const result = await updateFinancialData(financialData, updateInput);
+    const strictnessContext = getStrictnessContext(strictness);
+    const result = await updateFinancialData(
+      financialData,
+      updateInput,
+      strictnessContext,
+    );
     if (result) {
-      await saveRoadmap(userInput, result, updateInput);
+      await saveRoadmap(userInput, result, updateInput, strictness);
     }
   };
 
   const handleItemUpdate = async (updateInput) => {
     if (!financialData) return;
-    const result = await updateFinancialItem(financialData, updateInput);
+    const strictnessContext = getStrictnessContext(strictness);
+    const result = await updateFinancialItem(
+      financialData,
+      updateInput,
+      strictnessContext,
+    );
     if (result) {
-      await saveRoadmap(userInput, result, updateInput);
+      await saveRoadmap(userInput, result, updateInput, strictness);
     }
   };
 
@@ -109,7 +135,7 @@ function App() {
       },
     };
     setFinancialData(updated);
-    await saveRoadmap(userInput, updated, "Portfolio update");
+    await saveRoadmap(userInput, updated, "Portfolio update", strictness);
   };
 
   const handleTaxPlannerSave = async (taxPlanner) => {
@@ -122,7 +148,7 @@ function App() {
       },
     };
     setFinancialData(updated);
-    await saveRoadmap(userInput, updated, "Tax optimizer update");
+    await saveRoadmap(userInput, updated, "Tax optimizer update", strictness);
   };
 
   const handleTaskComplete = async (completedTask) => {
@@ -139,7 +165,7 @@ function App() {
       ],
     };
     setFinancialData(updated);
-    await saveRoadmap(userInput, updated, "Task completed");
+    await saveRoadmap(userInput, updated, "Task completed", strictness);
   };
 
   const loaderMessages = useMemo(() => t("app.loaderMessages"), [t]);
@@ -197,6 +223,39 @@ function App() {
       });
     }
   }, [colorMode, identity?.npub, updateUserData, userData]);
+
+  // Hydrate strictness from saved settings
+  useEffect(() => {
+    const storedStrictness = userData?.settings?.strictness;
+    if (storedStrictness == null || hasHydratedStrictnessRef.current) return;
+    if (storedStrictness !== strictness) {
+      skipStrictnessSyncRef.current = true;
+      setStrictness(storedStrictness);
+    }
+    hasHydratedStrictnessRef.current = true;
+  }, [strictness, userData]);
+
+  // Debounced sync strictness to user settings
+  useEffect(() => {
+    if (!identity?.npub || !userData) return;
+    if (skipStrictnessSyncRef.current) {
+      skipStrictnessSyncRef.current = false;
+      return;
+    }
+    const storedStrictness = userData.settings?.strictness;
+    if (strictness !== storedStrictness) {
+      clearTimeout(strictnessDebounceRef.current);
+      strictnessDebounceRef.current = setTimeout(() => {
+        updateUserData({
+          settings: {
+            ...(userData.settings || {}),
+            strictness,
+          },
+        });
+      }, 600);
+    }
+    return () => clearTimeout(strictnessDebounceRef.current);
+  }, [identity?.npub, strictness, updateUserData, userData]);
 
   useEffect(() => {
     if (!isGenerating) {
@@ -269,13 +328,27 @@ function App() {
             maxW="900px"
             mx="auto"
           >
-            <FinancialInput
-              onGenerate={handleGenerate}
-              isGenerating={isGenerating}
-              input={userInput}
-              onInputChange={setUserInput}
-              hasSavedData={hasSavedData}
-            />
+            {!financialData && !isGenerating ? (
+              <FinancialInput
+                onGenerate={handleGenerate}
+                isGenerating={isGenerating}
+                input={userInput}
+                onInputChange={setUserInput}
+                hasSavedData={hasSavedData}
+                strictness={strictness}
+                onStrictnessChange={setStrictness}
+              />
+            ) : (
+              <Box
+                p={{ base: "4", md: "6" }}
+                bg={loaderCardBg}
+                borderRadius="lg"
+                borderWidth="1px"
+                borderColor={loaderCardBorder}
+              >
+                <GradientSlider value={strictness} onChange={setStrictness} />
+              </Box>
+            )}
 
             {(parseError || updateError) && (
               <Box

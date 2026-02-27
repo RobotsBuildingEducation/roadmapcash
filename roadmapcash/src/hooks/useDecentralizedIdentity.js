@@ -223,7 +223,7 @@ export function useDecentralizedIdentity() {
   );
 
   const saveRoadmap = useCallback(
-    async (userInput, financialData, lastUpdatePrompt = null) => {
+    async (userInput, financialData, lastUpdatePrompt = null, strictness = null) => {
       if (!identity?.npub) return;
 
       try {
@@ -235,6 +235,7 @@ export function useDecentralizedIdentity() {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             lastUpdatePrompt,
+            ...(strictness != null && { strictness }),
           },
           updatedAt: new Date().toISOString(),
         };
