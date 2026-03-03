@@ -4087,6 +4087,10 @@ function MetricsSummary({
           borderWidth="1px"
           borderColor={theme.surfaceBorder}
           textAlign="center"
+          h="100%"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
         >
           <Text
             fontSize={{ base: "2xs", md: "xs" }}
@@ -4112,6 +4116,10 @@ function MetricsSummary({
           borderWidth="1px"
           borderColor={theme.surfaceBorder}
           textAlign="center"
+          h="100%"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
         >
           <Text
             fontSize={{ base: "2xs", md: "xs" }}
@@ -4137,6 +4145,10 @@ function MetricsSummary({
           borderWidth="1px"
           borderColor={theme.surfaceBorder}
           textAlign="center"
+          h="100%"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
         >
           <Text
             fontSize={{ base: "2xs", md: "xs" }}
@@ -4168,6 +4180,10 @@ function MetricsSummary({
           borderWidth="1px"
           borderColor={theme.surfaceBorder}
           textAlign="center"
+          h="100%"
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
         >
           <Text
             fontSize={{ base: "2xs", md: "xs" }}
